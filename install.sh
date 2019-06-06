@@ -145,4 +145,10 @@ python3 setup.py install
 
 fi
 
-
+echo " * * * * * * * * * * * * DHM Software Suite Installer has completed * * * * * * * * * * * * * * "
+echo " *"
+echo " *"
+echo " *"
+echo " *"
+echo " *"
+echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
