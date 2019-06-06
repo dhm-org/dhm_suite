@@ -14,6 +14,9 @@ usage()
     echo "where options are as follows:"
     echo "-all        Setup environment, install drivers, and install suite software"
     echo "-verbose    Display instruction verbose to standard out"
+    echo "-env        Environment setup"
+    echo "-drivers    Install external drivers required."
+    echo "-suite      Install DHM suite softwares"
     echo ""
     echo "any of the above options may be combined with any other"
     echo ""
@@ -36,7 +39,7 @@ do
         drivers=1
         suite=1
         ;;
-    "-env_setup")
+    "-env")
         env_setup=1
         ;;
     "-verbose")
@@ -83,45 +86,54 @@ case "$response" in
         ;;
 esac
 
-if [ "$env_setup" ]
+if [ $env_setup -eq 1 ]
 then
 
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install -y build-essential
-sudo apt-get install -y gcc
-sudo apt-get install -y git
-sudo apt-get install -y net-tools # for ifconfig
-sudo apt-get install -y ethtool #
-sudo apt-get install -y make
-sudo apt-get install -y vim
-sudo apt-get install -y libtiff5-dev
-sudo apt-get install -y nautilus #for running shell scripts from desktop
-sudo apt-get install -y xterm
-sudo apt-get install -y exfat-fuse exfat-utils
+ apt-get update
+ apt-get upgrade
+ apt-get install -y build-essential
+ apt-get install -y gcc g++
+ apt-get install -y git
+ apt-get install -y net-tools # for ifconfig
+ apt-get install -y ethtool #
+ apt-get install -y make
+ apt-get install -y vim
+ apt-get install -y libtiff5-dev
+ apt-get install -y nautilus #for running shell scripts from desktop
+ apt-get install -y xterm
+ apt-get install -y exfat-fuse exfat-utils
+ apt-get install -y python3-pip
 
 fi
 
-if [ "$drivers" ]
+if [ $drivers -eq 1 ]
 then
   ### Install Vimba driver
   ## Check if /opt/Vimba
   if [ ! -d "$VIMBA_DRIVER_DIR" ]; then
-      sudo tar -xvzf ./drivers/Vimba_v2.1.3_Linux.tgz -C /opt/
-  
-      ## Install tranport layers
-      echo "Installing Vimbal GigE and USB transport layers..."
-      sudo /opt/Vimba_2_1/VimbaGigETL/Install.sh
-      sudo /opt/Vimba_2_1/VimbaUSBTL/Install.sh
+       tar -xvzf $DHM_SUITE_DIR/drivers/Vimba_v2.1.3_Linux.tgz -C /opt/
+       ## Install tranport layers
+       echo "Installing Vimbal GigE and USB transport layers..."
+       $VIMBA_DRIVER_DIR/VimbaGigETL/Install.sh
+       $VIMBA_DRIVER_DIR/VimbaUSBTL/Install.sh
+       echo "Creating VimbaViewer shortcut on the Desktop..."
+       ln -s $VIMBA_DRIVER_DIR/Tools/Viewer/Bin/x86_64bit/VimbaViewer ~/Desktop/.
   else
       echo "Vimba driver directory [$VIMBA_DRIVER_DIR] exists! Skipping this driver install."
   fi
 
+
+
 fi
 
-if [ "$suite" ]
+if [ $suite -eq 1 ]
 then
 ### Install shampoo
+pip3 install astropy
+pip3 install astropy-helpers
+pip3 install scikit-image
+pip3 install pyfftw
+pip3 install sklearn
 cd $DHM_SUITE_DIR/shampoo
 python3 setup.py install
 
