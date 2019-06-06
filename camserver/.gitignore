@@ -1,0 +1,10 @@
+# C extensions
+*.so
+*.log
+*.tlog
+*.idb
+*.pdb
+*.opensdf
+*.lastbuildstate
+timestamp.txt
+Holograms
