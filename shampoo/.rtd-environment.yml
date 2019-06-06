@@ -1,0 +1,18 @@
+name: shampoo
+
+channels:
+    - astropy
+    - conda-forge
+    - salilab
+
+dependencies:
+    - astropy
+    - h5py
+    - matplotlib
+    - numpy
+    - scikit-image
+    - scikit-learn
+    - fftw
+    - pyfftw
+    - pip:
+        - mst_clustering
