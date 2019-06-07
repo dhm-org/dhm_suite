@@ -19,10 +19,51 @@ usage()
     echo "-shampoo    Install Shampoo python module"
     echo "-camserver  Install camera server application software"
     echo "-dhmsw      Install DHM softwares python module"
+    echo "-dhm_gui     Install DHM GUI and necessary packages"
     echo ""
     echo "any of the above options may be combined with any other"
     echo ""
     exit
+}
+
+create_insall_location()
+{
+   INSTALL_ROOT=$1
+   DHM_INSTALL_BIN=$INSTALL_ROOT/bin
+   DHM_INSTALL_SRC=$INSTALL_ROOT/src
+   DHM_INSTALL_CONFIG=$INSTALL_ROOT/config
+   DHM_INSTALL_LOG=$INSTALL_ROOT/log
+
+   if [ ! -f "$INSTALL_ROOT" ]; then
+       mkdir /opt/DHM
+   else
+       echo "$INSTALL_ROOT already exists."
+   fi
+
+   if [ ! -f "$DHM_INSTALL_BIN" ]; then
+       mkdir $DHM_INSTALL_BIN
+   else
+       echo "$DHM_INSTALL_BIN already exists."
+   fi
+
+   if [ ! -f "$DHM_INSTALL_SRC" ]; then
+       mkdir $DHM_INSTALL_SRC
+   else
+       echo "$DHM_INSTALL_SRC already exists."
+   fi
+
+   if [ ! -f "$DHM_INSTALL_CONFIG" ]; then
+       mkdir $DHM_INSTALL_CONFIG
+   else
+       echo "$DHM_INSTALL_CONFIG already exists."
+   fi
+
+   if [ ! -f "$DHM_INSTALL_LOG" ]; then
+       mkdir $DHM_INSTALL_LOG
+   else
+       echo "$DHM_INSTALL_LOG already exists."
+   fi
+   
 }
 
 env_setup=0
@@ -32,7 +73,7 @@ camserver=0
 dhmsw=0
 dhm_gui=0
 
-DHM_HOME=$HOME/dhm/
+DHM_INSTALL_ROOT=/opt/DHM
 DHM_SUITE_DIR=$PWD
 VIMBA_DRIVER_DIR=/opt/Vimba_2_1/
 
@@ -107,8 +148,8 @@ esac
 if [ $env_setup -eq 1 ]
 then
 
- apt-get update
- apt-get upgrade
+ apt-get update -y
+ apt-get upgrade -y
  apt-get install -y build-essential
  apt-get install -y gcc g++
  apt-get install -y git
@@ -121,6 +162,8 @@ then
  apt-get install -y xterm
  apt-get install -y exfat-fuse exfat-utils
  apt-get install -y python3-pip
+
+ create_install_location($DHM_INSTALL_ROOT)
 
 fi
 
@@ -155,12 +198,6 @@ pip3 install sklearn
 cd $DHM_SUITE_DIR/shampoo
 python3 setup.py install
 
-### Install dhmsw
-
-### Install dhm_gui
-#cd $DHM_SUITE_DIR/dhm_gui/tools
-#./Setup
-
 fi
 
 if [ $camserver -eq 1 ]
@@ -188,6 +225,7 @@ echo " *"
 echo " *"
 echo " *"
 echo " *                     DHM Software Suite Installer has completed "
+echo " *                             Reboot Required"
 echo " *"
 echo " *"
 echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
