@@ -26,7 +26,7 @@ usage()
     exit
 }
 
-create_insall_location()
+create_install_location()
 {
    INSTALL_ROOT=$1
    DHM_INSTALL_BIN=$INSTALL_ROOT/bin
@@ -63,6 +63,8 @@ create_insall_location()
    else
        echo "$DHM_INSTALL_LOG already exists."
    fi
+
+   chown -R $USER:dhm $DHM_INSTALL_ROOT
    
 }
 
@@ -163,7 +165,11 @@ then
  apt-get install -y exfat-fuse exfat-utils
  apt-get install -y python3-pip
 
- create_install_location($DHM_INSTALL_ROOT)
+ groupadd dhm
+ usermod -aG dhm $USER
+ create_install_location $DHM_INSTALL_ROOT
+
+
 
 fi
 
@@ -202,10 +208,11 @@ fi
 
 if [ $camserver -eq 1 ]
 then
-make clean; make -C $DHM_SUITE_DIR/camserver
+make clean -C $DHM_SUITE_DIR/camserver; make -C $DHM_SUITE_DIR/camserver
 #chmod 777 $DHM_SUITE_DIR/camserver/bin/camserver
-#cp -r $DHM_SUITE_DIR/camserver $DHM_HOME/src/.
-#cp -rf $DHM_HOME/src/camserver/bin/* $DHM_HOME/bin/.
+cp -r $DHM_SUITE_DIR/camserver $DHM_INSTALL_ROOT/src/.
+cp -rf $DHM_SUITE_DIR/camserver/bin/camserver $DHM_INSTALL_ROOT/bin/.
+cp -rf $DHM_SUITE_DIR/camserver/bin/*.so $DHM_INSTALL_ROOT/bin/.
 fi
 
 if [ $dhmsw -eq 1 ]
