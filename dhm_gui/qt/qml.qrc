@@ -1,0 +1,32 @@
+<RCC>
+    <qresource prefix="/">
+        <file>DhmxMain.qml</file>
+        <file>images/bg.jpg</file>
+        <file>images/dhmx.png</file>
+        <file>images/nasa-jpl.png</file>
+        <file>main.cpp</file>
+        <file>DhmxConf.qml</file>
+        <file>DhmxFD.qml</file>
+        <file>DhmxRecon.qml</file>
+        <file>DhmxHoloDisplay.qml</file>
+        <file>DhmxCmd.qml</file>
+        <file>DhmxCamera.qml</file>
+        <file>images/please_wait.png</file>
+        <file>images/icon_histogram.png</file>
+        <file>DhmxHistogram.qml</file>
+        <file>DhmxTest.qml</file>
+        <file>DoubleSpinBox.qml</file>
+        <file>DhmxPopup.qml</file>
+        <file>images/ui_handle.png</file>
+        <file>DhmxPlayback.qml</file>
+        <file>images/icon_fastforward.png</file>
+        <file>images/icon_play.png</file>
+        <file>images/icon_reverse.png</file>
+        <file>../sample.avi</file>
+        <file>DhmxMaskingMode.qml</file>
+        <file>../sample_1.png</file>
+        <file>images/icon_mask.png</file>
+        <file>DhmxPort.qml</file>
+        <file>DhmxAbout.qml</file>
+    </qresource>
+</RCC>

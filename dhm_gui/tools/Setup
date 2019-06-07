@@ -1,0 +1,202 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run this setup environment setup as root"
+  exit
+fi
+
+clear
+echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
+echo "This environment was tested and to be used for an Ubuntu 16.04 OS"
+echo "If you do not have Ubuntu 16.04, either exit or proceed with caution"
+echo ""
+echo "NOTE: Please ensure that you have an active internet connection in order"
+echo "      to download the necessary files that this environment installer   "
+echo "      requires."
+echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+echo ""
+read -r -p "Do you want to continue? [y/N] " response
+case "$response" in
+    [yY][eE][sS]|[yY]) 
+        ;;
+    *)
+        exit
+        ;;
+esac
+
+echo "Detecting what OS / platform is being used..."
+DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d \")
+VERSION=$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release | tr -d \")
+echo "Your operating system is: $DISTRO"
+echo "Your version is: $VERSION"
+
+	
+# # Python 3.x installation # #
+if [ "$DISTRO" == "CentOS Linux" ] || [ "$DISTRO" == "Red Hat Enterprise Linux Workstation" ]; then
+		echo "Continuing setup in CentOS mode..."
+		echo "Setting up the environment..."
+
+		echo "Installing the basics..."
+		sudo yum update
+		sudo yum install yum-utils
+		sudo yum groupinstall development
+		sudo yum groupinstall "Development Tools"
+		sudo yum install gcc
+		sudo yum install https://centos7.iuscommunity.org/ius-release.rpm
+		sudo yum update
+
+		echo "Installing the Python3 development libraries"
+		yum install python36u
+		yum install python36u-pip
+		yum install python36u-devel
+
+
+		echo "Installing Python3's PyQt5 libraries..."
+		sudo pip3.6 install pyqt5
+
+		#echo "Installing all of the PyQt tools for Linux..."
+		#yum install python3-pyqt5 pyqt5-dev-tools
+
+		echo "Installing the OpenGL support libraries..."
+		sudo yum install mesa-libGL
+		sudo yum install mesa-libGL-devel
+
+		echo "Installing libraries for PyQt charts using PIP..."
+		sudo pip3.6 install PyQtChart
+		sudo pip3.6 install numpy
+		sudo pip3.6 install matplotlib
+
+		echo "Installing pylab..."
+		sudo yum install numpy scipy python-matplotlib
+		sudo pip3.6 install matplotlib
+
+		echo "Installing tkinter..."
+		sudo yum install tkinter
+		sudo yum install python36u-tkinter
+
+		echo "Installing ffmpeg libraries..."
+		sudo rpm --import http://li.nux.ro/download/nux/RPM-GPG-KEY-nux.ro
+		sudo rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+
+		sudo yum install ffmpeg ffmpeg-devel
+
+		echo "Installing PIL / Pillow libraries..."
+		sudo pip3.6 install pillow
+
+		#echo "Installing gstreamer libraries..."
+		sudo yum install gstreamer-plugins-bad gstreamer-plugins-ugly gstreamer-ffmpeg 
+		sudo yum install qt-gstreamer-devel
+
+
+		clear
+		echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
+		echo " * The PyQt5 environment has been installed.  Please scroll up to      *"
+		echo " * ensure that all the libraries have successfully installed.          *"
+		echo " *                                                                     *"
+		echo " * The installer is now moving onto the dhmsw and shampoo library and  *"
+		echo " * and pre-requisite installation...                                   *"
+		echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+		sleep 8
+		echo "Installing shampoo & dhmsw libraries..."
+		sudo pip3.6 install astropy
+		sudo pip3.6 install scipy
+		sudo pip3.6 install scikit-image
+		sudo pip3.6 install sklearn
+		sudo pip3.6 install pyfftw
+		sudo pip3.6 install pytest
+		sudo pip3.6 install pytest-astropy
+
+
+elif [ "$DISTRO" == "Ubuntu" ]; then
+		echo "Continuing setup in Ubuntu mode..."
+		echo "Setting up the environment..."
+
+		echo "Installing the basics..."
+		sudo apt-get install gcc g++
+
+		echo "Installing Python3 PIP..."
+		sudo apt-get install python3-pip
+		
+		echo "Installing libraries for PyQt charts using PIP..."
+		pip3 install pyqt5
+		pip3 install PyQtChart
+		pip3 install numpy==1.15.1
+		pip3 install matplotlib
+
+		echo "Installing tkinter"
+		sudo apt-get install python3-tk
+
+		echo "Installing ffmpeg libraries..."
+		sudo apt-get install ffmpeg
+
+		echo "Installing gstreamer libraries..."
+		sudo apt-get install libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools
+		sudo apt-get install qtgstreamer-plugins-qt5
+
+		echo "Installing multimedia libraries for Qt /QML..."
+		sudo apt-get install libqt5multimedia5-plugins
+
+		echo "Installing PIL / Pillow libraries..."
+		pip3 install pillow
+
+		clear
+		echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
+		echo " * The PyQt5 environment has been installed.  Please scroll up to      *"
+		echo " * ensure that all the libraries have successfully installed.          *"
+		echo " *                                                                     *"
+		echo " * The installer is now moving onto the dhmsw and shampoo library and  *"
+		echo " * and pre-requisite installation...                                   *"
+		echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+		sleep 7
+		echo "Installing shampoo & dhmsw libraries..."
+		pip3 install astropy
+		pip3 install scipy
+		pip3 install scikit-image
+		pip3 install sklearn
+		pip3 install pyfftw
+		pip3 install pytest
+		pip3 install pytest-astropy
+        pip3 install astropy-helpers
+
+		if [ "$VERSION" == "18.04" ]; then
+			echo "Installing changes for 18.04..."
+        	sudo apt-get install libqt5multimedia5-plugins
+			sudo rm /usr/local/lib/python3.6/dist-packages/PyQt5/Qt/plugins/mediaservice/libgstmediaplayer.so
+			sudo ln -s /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice/libgstmediaplayer.so /usr/local/lib/python3.6/dist-packages/PyQt5/Qt/plugins/mediaservice/libgstmediaplayer.so
+		fi
+
+
+else
+		echo "Unknown operating system / environment - cannot install libraries."
+		exit -1
+fi
+
+# # Adding QtMultimedia Libraries # #
+echo "Installing the QtMultimedia shared libraries..."
+if [ "$DISTRO" == "CentOS Linux" ] || [ "$DISTRO" == "Red Hat Enterprise Linux Workstation" ]; then
+	echo "Copying to CentOS directory structure..."
+	sudo cp ../libs/libQt5MultimediaQuick.so.5 /usr/lib64/
+	sudo cp ../libs/libQt5MultimediaQuick.so.5.11 /usr/lib64/
+	sudo cp ../libs/libQt5MultimediaQuick.so.5.11.2 /usr/lib64/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5 /usr/lib64/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5.11 /usr/lib64/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5.11.2 /usr/lib64/
+elif [ "$DISTRO" == "Ubuntu" ]; then
+	echo "Copying to Ubuntu directory structure..."
+	sudo cp ../libs/libQt5MultimediaQuick.so.5 /usr/lib/
+	sudo cp ../libs/libQt5MultimediaQuick.so.5.11 /usr/lib/
+	sudo cp ../libs/libQt5MultimediaQuick.so.5.11.2 /usr/lib/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5 /usr/lib/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5.11 /usr/lib/
+	sudo cp ../libs/libQt5MultimediaGstTools.so.5.11.2 /usr/lib/
+fi
+
+
+
+clear
+echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
+echo " *                                                                     *"
+echo " *                        Setup is now complete!                       *"
+echo " *                                                                     *"
+echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+
