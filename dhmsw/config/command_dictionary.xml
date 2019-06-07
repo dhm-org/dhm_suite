@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DhmCommandDictionary>
+<CommandStruct RootDelimeter=" " ParameterDelimeter="," Version="0.1" Description="Initial Version" />
+<CommandList CommandCount="200">
+    <Command Id="reconst" ParameterCount="27">
+        <Parameter Id="propagation_distance" Type="Float" MaxCount="3" MinValue="-100" MaxValue="100" EnumList="" Units="meters" Description="" />
+        <Parameter Id="compute_spectral_peak" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="compute_digital_phase_mask" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="processing_mode" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="OFF|AMP|INTENSITY|PHASE|AMP_AND_PHASE|INT_AND_PHASE|ALL" Units="" Description="" />
+        <Parameter Id="chromatic_shift" Type="Float" MaxCount="3" MinValue="100e-9" MaxValue="-100e-9" EnumList="" Units="meters" Description="" />
+        <Parameter Id="ref_holo_path" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+        <Parameter Id="ref_holo_enable" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="ref_holo_save" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="ref_holo_averaging_sec" Type="Float" MaxCount="1" MinValue="0" MaxValue="60" EnumList="" Units="Seconds" Description="" />
+        <Parameter Id="ref_holo_averaging_enable" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="phase_unwrapping_enable" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="phase_unwrapping_algorithm" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="NONE" Units="" Description="" />
+        <Parameter Id="fitting_mode" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="NONE|1D_SEGMENT|2D_SEGMENT" Units="NONE" Description="" />
+        <Parameter Id="fitting_method" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="NONE|POLYNOMIAL" Units="NONE" Description="" />
+        <Parameter Id="fitting_order" Type="Float" MaxCount="1" MinValue="0" MaxValue="5" EnumList="" Units="" Description="" />
+        <Parameter Id="fitting_apply" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="reset_phase_mask" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="roi_offset_x" Type="Integer" MaxCount="1" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="" />
+        <Parameter Id="roi_offset_y" Type="Integer" MaxCount="1" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="" />
+        <Parameter Id="roi_size_x" Type="Integer" MaxCount="1" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="" />
+        <Parameter Id="roi_size_y" Type="Integer" MaxCount="1" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="" />
+        <Parameter Id="store_files" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="center_image" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="center_image_and_tilt" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="center_max_value" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="center_wide_spectrum" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+    </Command>
+    <Command Id="holo" ParameterCount="7">
+        <Parameter Id="wavelength" Type="Float" MaxCount="3" MinValue="200e-9" MaxValue="700e-9" EnumList="" Units="meters" Description="" />
+        <Parameter Id="dx" Type="Float" MaxCount="1" MinValue="200" MaxValue="700" EnumList="" Units="meters" Description="" />
+        <Parameter Id="dy" Type="Float" MaxCount="1" MinValue="200" MaxValue="700" EnumList="" Units="meters" Description="" />
+        <Parameter Id="crop_fraction" Type="Integer" MaxCount="1" MinValue="0" MaxValue="0" EnumList="" Units="" Description="" />
+        <Parameter Id="rebin_factor" Type="Integer" MaxCount="1" MinValue="0" MaxValue="0" EnumList="" Units="" Description="" />
+        <Parameter Id="bgd_sub" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="bgd_file" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+    </Command>
+    <Command Id="framesource" ParameterCount="3">
+        <Parameter Id="mode" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="FILE|CAMERA|SEQUENCE" Units="" Description="" />
+        <Parameter Id="filepath" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+        <Parameter Id="exec" Type="Enumeration" MaxCount="1" MinValue="" MaxValue="" EnumList="IDLE|RUN" Units="" Description="" />
+    </Command>
+    <Command Id="session" ParameterCount="10">
+        <Parameter Id="name" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+        <Parameter Id="description" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+        <Parameter Id="wavelength" Type="Float" MaxCount="3" MinValue="200e-9" MaxValue="700e-9" EnumList="" Units="meters" Description="" />
+        <Parameter Id="dx" Type="Float" MaxCount="1" MinValue="200" MaxValue="700" EnumList="" Units="meters" Description="" />
+        <Parameter Id="dy" Type="Float" MaxCount="1" MinValue="200" MaxValue="700" EnumList="" Units="meters" Description="" />
+        <Parameter Id="crop_fraction" Type="Integer" MaxCount="1" MinValue="0" MaxValue="0" EnumList="" Units="" Description="" />
+        <Parameter Id="rebin_factor" Type="Integer" MaxCount="1" MinValue="0" MaxValue="0" EnumList="" Units="" Description="" />
+        <Parameter Id="focal_length" Type="float" MaxCount="1" MinValue="1e-3" MaxValue="20e-3" EnumList="" Units="meters" Description="" />
+        <Parameter Id="numerical_aperture" Type="float" MaxCount="1" MinValue="0.1" MaxValue="1" EnumList="" Units="" Description="" />
+        <Parameter Id="system_magnification" Type="float" MaxCount="1" MinValue="1.0" MaxValue="200.0" EnumList="" Units="" Description="" />
+    </Command>
+    <Command Id="guiserver" ParameterCount="10">
+        <Parameter Id="enable_rawframes" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="enable_fourier" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="enable_amplitude" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="enable_intensity" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="enable_phase" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+    </Command>
+    <Command Id="datalogger" ParameterCount="1">
+        <Parameter Id="enabled" Type="Boolean" MaxCount="1" MinValue="False" MaxValue="True" EnumList="" Units="" Description="" />
+        <Parameter Id="rootpath" Type="String" MaxCount="1" MinValue="" MaxValue="" EnumList="" Units="" Description="" />
+    </Command>
+    <Command Id="fouriermask" ParameterCount="0">
+        <Parameter Id="mask_circle_1" Type="Integer" MaxCount="3" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="Pixels X, Y and radius of circular mask" />
+        <Parameter Id="mask_circle_2" Type="Integer" MaxCount="3" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="Pixels X, Y and radius of circular mask" />
+        <Parameter Id="mask_circle_3" Type="Integer" MaxCount="3" MinValue="0" MaxValue="2048" EnumList="" Units="" Description="Pixels X, Y and radius of circular mask" />
+    </Command>
+    <Command Id="shutdown" ParameterCount="0">
+    </Command>
+    <Command Id="no_op" ParameterCount="0">
+    </Command>
+</CommandList>
+</DhmCommandDictionary>

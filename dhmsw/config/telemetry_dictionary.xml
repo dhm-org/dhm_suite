@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<DhmTelemetryDictionary>
+<TelemetryStruct Version="0.1" Description="Initial Version" />
+<TelemetryList Count="8">
+    <Telemetry Id="Heartbeat" NumItems="1">
+        <Item Id="timestamp" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="0" Units="" Description="">0</Item>
+        <Item Id="status" Type="Integer" Bytes="4" MaxCount="5" MinValue="0" MaxValue="0" Units="" Description="">0</Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+    <Telemetry Id="Session" NumItems="11">
+        <Item Id="name" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units=""  Description=""></Item>
+        <Item Id="description" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units=""  Description=""></Item>
+        <Item Id="num_wavelength" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="wavelength" Type="Float" Bytes="4" MaxCount="3" MinValue="200e-9" MaxValue="700e-9" Units="meters" Desription="">439e-9</Item>
+        <Item Id="dx" Type="Float" Bytes="4" MaxCount="1" MinValue="200" MaxValue="700" Units="meters" Description="">3.45e-6</Item>
+        <Item Id="dy" Type="Float" Bytes="4" MaxCount="1" MinValue="200" MaxValue="700" Units="meters" Description="">3.45e-6</Item>
+        <Item Id="crop_fraction" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="0" Units="meters" Description="">0</Item>
+        <Item Id="rebin_factor" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="0" Units="meters" Description="">0</Item>
+        <Item Id="lens_focal_length" Type="Float" Bytes="4" MaxCount="1" MinValue="1e-3" MaxValue="20e-3" Units="meters" Description=""></Item>
+        <Item Id="lens_numerical_aperture" Type="Float" Bytes="4" MaxCount="1" MinValue=".1" MaxValue="1" Units="" Description=""></Item>
+        <Item Id="lens_system_magnification" Type="Float" Bytes="4" MaxCount="1" MinValue="1" MaxValue="200" Units="" Description=""></Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+    <Telemetry Id="Hologram" NumItems="7">
+        <Item Id="num_wavelength" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="wavelength" Type="Float" Bytes="4" MaxCount="3" MinValue="200e-9" MaxValue="700e-9" Units="meters" Description="">439</Item>
+        <Item Id="dx" Type="Float" Bytes="4" MaxCount="1" MinValue="200" MaxValue="700" Units="meters" Description="">3.45e-6</Item>
+        <Item Id="dy" Type="Float" Bytes="4" MaxCount="1" MinValue="200" MaxValue="700" Units="meters" Description="">3.45e-6</Item>
+        <Item Id="crop_fraction" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="0" Units="meters" Description="">0</Item>
+        <Item Id="rebin_factor" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="0" Units="meters" Description="">0</Item>
+        <Item Id="bgd_sub" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="bgd_file" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+    <Telemetry Id="Reconstruction" NumItems="28">
+        <Item Id="num_propagation_distance" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="propagation_distance" Type="Float" Bytes="4" MaxCount="3" MinValue="-100" MaxValue="100" Units="meters" Description="">0.1</Item>
+        <Item Id="compute_spectral_peak" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="compute_digital_phase_mask" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="processing_mode" Type="Enumeration" Bytes="2" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">None</Item>
+        <Item Id="num_chromatic_shift" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">0.0</Item>
+        <Item Id="chromatic_shift" Type="Float" Bytes="4" MaxCount="3" MinValue="100e-9" MaxValue="-100e-9" Units="meters" Description="">0.0</Item>
+        <Item Id="ref_holo_path" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="ref_holo_enable" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="ref_holo_averaging_sec" Type="Float" Bytes="4" MaxCount="1" MinValue="0" MaxValue="60" Units="Seconds" Description="">0.0</Item>
+        <Item Id="ref_holo_averaging_enabled" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="phase_unwrapping_enabled" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="phase_unwrapping_algorithm" Type="Enumeration" Bytes="2" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">None</Item>
+        <Item Id="fitting_mode" Type="Enumeration" Bytes="2" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">None</Item>
+        <Item Id="fitting_method" Type="Enumeration" Bytes="2" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">None</Item>
+        <Item Id="fitting_order" Type="Float" Bytes="4" MaxCount="1" MinValue="0" MaxValue="5" Units="" Description="">0</Item>
+        <Item Id="fitting_apply" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="reset_phase_mask" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="roi_offset_x" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="2048" Units="" Description="">0</Item>
+        <Item Id="roi_offset_y" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="2048" Units="" Description="">0</Item>
+        <Item Id="roi_size_x" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="2048" Units="" Description="">2048</Item>
+        <Item Id="roi_size_y" Type="Integer" Bytes="4" MaxCount="1" MinValue="0" MaxValue="2048" Units="" Description="">2048</Item>
+        <Item Id="store_files" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="center_image" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="center_image_and_tilt" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="center_max_value" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="center_wide_spectrum" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+    </Telemetry>
+    <Telemetry Id="Fouriermask" NumItems="5">
+        <Item Id="num_x_peak" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="x_peak" Type="Integer" Bytes="4" MaxCount="3" MinValue="0" MaxValue="2048" Units="pixels" Description=""></Item>
+        <Item Id="num_y_peak" Type="Integer" Bytes="4" MaxCount="1" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="y_peak" Type="Integer" Bytes="4" MaxCount="3" MinValue="0" MaxValue="2048" Units="pixels" Description=""></Item>
+        <Item Id="mask" Type="Binary" Bytes="1" MaxCount="4194304" MinValue="0" MaxValue="2048" Units="" Description="2048x2048 boolean mask"></Item>
+    </Telemetry>
+    <Telemetry Id="Framesource" NumItems="5">
+        <Item Id="state" Type="Enumeration" Bytes="2" MaxCount="1" MinValue="" MaxValue="" Units="" Description="">Idle</Item>
+        <Item Id="mode" Type="String" Bytes="1" MaxCount="10" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="file_path" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="current_file" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+    <Telemetry Id="Datalogger" NumItems="3">
+        <Item Id="enabled" Type="Boolean" Bytes="1" MaxCount="1" MinValue="False" MaxValue="True" Units="" Description="">False</Item>
+        <Item Id="rootpath" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+    <Telemetry Id="Guiserver" NumItems="3">
+        <Item Id="ports" Type="Integer" Bytes="4" MaxCount="4" MinValue="" MaxValue="" Units="" Description=""></Item>
+        <Item Id="connection_status" Type="Boolean" Bytes="1" MaxCount="4" MinValue="False" MaxValue="True" Units="" Description=""></Item>
+        <Item Id="status_msg" Type="String" Bytes="1" MaxCount="256" MinValue="" MaxValue="" Units="" Description=""></Item>
+    </Telemetry>
+</TelemetryList>
+</DhmTelemetryDictionary>
