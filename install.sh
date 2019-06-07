@@ -16,7 +16,9 @@ usage()
     echo "-verbose    Display instruction verbose to standard out"
     echo "-env        Environment setup"
     echo "-drivers    Install external drivers required."
-    echo "-suite      Install DHM suite softwares"
+    echo "-shampoo    Install Shampoo python module"
+    echo "-camserver  Install camera server application software"
+    echo "-dhmsw      Install DHM softwares python module"
     echo ""
     echo "any of the above options may be combined with any other"
     echo ""
@@ -25,8 +27,12 @@ usage()
 
 env_setup=0
 drivers=0
-suite=0
+shampoo=0
+camserver=0
+dhmsw=0
+dhm_gui=0
 
+DHM_HOME=$HOME/dhm/
 DHM_SUITE_DIR=$PWD
 VIMBA_DRIVER_DIR=/opt/Vimba_2_1/
 
@@ -37,7 +43,10 @@ do
     "-all")
         env_setup=1
         drivers=1
-        suite=1
+        shampoo=1
+        camserver=1
+        dhmsw=1
+        dhm_gui=1
         ;;
     "-env")
         env_setup=1
@@ -48,8 +57,17 @@ do
     "-drivers")
         drivers=1
         ;;
-    "-suite")
-        suite=1
+    "-shampoo")
+        shampoo=1
+        ;;
+    "-camserver")
+        camserver=1
+        ;;
+    "-dhmsw")
+        dhmsw=1
+        ;;
+    "-dhm_gui")
+        dhm_gui=1
         ;;
     "-help")
         usage
@@ -126,7 +144,7 @@ then
 
 fi
 
-if [ $suite -eq 1 ]
+if [ $shampoo -eq 1 ]
 then
 ### Install shampoo
 pip3 install astropy
@@ -145,10 +163,31 @@ python3 setup.py install
 
 fi
 
-echo " * * * * * * * * * * * * DHM Software Suite Installer has completed * * * * * * * * * * * * * * "
+if [ $camserver -eq 1 ]
+then
+make clean; make -C $DHM_SUITE_DIR/camserver
+#chmod 777 $DHM_SUITE_DIR/camserver/bin/camserver
+#cp -r $DHM_SUITE_DIR/camserver $DHM_HOME/src/.
+#cp -rf $DHM_HOME/src/camserver/bin/* $DHM_HOME/bin/.
+fi
+
+if [ $dhmsw -eq 1 ]
+then
+cd $DHM_SUITE_DIR/dhmsw
+python3 setup.py install
+fi
+
+if [ $dhm_gui -eq 1 ]
+then
+cd $DHM_SUITE_DIR/dhm_gui/tools/
+./Setup
+fi
+
+echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
 echo " *"
 echo " *"
 echo " *"
+echo " *                     DHM Software Suite Installer has completed "
 echo " *"
 echo " *"
 echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
