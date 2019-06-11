@@ -93,7 +93,7 @@ void banner()
 void usage(char *name)
 {
     printf("\n");
-    printf("Usage:  %s [-h] [-p port#] [-d] [-r rate] [-w width] [-ht height]\n\n", name);
+    printf("Usage:  %s [options]\n\n", name);
     printf( "\n");
     printf( "Where:\n");
     printf( "\t-h                 show help usage\n");
