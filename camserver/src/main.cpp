@@ -102,7 +102,7 @@ void usage(char *name)
     printf( "\t-tp  port#         Telemetry Port number to use for server, where port# is between 2000(2002 is default) and 65535 inclusive\n");
     printf( "\t-d                 Disable logging frames to disk. Default is to ask user to enable/disable logging.\n");
     printf( "\t-e                 Enable logging frames to disk. Default is to ask user to enable/disable logging.\n");
-    printf( "\t-r  rate Hz        Rate in Hz, default will be whatever the camera is set to.\n");
+    printf( "\t-r  rate Hz        Rate in Hz, default is 15Hz. Ignored if option -x used\n");
     printf( "\t-w  width          Camera image width in pixels.  Default value is 2048 or highest value from camera if max is less than 2048\n");
     printf( "\t-t  time_duration  Execution duration in seconds.\n");
     printf( "\t-ht height         Camera image height in pixels.  Default value is 2048 or highest value from camera if max is less than 2048\n");
