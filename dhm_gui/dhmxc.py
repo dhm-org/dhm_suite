@@ -55,7 +55,7 @@ TELEMETRY_SERVER_PORT = 2002
 
 
 def SetCommandServerPort(port_num):
-   global COMMMAND_SERVER_PORT
+   global COMMAND_SERVER_PORT
    COMMAND_SERVER_PORT = int(port_num)
 
 def SetFrameServerPort(port_num):

@@ -149,6 +149,18 @@ class guiclient(QThread):
         self.terminate()
         
 
+    def Connect(self):
+       self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+       connected = False
+       while(connected != True):
+          try:
+              self.sock.connect((self.server, self.port))
+              connected = True
+          except:
+              print("Could not connect to the the display server.  Trying again...")
+              time.sleep(1)
+       print("Connnected display server.")
+       self.readfds = [self.sock]
 
     def run(self):
         connected = False
@@ -161,14 +173,9 @@ class guiclient(QThread):
         meta = None
         totalbytes = 0
         
-        while(connected != True):
-           try:
-              self.sock.connect((self.server, self.port))
-              connected = True
-           except:
-              print("Could not connect to the the display server.  Trying again...")
-              time.sleep(1)
-        self.readfds = [self.sock]
+        # Attempt connection
+        self.Connect()
+
 
         while not self.quit:
             infds, outfds, errfds = select.select(self.readfds, [], [],1)
@@ -182,9 +189,9 @@ class guiclient(QThread):
                     #packet = self.sock.recv(150995023)
                     packet = self.sock.recv(65535)
                     if not packet:
-                        self.exit = True
-                        self.displayQ.put_nowait(None)
-                        break
+                        self.Connect()
+                        #self.exit = True
+                        #break
                     data += packet
                     datalen = len(data)
                     

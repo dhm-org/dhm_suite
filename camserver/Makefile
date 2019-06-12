@@ -70,6 +70,7 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(OBJ_DIR)
 
 $(BIN_PATH): $(DEPENDENCIES) $(OBJ_FILES) $(BIN_DIR)
 	$(CXX) $(ARCH_CFLAGS) $(LIBS_DIRS) -o $(BIN_PATH) $(OBJ_FILES) $(LIBS) -Wl,-rpath,'$$ORIGIN' -lpthread 
+	cp $(BIN_DIR)/* ../bin/.
 
 clean:
 	$(RM) $(PROJECT_DIR)/bin/$(PROJECT_NAME) -r -f

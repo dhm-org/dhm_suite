@@ -387,21 +387,21 @@ ApplicationWindow {
 
         Button {
             id: button_load
-            x: 56
+            x: 66
             y: 38
-            width: 55
+            width: 60
             height: 30
             text: qsTr("Load")
             anchors.right: parent.right
-            anchors.rightMargin: 177
+            anchors.rightMargin: 162
             enabled: false
         }
 
         Button {
             id: button_close
-            x: 610
+            x: 217
             y: 38
-            width: 55
+            width: 63
             height: 30
             text: qsTr("Close")
             anchors.right: parent.right
@@ -414,26 +414,26 @@ ApplicationWindow {
 
         Button {
             id: button_save
-            x: 14
+            x: 0
             y: 38
-            width: 55
+            width: 60
             height: 30
             text: qsTr("Save")
             anchors.right: parent.right
-            anchors.rightMargin: 238
+            anchors.rightMargin: 228
             enabled: false
         }
 
         Button {
             id: button_apply
-            x: 117
+            x: 132
             objectName: "button_apply"
             y: 38
-            width: 55
+            width: 60
             height: 30
             text: qsTr("Apply")
             anchors.right: parent.right
-            anchors.rightMargin: 116
+            anchors.rightMargin: 96
         }
 
 
@@ -443,6 +443,8 @@ ApplicationWindow {
 
 
 }
+
+
 
 
 

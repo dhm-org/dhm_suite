@@ -70,19 +70,24 @@ class Tlm(QThread):
         self.exit = True
 
 
-    def run(self):
-        ### Continous receive of data
-        try:
-           self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-           self.sock.connect((self.host, self.port))
-           self.readfds = [self.sock]
-        except socket.error as e:
-           print("Telemetry could not establish communication with dhmsw.  Please check your connection.")
-           if self.sock:
-              self.sock.close()
-              self.sock = None
+    def Connect(self):
+        connected = False
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while(connected != True):
+           ### Continous receive of data
+           try:
+              self.sock.connect((self.host, self.port))
+              connected = True
+           except socket.error as e:
+              print("Telemetry could not establish communication with dhmsw.  Please check your connection. Retrying...")
+              time.sleep(1)
+        self.readfds = [self.sock]
 
-        ### Start Telemetry Thread
+
+    def run(self):
+        # Start telemetry connection
+        self.Connect()
+
         length = None
         buf = b''
         data = b''
@@ -93,7 +98,6 @@ class Tlm(QThread):
             try:
                infds, outfds, errfds = select.select(self.readfds, [], [],5)
               
-
                if not (infds or outfds or errfds):
                    continue
                if self.exit: break
@@ -104,8 +108,9 @@ class Tlm(QThread):
                        packet = self.sock.recv(255) #possible 4194304
 
                        if not packet:
-                           self.exit = True
-                           break
+                           self.Connect()
+                           #self.exit = True
+                           #break
 
                        data += packet
                        datalen = len(data)
@@ -138,8 +143,6 @@ class Tlm(QThread):
 
             except:
                print("Could not run select for telemetry polling.  Please check your connection.")
-               sys.exit()
-              #break
             if self.exit: break
 
         self.sock.close() 

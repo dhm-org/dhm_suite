@@ -86,7 +86,7 @@ void banner()
 {
     printf("\n");
     printf("///////////////////////////////////////////\n");
-    printf("/// DHM Camera Streaming Software       ///\n");
+    printf("/// Camera Server Software       ///\n");
     printf("///////////////////////////////////////////\n\n");
 }
 
@@ -106,11 +106,12 @@ void usage(char *name)
     printf( "\t-w  width          Camera image width in pixels.  Default value is 2048 or highest value from camera if max is less than 2048\n");
     printf( "\t-t  time_duration  Execution duration in seconds.\n");
     printf( "\t-ht height         Camera image height in pixels.  Default value is 2048 or highest value from camera if max is less than 2048\n");
-    printf( "\t-c  config_file    Camera config file\n");
+    printf( "\t-c  config_file    Camera config file. Default is DEFAULT.ini\n");
     printf( "\t-l  log_dir        Log directory to where to place recorded frames. Default is current directory.\n");
-    printf( "\t-v  verbose        Display debug messages. Default is no verbose.\n");
-    printf( "\t-s  serial_number  Camera serial number.\n");
-    printf( "\t-x  trigger_source Set camera's FrameStart Trigger Source. Freerun is default and rate will be whatever was set, else rate is based on external source or other source selected. Valid values [Freerun|Line1|Line2|FixedRate|Software|Action0|Action1] .\n");
+    printf( "\t-v  verbose        Display frame timestamp. Default is no verbose.\n");
+    printf( "\t-s  serial_number  Camera serial number. Default is to ask user to select camera (if more than one is found).\n");
+    printf( "\t-x  trigger_source Set camera's FrameStart Trigger Source. Default is Freerun. -r option has not effect.\n");
+    printf( "\t                   Valid values [Freerun|Line1|Line2|FixedRate|Software|Action0|Action1].\n");
 }
 
 void parse_commandline(int argc, char* argv[], struct UserParams *params)

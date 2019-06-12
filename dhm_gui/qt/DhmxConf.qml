@@ -59,9 +59,9 @@ MouseArea {
     Button {
         id: button_save
         objectName: "button_save"
-        x: 151
+        x: 123
         y: 537
-        text: qsTr("Save")
+        text: qsTr("Save to File")
 
         onClicked: {
             pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+metric_conversion((spinBox_t3_dx.realValue),"um","m")+',dy='+metric_conversion((spinBox_t3_dy.realValue),"um","m")+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+metric_conversion((spinBox_t4_sys_mag.realValue),"mm","m"))
@@ -534,6 +534,17 @@ MouseArea {
             dhmx_fd.close()
         }
         Component.onCompleted: visible = false
+    }
+
+    Button {
+        id: button_apply
+        x: 229
+        y: 537
+        text: qsTr("Apply")
+        objectName: "button_apply"
+        onClicked: {
+            pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+metric_conversion((spinBox_t3_dx.realValue),"um","m")+',dy='+metric_conversion((spinBox_t3_dy.realValue),"um","m")+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+metric_conversion((spinBox_t4_sys_mag.realValue),"mm","m"))
+        }
     }
 
 

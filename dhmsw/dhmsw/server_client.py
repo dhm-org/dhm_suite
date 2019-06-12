@@ -194,7 +194,7 @@ class Server(object):
                                     ret = c.send(next_msg[totallen:])
                                     totallen += ret
 
-                                print('Port %d Sendall time: %d bytes; %f sec'%(self._port, totallen, time.time()-start_time), time.time(), datetime.datetime.now())
+                                #print('Port %d Sendall time: %d bytes; %f sec'%(self._port, totallen, time.time()-start_time), time.time(), datetime.datetime.now())
                                 #self._writefds.remove(c)
                                 self._sendinprogress = False
 
