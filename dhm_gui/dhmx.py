@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.9.12  06-04-2019"
+DHMX_VERSION_STRING = "DHMx v0.9.13  06-07-2019"
 
 import os, sys, re, time, random
 import threading
@@ -58,7 +58,10 @@ import dhmxc as dhmxc
 RUNNING_PATH = os.path.split(os.path.abspath(__file__))
 HOST = socket.gethostbyname('localhost')
 PORT = 10000
-CAMERA_SERVER_PORT = 2001
+DHM_TELEMETRY_SERVER_PORT = 9996
+FRAME_SERVER_PORT = 2000
+COMMAND_SERVER_PORT = 2001
+TELEMETRY_SERVER_PORT = 2002
 RAW_FRAME_PORT = 9995
 RECONST_AMP_FRAME_PORT = 9994
 RECONST_INT_FRAME_PORT = 9997
@@ -69,8 +72,43 @@ MAX_WAVELENGTH = 0
 MAX_PROPAGATION_DISTANCE = 0
 open_flag = False
 w = None
+tlm = None
+tlm_manager = None
 
 
+
+# Setting of custom ports if launch arguments are given
+def SetCommandServerPort(port_num):
+   global COMMMAND_SERVER_PORT
+   COMMAND_SERVER_PORT = int(port_num)
+def SetFrameServerPort(port_num):
+   global FRAME_SERVER_PORT
+   FRAME_SERVER_PORT = int(port_num)
+def SetTelemetryServerPort(port_num):
+   global TELEMETRY_SERVER_PORT
+   TELEMETRY_SERVER_PORT = int(port_num)
+def SetDhmCommandServerPort(port_num):
+   global PORT
+   PORT = int(port_num)
+def SetDhmTelemetryServerPort(port_num):
+   global DHM_TELEMETRY_SERVER_PORT
+   DHM_TELEMETRY_SERVER_PORT = int(port_num)
+def SetPhasePort(port_num):
+   global RECONST_PHASE_FRAME_PORT
+   RECONST_PHASE_FRAME_PORT = int(port_num)
+def SetIntensityPort(port_num):
+   global RECONST_INT_FRAME_PORT
+   RECONST_INT_FRAME_PORT = int(port_num)
+def SetRawPort(port_num):
+   global RAW_FRAME_PORT
+   RAW_FRAME_PORT = int(port_num)
+def SetAmplitudePort(port_num):
+   global RECONST_AMP_FRAME_PORT
+   RECONST_AMP_FRAME_PORT = int(port_num)
+def SetFourierPort(port_num):
+   global FOURIER_FRAME_PORT
+   FOURIER_FRAME_PORT = int(port_num)
+# End Setting of custom ports
 
 # Loading and saving files for DHMx
 # DHMx will save files as a *.cfg file in plain text.
@@ -78,48 +116,63 @@ w = None
 def LoadFile(file_type,x,y,path,title):
    if(file_type == "ses"):
       # For Reconst Config files
-      fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_ses")
-      if(fd.GetFilename() != ''):
-         file = open(fd.GetFilename(),"r")
-         return file.read()
-      else:
-         # Return something benign if nothing exists 
+      try:
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_ses")
+         if(fd.GetFilename() != ''):
+            file = open(fd.GetFilename(),"r")
+            return file.read()
+         else:
+            # Return something benign if nothing exists 
+            return "session"
+      except:
+         print("ERROR: Could not load session file...")
          return "session"
 
    if(file_type == "cfg"):
       # For Reconst Config files
-      fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_cfg")
-      if(fd.GetFilename() != ''):
-         file = open(fd.GetFilename(),"r")
-         return file.read()
-      else:
-         # Return something benign if nothing exists 
-         return "reconst"
-
+      try:
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_cfg")
+         if(fd.GetFilename() != ''):
+            file = open(fd.GetFilename(),"r")
+            return file.read()
+         else:
+            # Return something benign if nothing exists 
+            return "reconst"
+      except:
+           print("ERROR: Could not load configuration file...")
+           return "reconst"
 
 
 def SaveFile(file_type,cfg_file, x, y, path, title):
    if(file_type == "ses"):
       # For Reconst Config files
-      fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_ses")
-      if(fd.GetFilename() != ''):
-         if ".ses" in fd.GetFilename():
-            file = open(fd.GetFilename(),"w")
-         else:
-            file = open(fd.GetFilename()+".ses","w")
-         file.writelines(cfg_file)
-         file.close()
+      try:
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_ses")
+         if(fd.GetFilename() != ''):
+            if ".ses" in fd.GetFilename():
+               file = open(fd.GetFilename(),"w")
+            else:
+               file = open(fd.GetFilename()+".ses","w")
+            file.writelines(cfg_file)
+            file.close()
+      except:
+         print("ERROR: Could not save session file.")
 
    if(file_type == "cfg"):
-      # For Reconst Config files
-      fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_cfg")
-      if(fd.GetFilename() != ''):
-         if ".cfg" in fd.GetFilename():
-            file = open(fd.GetFilename(),"w")
-         else:
-            file = open(fd.GetFilename()+".cfg","w")
-         file.writelines(cfg_file)
-         file.close()
+      try:
+         # For Reconst Config files
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_cfg")
+         if(fd.GetFilename() != ''):
+            if ".cfg" in fd.GetFilename():
+               file = open(fd.GetFilename(),"w")
+            else:
+               file = open(fd.GetFilename()+".cfg","w")
+            file.writelines(cfg_file)
+            file.close()
+      except:
+         print("ERROR: Could not save configuration file.")
+
+
 
 
 
@@ -511,7 +564,7 @@ def CameraServerCommand(cmdstr):
     global w
     OutputDebug("Sending Command to Camera Server...")
     try:
-       a = DHM_Command_Client(HOST, CAMERA_SERVER_PORT)
+       a = DHM_Command_Client(HOST, COMMAND_SERVER_PORT)
        OutputDebug("Command is: "+cmdstr)
 
        cmd_ret = a.send(cmdstr)
@@ -566,9 +619,10 @@ def GetFrameSourceMode():
 class DhmxTelemetry(QThread):
    def __init__(self):
       super().__init__()
-      global w
+      global w, DHM_TELEMETRY_SERVER_PORT
       try:
          self.DhmxTlm = Tlm()
+         self.DhmxTlm.port = DHM_TELEMETRY_SERVER_PORT
          self.DhmxTlm.start()
       except OSError as e:
          print("Could not launch the Telemetry thread.")
@@ -2308,47 +2362,62 @@ class MainWin(QObject):
          self.CommandWin = CmdWin() 
 
 
-    def LaunchPortWindow(self):
+#    def LaunchPortWindow(self):
 
-       def ApplyPorts():
-         global RAW_FRAME_PORT, RECONST_AMP_FRAME_PORT, RECONST_INT_FRAME_PORT, RECONST_PHASE_FRAME_PORT, FOURIER_FRAME_PORT, CAMERA_SERVER_PORT
-         RAW_FRAME_PORT = int(port_raw_frame.property("text"))
-         RECONST_AMP_FRAME_PORT = int(port_amplitude.property("text"))
-         RECONST_INT_FRAME_PORT = int(port_intensity.property("text"))
-         RECONST_PHASE_FRAME_PORT = int(port_phase.property("text"))
-         FOURIER_FRAME_PORT = int(port_fourier.property("text"))
-         self.tlm.port = int(port_telemetry.property("text"))
+#       def ApplyPorts():
+#         global RAW_FRAME_PORT,           \
+#                RECONST_AMP_FRAME_PORT,   \
+#                RECONST_INT_FRAME_PORT,   \
+#                RECONST_PHASE_FRAME_PORT, \
+#                FOURIER_FRAME_PORT,       \
+#                COMMAND_SERVER_PORT,      \
+#                FRAME_SERVER_PORT,        \
+#                TELEMETRY_SERVER_PORT,    \
+#                PORT
+#         RAW_FRAME_PORT = int(port_raw_frame.property("text"))
+#         RECONST_AMP_FRAME_PORT = int(port_amplitude.property("text"))
+#         RECONST_INT_FRAME_PORT = int(port_intensity.property("text"))
+#         RECONST_PHASE_FRAME_PORT = int(port_phase.property("text"))
+#         FOURIER_FRAME_PORT = int(port_fourier.property("text"))
+#         self.tlm.port = int(port_telemetry.property("text"))
+         
+         # The command port used by DHMSW / DHMx to send commands
+#         PORT = int(port_command.property("text"))
+ 
          ######
          #Frame server disabled for now
-         CAMERA_SERVER_PORT = int(port_command_server.property("text"))
+#         COMMAND_SERVER_PORT = int(port_command_server.property("text"))
+#         FRAME_SERVER_PORT = int(port_frame_server.property("text"))
+#         TELEMETRY_SERVER_PORT = int(port_telemetry_server.property("text"))
 
          #Telemetry server port disabled for now
-         self.subwin_port.setProperty("visible",False)
+#         self.subwin_port.setProperty("visible",False)
 
 
-       self.subwin_port.setProperty("visible", True)
-       x_port = (int(self.win.property("width"))/2) - (int(self.subwin_port.property("width"))/2)
-       y_port = (int(self.win.property("height"))/2) - (int(self.subwin_port.property("height"))/2)
-       self.subwin_port.setProperty("x", x_port-100)
-       self.subwin_port.setProperty("y", y_port-150)
-       port_fourier = self.subwin_port.findChild(QObject, "textInput_fourier")
-       port_amplitude = self.subwin_port.findChild(QObject, "textInput_amplitude")
-       port_raw_frame = self.subwin_port.findChild(QObject, "textInput_raw_frame")
-       port_intensity = self.subwin_port.findChild(QObject, "textInput_intensity")
-       port_phase =  self.subwin_port.findChild(QObject, "textInput_phase")
-       port_telemetry = self.subwin_port.findChild(QObject, "textInput_telemetry")
+#       self.subwin_port.setProperty("visible", True)
+#       x_port = (int(self.win.property("width"))/2) - (int(self.subwin_port.property("width"))/2)
+#       y_port = (int(self.win.property("height"))/2) - (int(self.subwin_port.property("height"))/2)
+#       self.subwin_port.setProperty("x", x_port-100)
+#       self.subwin_port.setProperty("y", y_port-150)
+#       port_fourier = self.subwin_port.findChild(QObject, "textInput_fourier")
+#       port_amplitude = self.subwin_port.findChild(QObject, "textInput_amplitude")
+#       port_raw_frame = self.subwin_port.findChild(QObject, "textInput_raw_frame")
+#       port_intensity = self.subwin_port.findChild(QObject, "textInput_intensity")
+#       port_phase =  self.subwin_port.findChild(QObject, "textInput_phase")
+#       port_telemetry = self.subwin_port.findChild(QObject, "textInput_telemetry")
+#       port_command = self.subwin_port.findChild(QObject, "textInput_command")
        #########
-       port_frame_server = self.subwin_port.findChild(QObject, "textInput_frame_server")
-       port_command_server = self.subwin_port.findChild(QObject, "textInput_command_server")
-       port_telemetry_server = self.subwin_port.findChild(QObject, "textInput_telemetry_server")
-       button_apply = self.subwin_port.findChild(QObject, "button_apply")
-       button_cancel = self.subwin_port.findChild(QObject, "button_cancel")
+#       port_frame_server = self.subwin_port.findChild(QObject, "textInput_frame_server")
+#       port_command_server = self.subwin_port.findChild(QObject, "textInput_command_server")
+#       port_telemetry_server = self.subwin_port.findChild(QObject, "textInput_telemetry_server")
+#       button_apply = self.subwin_port.findChild(QObject, "button_apply")
+#       button_cancel = self.subwin_port.findChild(QObject, "button_cancel")
 
        # Temporarily disable Frame Server Port and Telemetry Server Port (Will enable in future versions)
-       port_frame_server.setProperty("enabled",False)
-       port_telemetry_server.setProperty("enabled",False)
+#       port_frame_server.setProperty("enabled",False)
+#       port_telemetry_server.setProperty("enabled",False)
 
-       button_apply.clicked.connect(ApplyPorts)
+#       button_apply.clicked.connect(ApplyPorts)
 
 
 
@@ -2432,8 +2501,8 @@ class MainWin(QObject):
 
 
     def LaunchDhmxc(self):
-       global CAMERA_SERVER_PORT
-       subprocess.Popen([sys.executable,"dhmxc.py","-p", str(CAMERA_SERVER_PORT)])
+       global COMMAND_SERVER_PORT
+       subprocess.Popen([sys.executable,"dhmxc.py","--cmdserver", str(COMMAND_SERVER_PORT),"--frameserver",str(FRAME_SERVER_PORT), "--tlmserver",str(TELEMETRY_SERVER_PORT) ])
 
 
 
@@ -2494,8 +2563,32 @@ if __name__ == "__main__":
                     help="Read version of DHMx.")
     parser.add_option("-l","--log",dest="logging",
                     help="Generate a log file for DHMx wich will be stored in its log dir.")
-    parser.add_option("-p","--port", action="store_true", dest="port",
-                    help="Will display a window at launch of DHMx to specify custom ports for the program.")
+    # DHM Specific Port
+    parser.add_option("--dhmcommand", dest="dhmCommandServerPort",
+                    help="Override the default DHM Command Server port.")
+    parser.add_option("--tlm", dest="dhmTelemetryServerPort",
+                    help="Override the default port for the Gui Server's raw display.")
+
+    # GUI Server specific ports
+    parser.add_option("--phase", dest="phasePort",
+                    help="Override the default port for the Gui Server's phase display.")
+    parser.add_option("--intensity", dest="intensityPort",
+                    help="Override the default port for the Gui Server's intensity display.")
+    parser.add_option("--raw", dest="rawPort",
+                    help="Override the default port for the Gui Server's raw display.")
+    parser.add_option("--amplitude", dest="amplitudePort",
+                    help="Override the default port for the Gui Server's phase display.")
+    parser.add_option("--fourier", dest="fourierPort",
+                    help="Override the default port for the Gui Server's intensity display.")
+
+    # Camera Server specific Ports
+    parser.add_option("--frameserver", dest="frameServerPort",
+                    help="Override the Camera Server's default Frame Server port.")
+    parser.add_option("--cmdserver", dest="commandServerPort",
+                    help="Override the Camera Server's default Command Server's port.")
+    parser.add_option("--tlmserver", dest="telemetryServerPort",
+                    help="Override the Camera Server's default Telemetry Server port.")
+
 
     # parse in the arguments
     (opts, args) = parser.parse_args()
@@ -2522,11 +2615,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
 
-    # Begin the telemetry monitoring thread
-    #tlm = Tlm()
-    OutputDebug("Starting up telemetry...")
-    tlm = DhmxTelemetry()
-    tlm_manager = TelemetryManager(tlm)
 
     # Update global variables with this class. Any changes to wavelength or
     # Prop distance is connected via pyqt signal
@@ -2547,16 +2635,30 @@ if __name__ == "__main__":
     engine.addImageProvider("Intensity", provider_intensity)
 
     # Video conversion testing - please remove
-   # vc.img_to_mp4(image_format="/home/qt/git/DHMX_0.7.x/test_sets/set01/Holograms/%05d_holo.tif")
+    #vc.img_to_mp4(image_format="/home/qt/git/DHMX_0.7.x/test_sets/set01/Holograms/%05d_holo.tif")
+
+    # Set custom ports if specified
+    if(opts.dhmCommandServerPort): SetDhmCommandServerPort(opts.dhmCommandServerPort)
+    if(opts.dhmTelemetryServerPort): SetDhmTelemetryServerPort(opts.dhmTelemetryServerPort)
+    if(opts.phasePort):  SetPhasePort(opts.phasePort)
+    if(opts.intensityPort): SetIntensityPort(opts.intensityPort)
+    if(opts.rawPort): SetRawPort(opts.rawPort)
+    if(opts.amplitudePort): SetAmplitudePort(opts.amplitudePort)
+    if(opts.fourierPort): SetFourierPort(opts.fourierPort)
+    if(opts.frameServerPort): SetFrameServerPort(opts.frameServerPort)
+    if(opts.commandServerPort): SetCommandServerPort(opts.commandServerPort)
+    if(opts.telemetryServerPort): SetTelemetryServerPort(opts.telemetryServerPort)
+
+    # Startup telemetry services
+    OutputDebug("Starting up telemetry...")
+    tlm = DhmxTelemetry()
+    tlm_manager = TelemetryManager(tlm)
+
 
     # Load up the main window
     OutputDebug("Creating the main window...")
-
-    #TODO: add -p here and make it blocking until the user complete and exit
+    # Launch main window
     w = MainWin(tlm)
-    
-    if(opts.port):
-       w.LaunchPortWindow()
 
     # Begin Qt Execution
     OutputDebug("Executing Qt engine.")

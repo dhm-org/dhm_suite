@@ -1,0 +1,8 @@
+#!/bin/bash
+xterm -e python3 -m dhmsw.main &
+
+WAITSEC=10
+echo "Waiting $WAITSEC seconds for dhmsw to come up..."
+sleep $WAITSEC
+cd /opt/DHM/dhm_gui
+xterm -e python3 ./dhmx.py &

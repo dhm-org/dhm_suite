@@ -167,7 +167,7 @@ then
 
  groupadd dhm
  usermod -aG dhm $USER
- create_install_location $DHM_INSTALL_ROOT
+ #create_install_location $DHM_INSTALL_ROOT
 
 
 
@@ -209,10 +209,8 @@ fi
 if [ $camserver -eq 1 ]
 then
 make clean -C $DHM_SUITE_DIR/camserver; make -C $DHM_SUITE_DIR/camserver
-#chmod 777 $DHM_SUITE_DIR/camserver/bin/camserver
-cp -r $DHM_SUITE_DIR/camserver $DHM_INSTALL_ROOT/src/.
-cp -rf $DHM_SUITE_DIR/camserver/bin/camserver $DHM_INSTALL_ROOT/bin/.
-cp -rf $DHM_SUITE_DIR/camserver/bin/*.so $DHM_INSTALL_ROOT/bin/.
+chmod 777 $DHM_SUITE_DIR/camserver/bin/camserver
+cp $DHM_SUITE_DIR/camserver/bin/* $DHM_SUITE_DIR/bin/.
 fi
 
 if [ $dhmsw -eq 1 ]
@@ -225,14 +223,23 @@ if [ $dhm_gui -eq 1 ]
 then
 cd $DHM_SUITE_DIR/dhm_gui/tools/
 ./Setup
+cp -rf $DHM_SUITE_DIR/dhm_gui $DHM_INSTALL_ROOT/src/.
 fi
+
+if [ ! -e $DHM_INSTALL_ROOT ]; then
+	echo "Creating $DHM_INSTALL_ROOT..."
+	mkdir $DHM_INSTALL_ROOT
+	chown -R $USER:dhm $DHM_INSTALL_ROOT
+fi
+
+echo "Copying contents of directory into $DHM_INSTALL_ROOT..."
+rsync -av --progress $DHM_SUITE_DIR/ $DHM_INSTALL_ROOT --exclude $DHM_SUITE_DIR/.git
 
 echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
 echo " *"
 echo " *"
 echo " *"
 echo " *                     DHM Software Suite Installer has completed "
-echo " *                             Reboot Required"
 echo " *"
 echo " *"
 echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"

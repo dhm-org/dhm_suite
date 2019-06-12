@@ -5,7 +5,7 @@ import QtQuick.Extras 1.4
 import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.1
 
-MouseArea {
+MouseArea{
     signal pack_cmd(string cmd)
 
     id: dhmx_port
@@ -13,6 +13,7 @@ MouseArea {
     width: 400
     height: 560
     drag.target: dhmx_port
+    objectName: "dhmx_port"
     transformOrigin: Item.TopLeft
 
     property variant clickX: 1
@@ -29,17 +30,17 @@ MouseArea {
 
     Label {
         id: label_port_list
-        x: 160
-        y: 57
+        x: 135
+        y: 20
         text: qsTr("Port List")
         font.bold: true
-        font.pointSize: 14
+        font.pointSize: 23
     }
 
     Label {
         id: label_gui_ports
         x: 48
-        y: 92
+        y: 126
         width: 161
         height: 30
         text: qsTr("GUI Server Ports")
@@ -61,7 +62,7 @@ MouseArea {
     Label {
         id: label_fourier
         x: 67
-        y: 128
+        y: 309
         text: qsTr("Fourier")
         font.pointSize: 12
     }
@@ -69,7 +70,7 @@ MouseArea {
     Label {
         id: label_amplitude
         x: 67
-        y: 159
+        y: 278
         text: qsTr("Amplitude")
         font.pointSize: 12
     }
@@ -77,7 +78,7 @@ MouseArea {
     Label {
         id: label_raw_frame
         x: 67
-        y: 252
+        y: 247
         text: qsTr("Raw Frame")
         font.pointSize: 12
     }
@@ -85,7 +86,7 @@ MouseArea {
     Label {
         id: label_telemetry
         x: 67
-        y: 283
+        y: 216
         text: qsTr("Telemetry")
         font.pointSize: 12
     }
@@ -93,7 +94,7 @@ MouseArea {
     Label {
         id: label_intensity
         x: 67
-        y: 187
+        y: 182
         text: qsTr("Intensity")
         font.pointSize: 12
     }
@@ -101,7 +102,7 @@ MouseArea {
     Label {
         id: label_phase
         x: 67
-        y: 221
+        y: 154
         text: qsTr("Phase")
         font.pointSize: 12
     }
@@ -109,7 +110,7 @@ MouseArea {
     Rectangle {
         id: item_fourier
         x: 253
-        y: 128
+        y: 309
         width: 90
         height: 25
         color: "#ffffff"
@@ -128,7 +129,7 @@ MouseArea {
     Rectangle {
         id: item_amplitude
         x: 253
-        y: 159
+        y: 278
         width: 90
         height: 25
         color: "#ffffff"
@@ -147,7 +148,7 @@ MouseArea {
     Rectangle {
         id: item_intensity
         x: 253
-        y: 190
+        y: 185
         width: 90
         height: 25
         color: "#ffffff"
@@ -166,7 +167,7 @@ MouseArea {
     Rectangle {
         id: item_phase
         x: 253
-        y: 221
+        y: 154
         width: 90
         height: 25
         color: "#ffffff"
@@ -185,7 +186,7 @@ MouseArea {
     Rectangle {
         id: item_raw_frame
         x: 253
-        y: 252
+        y: 247
         width: 90
         height: 25
         color: "#ffffff"
@@ -204,7 +205,7 @@ MouseArea {
     Rectangle {
         id: item_telemetry
         x: 253
-        y: 283
+        y: 216
         width: 90
         height: 25
         color: "#ffffff"
@@ -223,7 +224,7 @@ MouseArea {
     Label {
         id: label_frame_server
         x: 67
-        y: 369
+        y: 431
         text: qsTr("Frame Server")
         font.pointSize: 12
     }
@@ -239,7 +240,7 @@ MouseArea {
     Label {
         id: label_telmetry_server
         x: 67
-        y: 427
+        y: 365
         text: qsTr("Telemetry Server")
         font.pointSize: 12
     }
@@ -247,10 +248,10 @@ MouseArea {
     Rectangle {
         id: item_frame_server
         x: 253
-        y: 368
+        y: 430
         width: 90
         height: 25
-        color: "#848080"
+        color: "#ffffff"
 
         TextInput {
             id: textInput_frame_server
@@ -285,10 +286,10 @@ MouseArea {
     Rectangle {
         id: item_telemetry_server
         x: 253
-        y: 430
+        y: 368
         width: 90
         height: 25
-        color: "#848080"
+        color: "#ffffff"
 
         TextInput {
             id: textInput_telemetry_server
@@ -321,8 +322,58 @@ MouseArea {
         }
     }
 
+    Label {
+        id: label_dhm_port
+        x: 48
+        y: 70
+        width: 161
+        height: 30
+        text: qsTr("DHM Port")
+        font.bold: true
+        font.pointSize: 14
+    }
 
+    Rectangle {
+        id: item_command
+        x: 253
+        y: 94
+        width: 90
+        height: 25
+        color: "#ffffff"
+        TextInput {
+            id: textInput_command
+            objectName: "textInput_command"
+            text: qsTr("10000")
+            anchors.fill: parent
+            font.pixelSize: 12
+            topPadding: 3
+            leftPadding: 4
+        }
+    }
+
+    Label {
+        id: label_command
+        x: 67
+        y: 94
+        text: qsTr("Command Server")
+        font.pointSize: 12
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -343,6 +394,6 @@ MouseArea {
 D{i:16;anchors_height:20;anchors_width:80}D{i:18;anchors_height:20;anchors_width:80}
 D{i:20;anchors_height:20;anchors_width:80}D{i:22;anchors_height:20;anchors_width:80}
 D{i:27;anchors_height:20;anchors_width:80}D{i:29;anchors_height:20;anchors_width:80}
-D{i:31;anchors_height:20;anchors_width:80}
+D{i:31;anchors_height:20;anchors_width:80}D{i:36;anchors_height:20;anchors_width:80}
 }
  ##^##*/

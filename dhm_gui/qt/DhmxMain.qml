@@ -1829,12 +1829,12 @@ ApplicationWindow {
 
 
     /* Subwindows here */
-    DhmxPort{
-        objectName: "subwin_port"
-        id: subwin_port
-        visible: false
-        z:65535
-    }
+//    DhmxPort{
+//        objectName: "subwin_port"
+//        id: subwin_port
+//        visible: false
+//        z:65535
+//    }
 
     DhmxAbout{
         objectName: "subwin_about"
