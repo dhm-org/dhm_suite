@@ -27,6 +27,17 @@ struct CamFrame
     unsigned long long int m_databuffersize;
     unsigned long long int m_timestamp;
     unsigned long long int m_frame_id;
+#if 0
+    unsigned long long int m_logging;
+    double                 m_gain;
+    double                 m_gain_min;
+    double                 m_gain_max;
+    double                 m_shutter;
+    double                 m_shutter_min;
+    double                 m_shutter_max;
+    double                 m_rate;
+    double                 m_rate_measured;
+#endif
     //char m_data[2048 * 2048];
     char *m_data;
 

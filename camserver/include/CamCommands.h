@@ -5,6 +5,8 @@
 
 #define  ENA_RECORDING_CMD    "ENABLE_RECORDING"
 #define  DISA_RECORDING_CMD   "DISABLE_RECORDING"
+#define  SET_GAIN_CMD         "GAIN=" //db
+#define  SET_EXPOSURE_CMD     "EXPOSURE=" //us
 
 
 #endif

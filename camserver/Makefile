@@ -60,7 +60,6 @@ OBJ_FILES           = $(OBJ_DIR)/FrameObserver.o \
                       $(OBJ_DIR)/CircularBuffer.o \
                       $(OBJ_DIR)/TIFConverter.o \
                       $(OBJ_DIR)/CameraServer.o \
-                      $(OBJ_DIR)/FrameConsumer.o \
                      
 
 DEPENDENCIES        = VimbaCPP \

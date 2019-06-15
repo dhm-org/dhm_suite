@@ -38,6 +38,8 @@ public:
 
     bool IsLoggingEnabled(); 
     void SetLogging(bool state);
+    void SetGain(int gain);
+    void SetExposure(int exposure);
     bool Verbose(); 
     int CreateDataDir(int cameraidx);
 private:

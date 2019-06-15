@@ -401,20 +401,37 @@ void * CameraServer::FrameServerThread(void *arg)
                             fprintf(stderr, "Closed COMMAND Client\n");
                         }
                         else {
+                            int ret;
                             bool validcmd = false;
                             char retstatus[CAMERA_SERVER_MAXRESP];
                             char errstr[CAMERA_SERVER_MAXRESP];
 
                             fprintf(stderr, "Got COMMAND Client %d bytes. [%s]\n", nbytes, buffer);
                             // Get the command and close
-                            if(std::strncmp(buffer, ENA_RECORDING_CMD, strlen(ENA_RECORDING_CMD)) >= 0) {
-                                fprintf(stderr, "Enable recording.\n");
+                            if((ret = std::strncmp(buffer, ENA_RECORDING_CMD, strlen(ENA_RECORDING_CMD))) == 0) {
+                                fprintf(stderr, "Enable recording. ret= %d\n", ret);
                                 C->PCamApi()->SetLogging(true);
                                 validcmd = true;
                             }  
-                            else if(std::strncmp(buffer, DISA_RECORDING_CMD, strlen(DISA_RECORDING_CMD)) >= 0) {
+                            else if((ret = std::strncmp(buffer, DISA_RECORDING_CMD, strlen(DISA_RECORDING_CMD))) == 0) {
                                 fprintf(stderr, "Disabled recording.\n");
                                 C->PCamApi()->SetLogging(false);
+                                validcmd = true;
+                            }  
+                            else if((ret = std::strncmp(buffer, SET_GAIN_CMD, strlen(SET_GAIN_CMD))) == 0) {
+                                int gain;
+
+                                gain = std::stoi(buffer+strlen(SET_GAIN_CMD), nullptr, 10);
+                                //fprintf(stderr, "Set Gain to %d.\n", gain);
+                                C->PCamApi()->SetGain(gain);
+                                validcmd = true;
+                            }  
+                            else if(std::strncmp(buffer, SET_EXPOSURE_CMD, strlen(SET_EXPOSURE_CMD)) == 0) {
+                                int exposure;
+
+                                //fprintf(stderr, "Set Exposure to %d.\n", exposure);
+                                exposure = std::stoi(buffer+strlen(SET_EXPOSURE_CMD), nullptr, 10);
+                                C->PCamApi()->SetExposure(exposure);
                                 validcmd = true;
                             }  
                             else {

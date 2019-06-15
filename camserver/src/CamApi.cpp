@@ -459,5 +459,37 @@ void CamApi::SetLogging(bool state)
     PFrameObserver()->SetLogging(state);
 }
 
+void CamApi::SetGain(int gain)
+{
+#if 0
+    double newgain;
+    //VmbErrorType err = VmbErrorSuccess;
+    AVT::VmbAPI::FeaturePtr pFeature;
+
+    m_pCamera->GetFeatureByName("Gain", pFeature);
+    pFeature->SetValue((float)gain);
+    pFeature->GetValue(newgain);
+    fprintf(stderr, "Gain now set to %d\n", (int)newgain);
+#else
+    PFrameObserver()->SetGain(gain);
+#endif
+}
+
+void CamApi::SetExposure(int exposure)
+{
+#if 0
+    double newexposure;
+    //VmbErrorType err = VmbErrorSuccess;
+    AVT::VmbAPI::FeaturePtr pFeature;
+
+    m_pCamera->GetFeatureByName("ExposureTimeAbs", pFeature);
+    pFeature->SetValue((float)exposure);
+    pFeature->GetValue(newexposure);
+    fprintf(stderr, "exposure now set to %d\n", (int)newexposure);
+#else
+    PFrameObserver()->SetExposure(exposure);
+#endif
+}
+
 
 

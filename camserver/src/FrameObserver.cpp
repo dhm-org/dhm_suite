@@ -31,7 +31,9 @@
 // ****************************************************************************
 // ***                      Defines
 // ****************************************************************************
-#define THREAD_PER_FRAME 1
+#define THREAD_PER_FRAME 1 // Determines if to assigned upt to MAX_NUM_THREADS for logging frames
+#define MAX_NUM_THREADS  10
+#define LOG_THREAD_ALWAYS_ON 1 // If 1 then creates MAX_NUM_THREADS but they kept alive and frames assigned to it for logging. Valid only if THREAD_PER_FRAME==1
 #define PATHLEN  256
 // ****************************************************************************
 // ***              Structs, Typdefs, Classes
@@ -185,18 +187,53 @@ void *FrameReceived_TIFConvert(void *arg)
     return NULL;
 }
 
+
 #if THREAD_PER_FRAME == 1
 
-#define MAX_NUM_THREADS 10
 typedef struct LogThread
 {
     pthread_t thread;
     pthread_attr_t attr;
     bool is_running;
+    int id;
+
+    bool is_busy;
+    bool data_ready;
+    pthread_mutex_t mutex;
+    pthread_cond_t  cv;
+    
 }LogThread_t;
 
 LogThread_t log_threads[MAX_NUM_THREADS];
 struct LogArgs log_args[MAX_NUM_THREADS];
+
+void *FrameLoggerThread(void *arg)
+{
+    LogThread_t *threadargs = (LogThread_t *)arg;
+
+    threadargs->is_running = true;
+    while(1) {
+
+        pthread_mutex_lock(&threadargs->mutex);
+            while(!threadargs->data_ready)
+            //*** Wait for conditional variable
+                pthread_cond_wait(&threadargs->cv, &threadargs->mutex);
+
+            //*** Set flag that processing data 
+            threadargs->is_busy = true;
+            
+            //*** Log the data
+            //printf("Thread[%d] Frame ID = %d\n", threadargs->id, (int)log_args[threadargs->id].frameID);
+            
+            FrameReceived_TIFConvert((void*)&log_args[threadargs->id]);
+            //*** Lower flag that processing data
+            threadargs->is_busy = false;
+            threadargs->data_ready = false;
+        pthread_mutex_unlock(&threadargs->mutex);
+    }
+
+    return NULL;
+}
 
 #endif
 
@@ -210,9 +247,21 @@ void * FrameConsumerThread(void *arg)
     int thread_count = 0;
 
     for (int i = 0; i < MAX_NUM_THREADS; i++) {
-        //pthread_attr_init(&log_threads[i].attr);
         log_threads[i].is_running = false;
+        log_threads[i].id=i;
+        log_threads[i].is_busy=false;
+
+        pthread_cond_init(&log_threads[i].cv, NULL);
+        pthread_mutex_init(&log_threads[i].mutex, NULL);
     }
+
+#if LOG_THREAD_ALWAYS_ON == 1
+    //*** Spawn logger threads
+    for (int i = 0; i < MAX_NUM_THREADS; i++) {
+        pthread_create(&log_threads[i].thread, NULL, &FrameLoggerThread, &log_threads[i]);
+    }
+    usleep(1000);
+#endif
 #endif
     bool grab_till_empty = false;
     struct CamFrame *frame_ptr;
@@ -230,23 +279,39 @@ void * FrameConsumerThread(void *arg)
                 WriteToTimestampFile(&logargs, reset);
                 bool thread_assigned = false;
                 for(int i = 0; i < MAX_NUM_THREADS; i++) {
+#if LOG_THREAD_ALWAYS_ON == 1
+
+                    if(!thread_assigned) {
+                        int rettrylock= pthread_mutex_trylock(&log_threads[i].mutex);
+                        if(rettrylock != 0) continue;
+#else
                     int ret;
                     struct timespec ts;
-
                     if(!thread_assigned && !log_threads[i].is_running) {
+#endif
                         memcpy(&log_args[i], &logargs, sizeof(logargs));
                         log_args[i].frame = frame_ptr;
                         log_args[i].datadir = args->datadir;
                         log_args[i].sessiondir = args->sessiondir;
                         log_args[i].frameID = logargs.frameID;
-                        pthread_create(&log_threads[i].thread, NULL, &FrameReceived_TIFConvert, &log_args[i]);
-                        //usleep(100); //Wait for thread to start... Don't like this but works
-                        thread_assigned = true;
+#if LOG_THREAD_ALWAYS_ON == 1
+                        log_threads[i].data_ready = true;
                         log_threads[i].is_running = true;
+                        pthread_cond_signal(&log_threads[i].cv);
+                        pthread_mutex_unlock(&log_threads[i].mutex);
+#else
+                        pthread_create(&log_threads[i].thread, NULL, &FrameReceived_TIFConvert, &log_args[i]);
+                        log_threads[i].is_running = true;
+#endif
+                        thread_assigned = true;
                         thread_count++;
                         //fprintf(stderr, "ASSIGNED thread %d. thread_count=%d\n", i, thread_count);
+                        //fprintf(stderr, "ASSIGNED thread %d. \n", i);
                         continue;
                     }
+#if LOG_THREAD_ALWAYS_ON == 1
+#else
+                    
                     clock_gettime(CLOCK_REALTIME, &ts);
                     ts.tv_nsec += 1000;
                     if(ts.tv_nsec >= 1E9) {ts.tv_sec+=1; ts.tv_nsec-=1E9;}
@@ -254,10 +319,12 @@ void * FrameConsumerThread(void *arg)
                         if((ret = pthread_timedjoin_np(log_threads[i].thread, NULL, &ts)) == 0) {
                             log_threads[i].is_running = false; 
                             thread_count--;
-                            //fprintf(stderr, "COMPLETED thread %d, thread_count=%d\n", i, thread_count);
+                            fprintf(stderr, "COMPLETED thread %d, thread_count=%d\n", i, thread_count);
                         }
                         //else fprintf(stderr, "Thread %d not terminated\n", i);
                     }
+                    
+#endif
                 }
        
                 if(!thread_assigned) {
@@ -333,23 +400,34 @@ static int create_datadir(char *rootdir, char *datadir, char *sessiondir) //stru
     loctime = localtime (&curtime);     /* Convert it to local time representation. */
     strftime (datadir + strlen(datadir), 200, "/%Y.%m.%d/", loctime); //Append date format info into datadir
 
-    //Check if Holograms file exists if not create it
+    //Check if daily directory exists, else create it
     if (stat(datadir, &info) == -1) {
         mkdir(datadir, 0700);
     }
 
-    // Session directory
-    strcpy(tempdir, datadir);
-    strftime (timestr, sizeof(timestr), "/%Y.%m.%d_%H.%M.%S/", loctime);
+    //*** If daily session already exists ususally means another instance of the camserver
+    //created the directory at the same time
+    while(1) {
+        timeval curTime;
+        gettimeofday(&curTime, NULL);
+        int milli = curTime.tv_usec / 1000;
 
-    strcat(tempdir, timestr);
-    if(stat(tempdir, &info) == -1) {
-        //Create daily folder
-        //strcpy(datadir, tempdir);
-        mkdir(tempdir, 0700);
-    }
-    else if (info.st_mode & S_IFDIR) {
-    //    strcpy(datadir, tempdir);
+        // Session directory
+        strcpy(tempdir, datadir);
+        strftime (timestr, sizeof(timestr), "/%Y.%m.%d_%H.%M.%S", loctime);
+        sprintf(timestr, "%s.%d/", timestr, milli);
+    
+        strcat(tempdir, timestr);
+        if(stat(tempdir, &info) == -1) {
+            //Create daily folder
+            //strcpy(datadir, tempdir);
+            mkdir(tempdir, 0700);
+            break;
+        }
+        else if (info.st_mode & S_IFDIR) {
+        //    strcpy(datadir, tempdir);
+        }
+        usleep(1000);
     }
 
     strcpy(sessiondir, tempdir);
@@ -496,5 +574,31 @@ void FrameObserver::SetLogging(bool state)
         create_camera_metadata(m_pCamera, m_sessiondir);
     }
     m_logging_enabled=state;
+}
+
+void FrameObserver::SetGain(int gain)
+{
+    double newgain;
+    //VmbErrorType err = VmbErrorSuccess;
+    AVT::VmbAPI::FeaturePtr pFeature;
+
+    m_pCamera->GetFeatureByName("Gain", pFeature);
+    pFeature->SetValue((float)gain);
+    pFeature->GetValue(newgain);
+    fprintf(stderr, "Camera gain now set to %d\n", (int)newgain);
+
+}
+
+void FrameObserver::SetExposure(int exposure)
+{
+    double newexposure;
+    //VmbErrorType err = VmbErrorSuccess;
+    AVT::VmbAPI::FeaturePtr pFeature;
+
+    m_pCamera->GetFeatureByName("ExposureTimeAbs", pFeature);
+    pFeature->SetValue((float)exposure);
+    pFeature->GetValue(newexposure);
+    fprintf(stderr, "Camera exposure now set to %d\n", (int)newexposure);
+
 }
 

@@ -42,6 +42,8 @@ public:
     int StartCameraServer(int frame_port, int command_port, int telem_port);
     void SetVerbose(bool verbose) {m_verbose = verbose;}
     void SetLogging(bool state);
+    void SetGain(int gain);
+    void SetExposure(int exposure);
     int PrepareTrigger(AVT::VmbAPI::CameraPtr camera, const char *triggerSelector, const char *triggerMode, const char *triggerSource);
 
 private:
