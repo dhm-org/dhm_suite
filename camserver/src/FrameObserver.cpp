@@ -122,7 +122,7 @@ void WriteToTimestampFile(struct LogArgs *logargs, bool reset)
     static unsigned long long int first_frame_time = 0;
     struct CamFrame *frame = logargs->frame;
 
-    static long long int lastFrameID = frame->m_frame_id;
+    static long long int lastFrameID = frame->header.m_frame_id;
 
     char *sessiondir = logargs->sessiondir;
     sprintf(tsfile, "%s/%s", sessiondir, "timestamps.txt");
@@ -136,15 +136,15 @@ void WriteToTimestampFile(struct LogArgs *logargs, bool reset)
     if(firsttime || reset) {
         fprintf(stderr, "FIRST TIME\n");
         //if (frame->m_frame_id == 0) frameIDOffset = 1; //Added offset because USB cameras frames start at 0.
-        first_frame_time = frame->m_timestamp;
+        first_frame_time = frame->header.m_timestamp;
         firsttime = false;
 
         if(reset) {
-            lastFrameID = frame->m_frame_id;            
+            lastFrameID = frame->header.m_frame_id;            
         }
     }
 
-    logargs->frameID =  (frame->m_frame_id - lastFrameID) + frameIDOffset;
+    logargs->frameID =  (frame->header.m_frame_id - lastFrameID) + frameIDOffset;
 
     sprintf(frameNum, "%05llu", logargs->frameID);
     std::string time1(frameNum);
@@ -157,7 +157,7 @@ void WriteToTimestampFile(struct LogArgs *logargs, bool reset)
 
     strftime (timestr, 200, "%Y.%m.%d", loctime);
     //fprintf(stderr, "timestamp=%f, first_frame_time=%f, diff=%04f\n", frame->m_timestamp*1., first_frame_time*1., (frame->m_timestamp-first_frame_time)*1.e-6);
-    sprintf(timechar, "%s %04f\r\n", timestr,(frame->m_timestamp-first_frame_time)*1.e-6); 
+    sprintf(timechar, "%s %04f\r\n", timestr,(frame->header.m_timestamp-first_frame_time)*1.e-6); 
     std::string time3(timechar);
 
     timeTotal = time1 + " " + time2 +" "+ time3;
@@ -181,7 +181,7 @@ void *FrameReceived_TIFConvert(void *arg)
 
     sprintf(buff, "%s/%05d_holo.tif", datadir, (int)logargs->frameID);
     Filename = buff;
-    AVT::VmbAPI::Examples::TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->m_imgsize, (int)frame->m_width, (int)frame->m_height);
+    AVT::VmbAPI::Examples::TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_width, (int)frame->header.m_height);
     tifCon.convertToTIF((char *)frame->m_data);
 
     return NULL;
@@ -500,6 +500,9 @@ FrameObserver::FrameObserver(AVT::VmbAPI::CameraPtr pCamera, CircularBuffer *cir
     if (m_circbuff != NULL)
         m_circbuff->Reset();
 
+    // Init Frame Header Info
+    InitFrameHeaderInfo(pCamera);
+
     StartFrameConsumer();
 }
 
@@ -533,6 +536,84 @@ void FrameObserver::ShutdownFrameConsumer()
     pthread_join(m_frame_handler_thread, NULL);
 }
 
+void FrameObserver::InitFrameHeaderInfo(AVT::VmbAPI::CameraPtr pCamera)
+{
+    VmbErrorType err = VmbErrorSuccess;
+    double exposure, exposure_min, exposure_max;
+    double gain, gain_min, gain_max;
+    double rate;
+
+    AVT::VmbAPI::FeaturePtr pFeature;
+
+    err = pCamera->GetFeatureByName("ExposureTimeAbs", pFeature);
+    if(err != VmbErrorSuccess) {
+        // Work for USB3
+        pCamera->GetFeatureByName("ExposureTime", pFeature);
+    }
+    
+    pFeature->GetValue(exposure);
+    pFeature->GetRange(exposure_min, exposure_max);
+    m_exposure = exposure;
+    m_exposure_min = exposure_min;
+    m_exposure_max = exposure_max;
+
+    pCamera->GetFeatureByName("Gain", pFeature);
+    pFeature->GetValue(gain);
+    pFeature->GetRange(gain_min, gain_max);
+    m_gain = gain;
+    m_gain_min = gain_min;
+    m_gain_max = gain_max;
+    pCamera->GetFeatureByName("AcquisitionFrameRateAbs", pFeature);
+    if((err = pFeature->GetValue(rate)) != VmbErrorSuccess) { 
+        
+        // The 'AcquisitionFrameRateMode' only applies to USB but not the GigE cameras. Error when not USB
+        pCamera->GetFeatureByName("AcquisitionFrameRateMode", pFeature);
+        if((err = pFeature->SetValue("Basic")) != VmbErrorSuccess) { printf("Error. Unable to set AcquisitionFrameRateMode to Basic.\n"); }
+
+        pCamera->GetFeatureByName("AcquisitionFrameRate", pFeature);
+        if((err = pFeature->GetValue(rate)) != VmbErrorSuccess) { printf("Error. Getting RATE failed. err=%d\n", err); }
+
+    }
+    m_rate = rate;
+
+    m_rate_measured = 0;
+
+}
+
+void FrameObserver::getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struct CamFrameHeader *header)
+{
+    VmbUint32_t imgSize = 0;
+    VmbUint32_t width = 0;
+    VmbUint32_t height = 0;
+    VmbUint64_t timestamp =0;
+    VmbUint64_t frameID = 0;
+
+    pFrame->GetTimestamp(timestamp);
+    pFrame->GetFrameID(frameID);
+    pFrame->GetImageSize(imgSize);
+    pFrame->GetWidth(width);
+    pFrame->GetHeight(height);
+
+    header->m_timestamp = timestamp;
+    header->m_frame_id = frameID;
+    header->m_imgsize = imgSize;
+    //m_buf[m_head].m_databuffersize = sizeof(m_buf[m_head].m_data);
+    header->m_databuffersize = width * height;
+    //*** Had to do this to make it compatible with dhmsw
+    header->m_width = height;
+    header->m_height = width;
+    header->m_logging = m_logging_enabled;
+    header->m_gain = m_gain;
+    header->m_gain_min = m_gain_min;
+    header->m_gain_max = m_gain_max;
+    header->m_exposure = m_exposure;
+    header->m_exposure_min = m_exposure_min;
+    header->m_exposure_max = m_exposure_max;
+    header->m_rate = m_rate;
+    header->m_rate_measured = m_rate_measured;
+
+}
+
 void FrameObserver::FrameReceived(const AVT::VmbAPI::FramePtr pFrame)
 {
     // *** Ignore if pFrame is NULL
@@ -548,7 +629,10 @@ void FrameObserver::FrameReceived(const AVT::VmbAPI::FramePtr pFrame)
         // *** Place frame into circular buffer
         err = SP_ACCESS(pFrame)->GetReceiveStatus(status);
         if(err == VmbErrorSuccess && status == VmbFrameStatusComplete) { // always check if the frame data is valid
-            m_circbuff->Put(pFrame);            
+            struct CamFrameHeader header;
+
+            getFrameHeaderInfo(pFrame, &header);
+            m_circbuff->Put(pFrame, &header);            
 
             if(m_verbose) {
                 struct timespec ts;
@@ -586,6 +670,7 @@ void FrameObserver::SetGain(int gain)
     pFeature->SetValue((float)gain);
     pFeature->GetValue(newgain);
     fprintf(stderr, "Camera gain now set to %d\n", (int)newgain);
+    m_gain = newgain;
 
 }
 
@@ -599,6 +684,7 @@ void FrameObserver::SetExposure(int exposure)
     pFeature->SetValue((float)exposure);
     pFeature->GetValue(newexposure);
     fprintf(stderr, "Camera exposure now set to %d\n", (int)newexposure);
+    m_exposure = newexposure;
 
 }
 

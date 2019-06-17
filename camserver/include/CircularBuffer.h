@@ -34,7 +34,7 @@ public:
 
     void Reset(); //Reset (empty) circular buffer
     void TouchReset();
-    void Put(AVT::VmbAPI::FramePtr item);
+    void Put(AVT::VmbAPI::FramePtr item, const struct CamFrameHeader *header);
     int Get(struct CamFrame *frame);
     struct CamFrame *Peek();
     bool GetOnSignal(struct CamFrame *frame);

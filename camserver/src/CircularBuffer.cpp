@@ -61,9 +61,11 @@ void CircularBuffer::TouchReset()
     Reset();
 }
 
-void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame)
+void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame, const struct CamFrameHeader *header)
 {
     VmbUchar_t* data;
+
+#if 0
     VmbUint32_t imgSize = 0;
     VmbUint32_t width = 0;
     VmbUint32_t height = 0;
@@ -82,17 +84,24 @@ void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame)
     pFrame->GetBuffer(data);
 
     pthread_mutex_lock(&m_mutex);
-
-    m_buf[m_head].m_timestamp = timestamp;
-    m_buf[m_head].m_frame_id = frameID;
-    m_buf[m_head].m_imgsize = imgSize;
+    m_buf[m_head].header.m_timestamp = timestamp;
+    m_buf[m_head].header.m_frame_id = frameID;
+    m_buf[m_head].header.m_imgsize = imgSize;
     //m_buf[m_head].m_databuffersize = sizeof(m_buf[m_head].m_data);
-    m_buf[m_head].m_databuffersize = width * height;
+    m_buf[m_head].header.m_databuffersize = width * height;
     //m_buf[m_head].m_width = width;
     //m_buf[m_head].m_height = height;
-    m_buf[m_head].m_width = height;
-    m_buf[m_head].m_height = width;
-    memcpy(m_buf[m_head].m_data, (unsigned char *) data, imgSize); 
+    m_buf[m_head].header.m_width = height;
+    m_buf[m_head].header.m_height = width;
+#else
+    pFrame->GetBuffer(data);
+    pthread_mutex_lock(&m_mutex);
+    memcpy(&m_buf[m_head].header, header, sizeof(*header));
+
+
+    fprintf(stderr, "timestamp=%lld, frameID=%lld, imgSize=%lld, width=%lld, height=%lld, gain=%f, gain_min=%f, gain_max=%f, exposure=%f, exposure_min=%f, exposure_max=%f, rate=%f, rate_measured=%f, logging=%d\n", m_buf[m_head].header.m_timestamp, m_buf[m_head].header.m_frame_id, m_buf[m_head].header.m_imgsize, m_buf[m_head].header.m_width, m_buf[m_head].header.m_height, m_buf[m_head].header.m_gain, m_buf[m_head].header.m_gain_min, m_buf[m_head].header.m_gain_max, m_buf[m_head].header.m_exposure, m_buf[m_head].header.m_exposure_min, m_buf[m_head].header.m_exposure_max, m_buf[m_head].header.m_rate, m_buf[m_head].header.m_rate_measured, (int)m_buf[m_head].header.m_logging);
+#endif
+    memcpy(m_buf[m_head].m_data, (unsigned char *) data, header->m_imgsize); 
 
     if(m_full) {
         // increment tail and wrap around if needed

@@ -32,6 +32,9 @@
  0.6.0 - Version that creates 10 thread for logging which are created once
          Also the session directory name now include millisecond time.
          Addded gain and exposure commands.
+
+ 0.7.0 - Added gain, gain range, exposure, exposure range, and rate to 
+         frame header
  ******************************************************************************
  */
 #ifndef __DHM_STREAMING_VERSION_H__

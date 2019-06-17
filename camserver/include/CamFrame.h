@@ -19,7 +19,7 @@
 #ifndef _CAM_FRAME_H_
 #define _CAM_FRAME_H_
 
-struct CamFrame
+struct CamFrameHeader
 {
     unsigned long long int m_width;
     unsigned long long int m_height;
@@ -27,17 +27,23 @@ struct CamFrame
     unsigned long long int m_databuffersize;
     unsigned long long int m_timestamp;
     unsigned long long int m_frame_id;
-#if 0
+#if 1
     unsigned long long int m_logging;
     double                 m_gain;
     double                 m_gain_min;
     double                 m_gain_max;
-    double                 m_shutter;
-    double                 m_shutter_min;
-    double                 m_shutter_max;
+    double                 m_exposure;
+    double                 m_exposure_min;
+    double                 m_exposure_max;
     double                 m_rate;
     double                 m_rate_measured;
 #endif
+
+};
+
+struct CamFrame
+{
+    struct CamFrameHeader header;
     //char m_data[2048 * 2048];
     char *m_data;
 

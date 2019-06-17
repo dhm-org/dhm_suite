@@ -34,6 +34,8 @@ public:
     
     void ShutdownFrameConsumer();
     int StartFrameConsumer();
+    void getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struct CamFrameHeader *header);
+    void InitFrameHeaderInfo(AVT::VmbAPI::CameraPtr pCamera);
     virtual void FrameReceived(const AVT::VmbAPI::FramePtr pFrame );
 
     bool IsLoggingEnabled(); 
@@ -51,6 +53,14 @@ private:
     char m_sessiondir[256];
     CircularBuffer *m_circbuff;
     pthread_t m_frame_handler_thread;
+    double                 m_gain;
+    double                 m_gain_min;
+    double                 m_gain_max;
+    double                 m_exposure;
+    double                 m_exposure_min;
+    double                 m_exposure_max;
+    double                 m_rate;
+    double                 m_rate_measured;
 };
 
 #endif
