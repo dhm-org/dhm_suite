@@ -99,7 +99,7 @@ void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame, const struct CamFrameHead
     memcpy(&m_buf[m_head].header, header, sizeof(*header));
 
 
-    fprintf(stderr, "timestamp=%lld, frameID=%lld, imgSize=%lld, width=%lld, height=%lld, gain=%f, gain_min=%f, gain_max=%f, exposure=%f, exposure_min=%f, exposure_max=%f, rate=%f, rate_measured=%f, logging=%d\n", m_buf[m_head].header.m_timestamp, m_buf[m_head].header.m_frame_id, m_buf[m_head].header.m_imgsize, m_buf[m_head].header.m_width, m_buf[m_head].header.m_height, m_buf[m_head].header.m_gain, m_buf[m_head].header.m_gain_min, m_buf[m_head].header.m_gain_max, m_buf[m_head].header.m_exposure, m_buf[m_head].header.m_exposure_min, m_buf[m_head].header.m_exposure_max, m_buf[m_head].header.m_rate, m_buf[m_head].header.m_rate_measured, (int)m_buf[m_head].header.m_logging);
+    //fprintf(stderr, "timestamp=%lld, frameID=%lld, imgSize=%lld, width=%lld, height=%lld, gain=%f, gain_min=%f, gain_max=%f, exposure=%f, exposure_min=%f, exposure_max=%f, rate=%f, rate_measured=%f, logging=%d\n", m_buf[m_head].header.m_timestamp, m_buf[m_head].header.m_frame_id, m_buf[m_head].header.m_imgsize, m_buf[m_head].header.m_width, m_buf[m_head].header.m_height, m_buf[m_head].header.m_gain, m_buf[m_head].header.m_gain_min, m_buf[m_head].header.m_gain_max, m_buf[m_head].header.m_exposure, m_buf[m_head].header.m_exposure_min, m_buf[m_head].header.m_exposure_max, m_buf[m_head].header.m_rate, m_buf[m_head].header.m_rate_measured, (int)m_buf[m_head].header.m_logging);
 #endif
     memcpy(m_buf[m_head].m_data, (unsigned char *) data, header->m_imgsize); 
 
