@@ -28,12 +28,13 @@ from PyQt5.QtQml import *
 # Struct is from dhm_streaming/include/CamFrame.h
 # Q = unsinged long long int
 # I = unsigned Int
-headerStruct = struct.Struct('QQQQQQ')
+headerStruct = struct.Struct('QQQQQQQdddddddd')
 
 
 class guiclient(QThread):
     sig_img = pyqtSignal(int,str, np.ndarray)
     sig_hist_val = pyqtSignal(int,int)
+    sig_header = pyqtSignal(int, int, int, int) #header: height, width, frameID, timestamp
     sig_img_complete = pyqtSignal(str)
     def __init__(self,server,port):
         QThread.__init__(self)
@@ -68,6 +69,15 @@ class guiclient(QThread):
         self.m_timestamp = None 
         self.m_frame_id = None 
         self.m_data = None
+        self.m_logging = None
+        self.m_gain = None
+        self.m_gain_min = None
+        self.m_gain_max = None
+        self.m_exposure = None
+        self.m_exposure_min = None
+        self.m_exposure_max = None
+        self.m_rate = None
+        self.m_rate_measured = None
 
         for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
             signal.signal(sig, self.signal_handler)
@@ -131,6 +141,7 @@ class guiclient(QThread):
 
             # Emit to Qt/QML that the processed image is ready to be displayed
             self.sig_img_complete.emit(current_time)
+            self.sig_header.emit(self.m_width, self.m_height, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max)
             self.init = True
 
 
@@ -202,6 +213,15 @@ class guiclient(QThread):
                         self.m_databuffersize, \
                         self.m_timestamp, \
                         self.m_frame_id, \
+                        self.m_logging, \
+                        self.m_gain,\
+                        self.m_gain_min,\
+                        self.m_gain_max,\
+                        self.m_exposure,\
+                        self.m_exposure_min,\
+                        self.m_exposure_max,\
+                        self.m_rate,\
+                        self.m_rate_measured,\
                            = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
                         meta = (self.m_width)
 

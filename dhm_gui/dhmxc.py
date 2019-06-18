@@ -74,6 +74,8 @@ def CameraServerCommand(cmdstr):
     global w, COMMAND_SERVER_PORT
 
     try:
+       print(cmdstr)
+       cmdstr = cmdstr.strip()
        a = DHM_Command_Client(HOST, COMMAND_SERVER_PORT)
        cmd_ret = a.send(cmdstr)
        return cmd_ret
@@ -132,11 +134,20 @@ class MainWin(QObject):
 
       # Collect QObjects
       self.check_recording = self.win.findChild(QObject,"check_recording")
+      self.label_width_data = self.win.findChild(QObject, "label_width_data")
+      self.label_height_data = self.win.findChild(QObject, "label_height_data")
+      self.label_timestamp_data = self.win.findChild(QObject, "label_timestamp_data")
+      self.label_frame_id_data = self.win.findChild(QObject, "label_frame_id_data")
       self.button_apply = self.win.findChild(QObject, "button_apply")
       self.image_sample = self.win.findChild(QObject, "image_sample")
+      self.textField_exposure = self.win.findChild(QObject, "textField_exposure")
+      self.textField_gain = self.win.findChild(QObject, "textField_gain")
+      self.slider_exposure = self.win.findChild(QObject, "slider_exposure")
+      self.slider_gain = self.win.findChild(QObject,"slider_gain")
 
       # Connect QObject signals
       self.button_apply.clicked.connect(self.ApplySettings)
+      self.win.send_cmd.connect(CameraServerCommand)
 
       # Start streaming images
       self.display_t = guiclient(HOST,FRAME_SERVER_PORT)
@@ -153,9 +164,23 @@ class MainWin(QObject):
    # When this is called by the main window (signal/slot), this will start a 
    # series of events which will spawn Qt threads and begin the actual playback
    def BeginPlayback(self):
+      self.display_t.sig_header.connect(self.UpdateHeaderInfo)
       self.display_t.sig_img_complete.connect(self.UpdateImage)
       self.display_t.start()
 
+
+   #PYQT SLOT
+   # Called by display.py, this receives the header information from the camera server
+   # and displays it in the dhmxc window on the bottom
+   def UpdateHeaderInfo(self, width, height, frameid, timestamp, gain_min, gain_max, exposure_min, exposure_max):
+      self.label_width_data.setProperty("text",str(width))
+      self.label_height_data.setProperty("text",str(height))
+      self.label_timestamp_data.setProperty("text",str(timestamp))
+      self.label_frame_id_data.setProperty("text",str(frameid))
+      self.win.setProperty("gain_min",gain_min)
+      self.win.setProperty("gain_max",gain_max)
+      self.win.setProperty("exposure_min",exposure_min)
+      self.win.setProperty("exposure_max",exposure_max)
 
    #PYQT SLOT
    # Called by raw_display.py.  When an image is finished being reconstructed
