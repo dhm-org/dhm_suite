@@ -279,11 +279,16 @@ ApplicationWindow {
         CheckDelegate {
             id: checkDelegate_recording
             objectName: "check_recording"
+            signal qml_signal_recording(bool checked)
             x: 140
             y: 372
             text: qsTr("Enable Recording")
             anchors.right: parent.right
             anchors.rightMargin: -2
+
+            onCheckedChanged:{
+              qml_signal_recording(checkDelegate_recording.checked)
+            }
         }
     }
 
@@ -336,21 +341,6 @@ ApplicationWindow {
             anchors.rightMargin: 228
             enabled: false
         }
-
-        Button {
-            id: button_apply
-            x: 132
-            objectName: "button_apply"
-            y: 38
-            width: 60
-            height: 30
-            text: qsTr("Apply")
-            anchors.right: parent.right
-            anchors.rightMargin: 96
-        }
-
-
-
     }
 
     Label {

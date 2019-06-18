@@ -146,16 +146,16 @@ class MainWin(QObject):
       self.slider_gain = self.win.findChild(QObject,"slider_gain")
 
       # Connect QObject signals
-      self.button_apply.clicked.connect(self.ApplySettings)
       self.win.send_cmd.connect(CameraServerCommand)
+      self.check_recording.qml_signal_recording.connect(self.ApplyRecording)
 
       # Start streaming images
       self.display_t = guiclient(HOST,FRAME_SERVER_PORT)
       self.display_t.start()
       self.BeginPlayback()
 
-   def ApplySettings(self):
-      if(self.check_recording.property("checked")):
+   def ApplyRecording(self, isRecording):
+      if(isRecording):
          CameraServerCommand("ENABLE_RECORDING")    
       else:
          CameraServerCommand("DISABLE_RECORDING")
