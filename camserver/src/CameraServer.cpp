@@ -391,6 +391,7 @@ void * CameraServer::FrameServerThread(void *arg)
                         char buffer[CAMERA_SERVER_MAXMSG];
                         int nbytes;
 
+			memset(buffer,'\0', sizeof(buffer));
                         if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
                             // *** Client connection closed
                             close(client);
