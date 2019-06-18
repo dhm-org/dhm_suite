@@ -269,6 +269,7 @@ void * FrameConsumerThread(void *arg)
     while(1) {
 
         if((frame_ptr = args->circbuff->Get()) != NULL) {
+        //if((frame_ptr = args->circbuff->GetOnSignal()) != NULL) {
             if(*args->logging_enabled) {
                 struct LogArgs logargs;
 
@@ -328,7 +329,7 @@ void * FrameConsumerThread(void *arg)
                 }
        
                 if(!thread_assigned) {
-                    //fprintf(stderr, "****** Thread not assigned. Processing in this thread\n");
+                    fprintf(stderr, "****** Thread not assigned. Processing in this thread\n");
                     FrameReceived_TIFConvert((void*)&logargs);
                 }
 
@@ -356,6 +357,8 @@ void * FrameConsumerThread(void *arg)
         }
     }
 #if THREAD_PER_FRAME == 1 
+#if LOG_THREAD_ALWAYS_ON == 1
+#else
         for(int i = 0; i < MAX_NUM_THREADS; i++) {
             if(log_threads[i].is_running) {
                 pthread_join(log_threads[i].thread, NULL);
@@ -363,6 +366,7 @@ void * FrameConsumerThread(void *arg)
                 fprintf(stderr, "AFTER: Completed thread %d, thread_count=%d\n", i, thread_count);
             }
         }
+#endif
 
 #endif
     fprintf(stderr, "Ended FrameConsumerThread\n");
@@ -484,7 +488,10 @@ FrameObserver::FrameObserver(AVT::VmbAPI::CameraPtr pCamera, CircularBuffer *cir
     ,   m_verbose (verbose)
 {
 
-    printf("Width=%d, Height=%d\n", maxWidth, maxHeight);
+    //printf("Width=%d, Height=%d\n", maxWidth, maxHeight);
+    m_rootdir[0] = '\0';
+    m_datadir[0] = '\0';
+    m_sessiondir[0] = '\0';
 
     strcpy(m_rootdir, rootdir);
 

@@ -121,8 +121,6 @@ int BindServer(int port)
         return SOCKET_ERROR; 
     }
 
-    printf("Bind ret=%d\n", ret);
-
     return fd;
 }
 

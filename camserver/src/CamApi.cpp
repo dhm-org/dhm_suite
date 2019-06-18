@@ -205,7 +205,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     VmbInt64_t minWidth, maxWidth, minHeight, maxHeight, width, height;
     double minRate, maxRate, rate; 
     std::string strValue;
-    printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
+    //printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
     camera = m_cameras[cameraidx];
 
 
@@ -237,7 +237,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     camera->GetFeatureByName("Width", pFeature);
     if ((err = pFeature->GetValue(width)) == VmbErrorSuccess && (err = pFeature->GetRange(minWidth, maxWidth)) == VmbErrorSuccess) {
 
-        printf("Width=%lld, minWidth=%lld, maxWidth=%lld\n", width, minWidth, maxWidth);
+        //printf("Width=%lld, minWidth=%lld, maxWidth=%lld\n", width, minWidth, maxWidth);
         if(width_in > maxWidth) {
             width_in = maxWidth;
         }
@@ -256,7 +256,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     camera->GetFeatureByName("Height", pFeature);
     if ((err = pFeature->GetValue(height)) == VmbErrorSuccess && (err = pFeature->GetRange(minHeight, maxHeight)) == VmbErrorSuccess) {
 
-        printf("Height=%lld, minHeight=%lld, maxHeight=%lld\n", height, minHeight, maxHeight);
+        //printf("Height=%lld, minHeight=%lld, maxHeight=%lld\n", height, minHeight, maxHeight);
         if(height_in > maxHeight) {
             height_in = maxHeight;
         }
@@ -295,7 +295,8 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
 
         camera->GetFeatureByName("StreamBytesPerSecond", pFeature);
         err = pFeature->GetValue(streambps);
-        if(err != VmbErrorSuccess) {printf("Error.  Unable to get StreamBytesPerSecond.");}else{printf("StreamBytesPerSec = %lld\n", streambps);}
+        if(err != VmbErrorSuccess) {printf("Error.  Unable to get StreamBytesPerSecond.");}
+	//else{printf("StreamBytesPerSec = %lld\n", streambps);}
     } //End of GigE
 
     // *** Set the Frame Rate. NOTE: AcquisitionFrameRateAbs for 'GigE' only , if fails try other
@@ -313,7 +314,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     // Validate the user rate agains min/max range
     if ((err = pFeature->GetRange(minRate, maxRate)) == VmbErrorSuccess) {
 
-        printf("MinRate = %f, MaxRate = %f, Rate = %f, userRate=%f\n", minRate, maxRate, rate, rate_in);
+        //printf("MinRate = %f, MaxRate = %f, Rate = %f, userRate=%f\n", minRate, maxRate, rate, rate_in);
         rate_in = (rate_in > maxRate)?maxRate:rate_in;
         rate_in = (rate_in < minRate)?minRate:rate_in;
         err = pFeature->SetValue(rate_in);
@@ -410,11 +411,11 @@ int CamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_ena
         // Bandwidth control mode
         err = camera->GetFeatureByName("BandwidthControlMode", pFeature);
         err = pFeature->GetValue( strValue );
-        printf("Bandwidth Control Mode: %s\n", strValue.c_str());
+        //printf("Bandwidth Control Mode: %s\n", strValue.c_str());
         // GVSP Packet Size
         err = camera->GetFeatureByName("GVSPPacketSize", pFeature);
         err = pFeature->GetValue(gvspacketsize);
-        printf("GVSPPacketSize: %lld\n", gvspacketsize);
+        //printf("GVSPPacketSize: %lld\n", gvspacketsize);
         // Stream Bytes Per Second 
         err = camera->GetFeatureByName("StreamBytesPerSecond", pFeature);
         //streambps = int((width * height * rate * 1)/gvspacketsize) * gvspacketsize;
@@ -422,16 +423,16 @@ int CamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_ena
         //err = pFeature->SetValue(streambps); //DON'T set because it causes dropped frames after a given time
         err = camera->GetFeatureByName("StreamBytesPerSecond", pFeature);
         err = pFeature->GetValue(streambps);
-        printf("Stream Bytes Per Second (Bps): %lld\n", streambps);
+        //printf("Stream Bytes Per Second (Bps): %lld\n", streambps);
         err = camera->GetFeatureByName("StreamFrameRateConstrain", pFeature);
         framerateconstrain = true;
         err = pFeature->SetValue(framerateconstrain);
         err = camera->GetFeatureByName("StreamFrameRateConstrain", pFeature);
         err = pFeature->GetValue(framerateconstrain);
-        printf("Frame Rate Constrain: %s\n", (framerateconstrain)?"TRUE":"FALSE");
+        //printf("Frame Rate Constrain: %s\n", (framerateconstrain)?"TRUE":"FALSE");
         err = camera->GetFeatureByName("GevTimestampTickFrequency", pFeature);
         err = pFeature->GetValue(tsTickFreq);
-        printf("tsTickFreq: %lld\n", tsTickFreq);
+        //printf("tsTickFreq: %lld\n", tsTickFreq);
 
     }
     else if (err == VmbErrorSuccess && strncmp((const char*)strValue.c_str(), "USB3", 3) == 0) {  //GEV ==> GigE

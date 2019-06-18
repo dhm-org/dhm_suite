@@ -244,8 +244,10 @@ void set_default(struct UserParams *params)
     params->configfile.cmdline = false;
     strncpy(params->rootdir.val, rootdir, PATHLEN);
     params->rootdir.cmdline = false;
-    params->sessiondir.val[0] = {'\0'};
+    memset(params->sessiondir.val, '\0', PATHLEN);
     params->sessiondir.cmdline = false;
+    memset(params->datadir.val, '\0', PATHLEN);
+    params->datadir.cmdline = false;
     params->camserialnum.val[0] = {'\0'};
     params->camserialnum.cmdline = false;
     strncpy(params->trigger_source.val, "Freerun", PATHLEN);
@@ -302,7 +304,7 @@ int list_cameras(CamApi *cam_api)
     int numcameras;
 
     cam_api->Startup();
-    if((numcameras = cam_api->QueryConnectedCameras()) < 0) {
+    if((numcameras = cam_api->QueryConnectedCameras()) <= 0) {
         cam_api->Shutdown();
     }
 
@@ -362,7 +364,7 @@ int main( int argc, char* argv[] )
 
     // *** List cameras in the computer
     if((numcameras = list_cameras(cam_api)) <= 0) {
-        exit(-1);
+        return -1;
     }
     
     // *** Prompt user to select a camera
