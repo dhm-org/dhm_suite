@@ -119,8 +119,8 @@ ApplicationWindow {
                     y: 28
                     height: 40
                     enabled: true
-                    to: 25
-                    from: 0
+                    to: gain_max
+                    from: gain_min
                     anchors.right: parent.right
                     anchors.rightMargin: 99
                     anchors.left: parent.left
@@ -163,15 +163,13 @@ ApplicationWindow {
                     maximumLength: 2
                     selectByMouse: true
 
-                    onTextChanged: {
-                        if(textField_gain.text > 25){
-                            textField_gain.text = "25"
-                        }
-                        if(textField_gain.text < 0){
-                            textField_gain.text = "0"
-                        }
-                    }
                     Keys.onReturnPressed: {
+                        if(textField_gain.text > gain_max){
+                            textField_gain.text = gain_max
+                        }
+                        if(textField_gain.text < gain_min){
+                            textField_gain.text = gain_min
+                        }
                         slider_gain.value = textField_gain.text
                         send_cmd("GAIN="+textField_gain.text)
                     }
@@ -193,8 +191,8 @@ ApplicationWindow {
                     anchors.right: parent.right
                     value: 45
                     anchors.leftMargin: 8
-                    to: 85899338
-                    from: 45
+                    to: exposure_max
+                    from: exposure_min
                     anchors.left: parent.left
                     anchors.rightMargin: 99
                     enabled: true
@@ -233,15 +231,13 @@ ApplicationWindow {
                     inputMethodHints: Qt.ImhPreferNumbers
                     selectByMouse: true
 
-                    onTextChanged: {
-                        if(textField_exposure.text > 85899338){
-                            textField_exposure.text = "85899338"
-                        }
-                        if(textField_exposure.text < 45){
-                            textField_exposure.text = "45"
-                        }
-                    }
                     Keys.onReturnPressed: {
+                        if(textField_exposure.text > exposure_max){
+                            textField_exposure.text = exposure_max
+                        }
+                        if(textField_exposure.text < exposure_min){
+                            textField_exposure.text = exposure_min
+                        }
                         slider_exposure.value = textField_exposure.text
                         send_cmd("EXPOSURE="+textField_exposure.text)
                     }
