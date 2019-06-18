@@ -20,6 +20,7 @@ Testing has been successful on a system with the following requirements
      -  Configure Netword card per Allied Vision recommendations for optimal performance
   -  USB3 and/or USB-C Ports
      -  Best for USB to Ethernet adapters
+  -  IMPORTANT:  Linux may use a generic driver for your network card.  For optimal performance you will need to install the proper driver for your hardware.
 
 ## Installation Instruction
 With 'sudo' powers, run 'install.sh -all' to setup the environment, install drivers, and install the dhm software.
