@@ -189,19 +189,22 @@ ApplicationWindow {
                     y: 28
                     height: 40
                     anchors.right: parent.right
-                    value: 45
+                    value: 0
                     anchors.leftMargin: 8
-                    to: exposure_max
-                    from: exposure_min
+                    //to: exposure_max
+                    //from: exposure_min
+                    to: 100
+                    from: 0
                     anchors.left: parent.left
                     anchors.rightMargin: 99
                     enabled: true
                     onValueChanged: {
-                        textField_exposure.text = parseInt(slider_exposure.value)
+                       // textField_exposure.text = parseInt(slider_exposure.value)
+                       textField_exposure.text = parseInt(slider_to_log(from,to,exposure_min,exposure_max,value))
                     }
                     onPressedChanged: {
                         if(!pressed){
-                            send_cmd("EXPOSURE="+parseInt(slider_exposure.value))
+                            send_cmd("EXPOSURE="+parseInt(slider_to_log(from,to,exposure_min,exposure_max,value)))
                         }
                     }
                 }
@@ -417,6 +420,21 @@ ApplicationWindow {
         text: qsTr("0")
         font.bold: false
         font.pointSize: 11
+    }
+
+    function slider_to_log(slider_min, slider_max, data_min, data_max, position) {
+       // position will be between 0 and 100
+       var minp = slider_min;
+       var maxp = slider_max;
+
+       // The result should be between 100 an 10000000
+       var minv = Math.log(data_min);
+       var maxv = Math.log(data_max);
+
+       // calculate adjustment factor
+       var scale = (maxv-minv) / (maxp-minp);
+
+       return Math.exp(minv + scale*(position-minp));
     }
 
 
