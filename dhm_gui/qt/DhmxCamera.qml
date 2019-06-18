@@ -14,6 +14,12 @@ ApplicationWindow {
     minimumWidth: 800
     minimumHeight: 765
 
+    signal send_cmd(string cmd)
+    property int gain_min: 0
+    property int gain_max: 1
+    property int exposure_min: 0
+    property int exposure_max: 1
+    property int framerate: 0
 
     Rectangle {
         id: bg
@@ -90,102 +96,6 @@ ApplicationWindow {
         anchors.topMargin: 0
         border.width: 0
 
-        Frame {
-            id: item_input_region
-            x: 0
-            y: 525
-            width: 300
-            height: 243
-            anchors.right: parent.right
-            anchors.rightMargin: 0
-
-            Rectangle {
-                id: rectangle_bg
-                x: 21
-                y: 265
-                color: "#a7a1a1"
-                anchors.leftMargin: -12
-                anchors.rightMargin: -12
-                anchors.bottomMargin: -12
-                anchors.topMargin: -12
-                border.width: 0
-                anchors.fill: parent
-            }
-
-            SpinBox {
-                id: spinBox_ir_col
-                x: 161
-                y: 96
-                width: 115
-                height: 30
-                enabled: false
-            }
-
-            Label {
-                id: label_ir_col
-                x: 96
-                y: 103
-                text: qsTr("Column")
-            }
-
-            SpinBox {
-                id: spinBox_ir_row
-                x: 161
-                y: 21
-                width: 115
-                height: 30
-                enabled: false
-            }
-
-            Label {
-                id: label_ir_row
-                x: 115
-                y: 28
-                text: qsTr("Row")
-            }
-
-            SpinBox {
-                id: spinBox_ir_height
-                x: 161
-                y: 134
-                width: 115
-                height: 30
-                enabled: false
-            }
-
-            Label {
-                id: label_ir_height
-                x: 101
-                y: 141
-                text: qsTr("Height")
-            }
-
-            SpinBox {
-                id: spinBox_ir_width
-                x: 161
-                y: 59
-                width: 115
-                height: 30
-                enabled: false
-            }
-
-            Label {
-                id: label_ir_width
-                x: 107
-                y: 66
-                text: qsTr("Width")
-            }
-
-            Label {
-                id: label_input_region
-                x: 62
-                y: 5
-                text: qsTr("Input Region")
-                font.bold: true
-            }
-
-        }
-
         Item {
             id: item_camera_controls
             x: 0
@@ -203,31 +113,28 @@ ApplicationWindow {
                 width: 301
                 height: 68
 
-                SpinBox {
-                    id: spinBox_gain
-                    x: 182
-                    y: 32
-                    width: 109
-                    height: 32
-                    leftPadding: 46
-                    topPadding: 6
-                    enabled: false
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                }
-
                 Slider {
                     id: slider_gain
+                    objectName: "slider_gain"
                     y: 28
                     height: 40
-                    enabled: false
-                    to: 255
+                    enabled: true
+                    to: 25
                     from: 0
                     anchors.right: parent.right
-                    anchors.rightMargin: 127
+                    anchors.rightMargin: 99
                     anchors.left: parent.left
                     anchors.leftMargin: 8
                     value: 0
+                    onValueChanged: {
+                        textField_gain.text = parseInt(slider_gain.value)
+
+                    }
+                    onPressedChanged: {
+                        if(!pressed){
+                            send_cmd("GAIN="+parseInt(slider_gain.value))
+                        }
+                    }
                 }
 
                 Label {
@@ -235,89 +142,70 @@ ApplicationWindow {
                     y: 15
                     width: 30
                     height: 17
-                    text: qsTr("Gain")
+                    text: qsTr("Gain (dB)")
                     font.bold: true
                     anchors.left: parent.left
                     anchors.leftMargin: 13
                 }
-            }
 
-            Item {
-                id: item_brightness
-                x: 0
-                y: 57
-                width: 301
-                height: 68
-                SpinBox {
-                    id: spinBox_brightness
-                    x: 182
-                    y: 32
-                    width: 109
-                    height: 32
-                    topPadding: 6
-                    anchors.right: parent.right
-                    leftPadding: 46
-                    anchors.rightMargin: 10
-                    enabled: false
-                }
-
-                Slider {
-                    id: slider_brightness
+                TextField {
+                    id: textField_gain
+                    objectName: "textField_gain"
+                    x: 208
                     y: 28
-                    height: 40
+                    width: 83
+                    height: 36
+                    inputMethodHints: Qt.ImhPreferNumbers
+                    text: qsTr("0")
+                    placeholderText: ""
                     anchors.right: parent.right
-                    value: 0
-                    anchors.leftMargin: 8
-                    to: 255
-                    from: 0
-                    anchors.left: parent.left
-                    anchors.rightMargin: 127
-                    enabled: false
-                }
+                    anchors.rightMargin: 10
+                    maximumLength: 2
+                    selectByMouse: true
 
-                Label {
-                    id: label_brightness
-                    y: 15
-                    width: 69
-                    height: 17
-                    text: qsTr("Brightness")
-                    anchors.leftMargin: 13
-                    font.bold: true
-                    anchors.left: parent.left
+                    onTextChanged: {
+                        if(textField_gain.text > 25){
+                            textField_gain.text = "25"
+                        }
+                        if(textField_gain.text < 0){
+                            textField_gain.text = "0"
+                        }
+                    }
+                    Keys.onReturnPressed: {
+                        slider_gain.value = textField_gain.text
+                        send_cmd("GAIN="+textField_gain.text)
+                    }
                 }
             }
 
             Item {
                 id: item_shutter
                 x: 0
-                y: 113
+                y: 57
                 width: 301
                 height: 68
-                SpinBox {
-                    id: spinBox_shutter
-                    x: 182
-                    y: 32
-                    width: 109
-                    height: 32
-                    topPadding: 6
-                    anchors.right: parent.right
-                    leftPadding: 46
-                    anchors.rightMargin: 10
-                    enabled: false
-                }
 
                 Slider {
-                    id: slider_shutter
+                    id: slider_exposure
+                    objectName: "slider_exposure"
                     y: 28
                     height: 40
                     anchors.right: parent.right
-                    value: 0
+                    value: 45
                     anchors.leftMargin: 8
-                    to: 255
-                    from: 0
+                    to: 85899338
+                    from: 45
                     anchors.left: parent.left
-                    anchors.rightMargin: 127
-                    enabled: false
+                    anchors.rightMargin: 99
+                    enabled: true
+                    onValueChanged: {
+                        textField_exposure.text = parseInt(slider_exposure.value)
+                    }
+                    onPressedChanged: {
+                        if(!pressed){
+                            send_cmd("EXPOSURE="+parseInt(slider_exposure.value))
+                        }
+                    }
                 }
 
                 Label {
@@ -325,10 +213,39 @@ ApplicationWindow {
                     y: 15
                     width: 81
                     height: 17
-                    text: qsTr("Shutter (ms)")
+                    text: qsTr("Exposure (us)")
                     anchors.leftMargin: 13
                     font.bold: true
                     anchors.left: parent.left
+                }
+
+                TextField {
+                    id: textField_exposure
+                    objectName: "textField_exposure"
+                    x: 221
+                    y: 28
+                    width: 83
+                    height: 36
+                    text: qsTr("0")
+                    placeholderText: ""
+                    anchors.rightMargin: 10
+                    anchors.right: parent.right
+                    inputMethodHints: Qt.ImhPreferNumbers
+                    selectByMouse: true
+
+                    onTextChanged: {
+                        if(textField_exposure.text > 85899338){
+                            textField_exposure.text = "85899338"
+                        }
+                        if(textField_exposure.text < 45){
+                            textField_exposure.text = "45"
+                        }
+                    }
+                    Keys.onReturnPressed: {
+                        slider_exposure.value = textField_exposure.text
+                        send_cmd("EXPOSURE="+textField_exposure.text)
+                    }
+
                 }
             }
         }
@@ -359,7 +276,7 @@ ApplicationWindow {
                 text: qsTr("Framerate (fps)")
                 font.bold: true
                 anchors.left: parent.left
-                anchors.leftMargin: 73
+                anchors.leftMargin: 68
             }
         }
 
@@ -440,6 +357,82 @@ ApplicationWindow {
 
     }
 
+    Label {
+        id: label_width
+        x: 45
+        y: 768
+        text: qsTr("Image Width:")
+        font.pointSize: 11
+        font.bold: true
+    }
+
+    Label {
+        id: label_height
+        x: 39
+        y: 796
+        text: qsTr("Image Height:")
+        font.bold: true
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_frame_id
+        x: 310
+        y: 796
+        text: qsTr("Frame ID:")
+        font.bold: true
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_timestamp
+        x: 294
+        y: 768
+        text: qsTr("Timestamp:")
+        font.bold: true
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_frame_id_data
+        x: 388
+        objectName: "label_frame_id_data"
+        y: 796
+        text: qsTr("000")
+        font.bold: false
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_timestamp_data
+        x: 388
+        objectName: "label_timestamp_data"
+        y: 768
+        text: qsTr("00:00:00")
+        font.bold: false
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_width_data
+        x: 152
+        objectName: "label_width_data"
+        y: 768
+        text: qsTr("0")
+        font.bold: false
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_height_data
+        x: 152
+        objectName: "label_height_data"
+        y: 796
+        text: qsTr("0")
+        font.bold: false
+        font.pointSize: 11
+    }
+
 
 
 }
@@ -512,11 +505,41 @@ ApplicationWindow {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*##^## Designer {
     D{i:1;invisible:true}D{i:3;anchors_height:650;anchors_width:650;anchors_x:33;anchors_y:76}
-D{i:6;anchors_height:200;anchors_width:200}D{i:19;anchors_x:52}D{i:18;anchors_width:380;anchors_x:52}
-D{i:23;anchors_x:52}D{i:22;anchors_width:380;anchors_x:52}D{i:27;anchors_x:52}D{i:26;anchors_width:380;anchors_x:52}
-D{i:32;anchors_x:129}D{i:5;anchors_height:90;anchors_y:242}D{i:35;anchors_width:50;anchors_x:134}
-D{i:37;anchors_width:50;anchors_x:14}D{i:38;anchors_width:50;anchors_x:255}D{i:34;anchors_width:718;anchors_x:0}
+D{i:7;anchors_width:380;anchors_x:52}D{i:11;anchors_width:380;anchors_x:52}D{i:16;anchors_x:129}
+D{i:17;anchors_x:129}D{i:18;anchors_width:718;anchors_x:0}D{i:5;anchors_height:90;anchors_y:242}
+D{i:20;anchors_width:50;anchors_x:134}D{i:21;anchors_width:50;anchors_x:14}D{i:22;anchors_width:50;anchors_x:255}
+D{i:23;anchors_width:50;anchors_x:45}D{i:19;anchors_width:50;anchors_x:134}D{i:24;anchors_x:39}
+D{i:25;anchors_x:310}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
+D{i:29;anchors_x:152}D{i:30;anchors_x:152}D{i:31;anchors_x:152}
 }
  ##^##*/
