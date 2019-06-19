@@ -14,6 +14,11 @@ ApplicationWindow {
     minimumWidth: 800
     minimumHeight: 765
 
+    maximumHeight: 850
+    maximumWidth: 1024
+
+    visibility: Window.Windowed
+
     signal send_cmd(string cmd)
     property int gain_min: 0
     property int gain_max: 1
@@ -43,16 +48,49 @@ ApplicationWindow {
     }
 
 
+    Rectangle {
+        id: sample_area
+        x: 33
+        y: 70
+        width: 650
+        height: 655
+        visible: true
+        enabled: true
+        clip: true
+        color: "#00ffffff"
+
+    Flickable{
+        id: flickArea
+        width: parent.width
+        height: parent.height
+        contentWidth: sample.width*sample.scale
+        contentHeight: sample.height*sample.scale
+        property int start_width: parent.width
+        property int start_height: parent.height
+        MouseArea{
+            id: zoom_area
+            height: flickArea.height
+            width: flickArea.width
+            anchors.fill:parent
+
+            onWheel: {
+                zoom(wheel.angleDelta.y)
+                update_zoom(sample)
+            }
+            onMouseXChanged: {
+                flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
+
+            }
+            onMouseYChanged: {
+                flickArea.anchors.verticalCenterOffset = zoom_area.mouseY
+
+            }
+
     Image {
         property bool counter: false
-        y: 76
+        width: 655
+        height: 655
         id: sample
-        width: 650
-        height: 650
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 124
-        anchors.left: parent.left
-        anchors.leftMargin: 33
         objectName: "image_sample"
         asynchronous: false
         cache: false
@@ -64,15 +102,16 @@ ApplicationWindow {
 
         Component.onCompleted: {
             source = ""
-            // sample.width = sample_area.width
-            // sample.height = sample_area.height
-            // update_zoom(sample)
+             //sample.width = sample_area.width
+             //sample.height = sample_area.height
+             update_zoom(sample)
 
         }
     }
+}
+    }
 
-
-
+}
     Label {
         id: label_camera_settings
         x: 316
@@ -429,6 +468,31 @@ ApplicationWindow {
         font.bold: false
         font.pointSize: 11
     }
+    function zoom(zoom){
+        if(!(flickArea.start_height > sample.height)){
+          sample.width += zoom
+           sample.height += zoom
+        }
+        else{
+            sample.width = flickArea.start_width
+            sample.height = flickArea.start_height
+        }
+    }
+
+    function update_zoom(id){
+        var curr_zoom
+        var ammount
+        curr_zoom = id.width / 2048
+        curr_zoom = curr_zoom * 100
+        ammount = curr_zoom.toFixed(2)+"%"
+        get_zoom_amnt(id)
+    }
+
+    function get_zoom_amnt(id){
+        var zoom
+        zoom = id.width  / 2048
+        return zoom
+    }
 
     function slider_to_log(slider_min, slider_max, data_min, data_max, position) {
        // The slider scale
@@ -562,13 +626,25 @@ ApplicationWindow {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 /*##^## Designer {
-    D{i:1;invisible:true}D{i:3;anchors_height:650;anchors_width:650;anchors_x:33;anchors_y:76}
-D{i:7;anchors_width:380;anchors_x:52}D{i:11;anchors_width:380;anchors_x:52}D{i:16;anchors_x:129}
-D{i:17;anchors_x:129}D{i:18;anchors_width:718;anchors_x:0}D{i:5;anchors_height:90;anchors_y:242}
-D{i:20;anchors_width:50;anchors_x:134}D{i:21;anchors_width:50;anchors_x:14}D{i:22;anchors_width:50;anchors_x:255}
-D{i:23;anchors_width:50;anchors_x:45}D{i:19;anchors_width:50;anchors_x:134}D{i:24;anchors_x:39}
-D{i:25;anchors_x:310}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
-D{i:29;anchors_x:152}D{i:30;anchors_x:152}D{i:31;anchors_x:152}
+    D{i:1;invisible:true}D{i:5;anchors_height:90;anchors_width:650;anchors_y:76}D{i:3;anchors_height:650;anchors_width:650;anchors_x:33;anchors_y:76}
+D{i:7;anchors_width:380;anchors_x:52}D{i:11;anchors_width:380;anchors_x:52}D{i:12;anchors_width:380;anchors_x:52}
+D{i:16;anchors_x:129}D{i:17;anchors_x:129}D{i:19;anchors_width:50;anchors_x:134}D{i:20;anchors_width:50;anchors_x:134}
+D{i:18;anchors_width:718;anchors_x:0}D{i:21;anchors_width:50;anchors_x:14}D{i:8;anchors_width:380;anchors_x:52}
+D{i:23;anchors_width:50;anchors_x:45}D{i:24;anchors_width:50;anchors_x:39}D{i:25;anchors_x:310}
+D{i:22;anchors_width:50;anchors_x:255}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
+D{i:29;anchors_x:152}D{i:30;anchors_x:152}D{i:31;anchors_x:152}D{i:32;anchors_x:152}
 }
  ##^##*/
