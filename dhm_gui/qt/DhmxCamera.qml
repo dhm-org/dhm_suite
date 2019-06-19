@@ -14,11 +14,6 @@ ApplicationWindow {
     minimumWidth: 800
     minimumHeight: 765
 
-    maximumHeight: 850
-    maximumWidth: 1024
-
-    visibility: Window.Windowed
-
     signal send_cmd(string cmd)
     property int gain_min: 0
     property int gain_max: 1
@@ -38,10 +33,12 @@ ApplicationWindow {
 
         Image {
             id: image
-            x: 348
             y: 15
-            width: 155
             height: 51
+            anchors.right: parent.right
+            anchors.rightMargin: 521
+            anchors.left: parent.left
+            anchors.leftMargin: 348
             source: "images/dhmx_blk.png"
             fillMode: Image.PreserveAspectFit
         }
@@ -50,14 +47,18 @@ ApplicationWindow {
 
     Rectangle {
         id: sample_area
-        x: 33
-        y: 70
-        width: 650
-        height: 655
         visible: true
         enabled: true
         clip: true
         color: "#00ffffff"
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 125
+        anchors.right: parent.right
+        anchors.rightMargin: 341
+        anchors.top: parent.top
+        anchors.topMargin: 70
+        anchors.left: parent.left
+        anchors.leftMargin: 33
 
     Flickable{
         id: flickArea
@@ -67,6 +68,8 @@ ApplicationWindow {
         contentHeight: sample.height*sample.scale
         property int start_width: parent.width
         property int start_height: parent.height
+        anchors.fill: parent
+
         MouseArea{
             id: zoom_area
             height: flickArea.height
@@ -74,8 +77,8 @@ ApplicationWindow {
             anchors.fill:parent
 
             onWheel: {
+                console.log(zoom_area.width)
                 zoom(wheel.angleDelta.y)
-                update_zoom(sample)
             }
             onMouseXChanged: {
                 flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
@@ -88,12 +91,14 @@ ApplicationWindow {
 
     Image {
         property bool counter: false
-        width: 655
-        height: 655
+        width: sample_area.width
+        height: sample_area.height
+        fillMode: Image.PreserveAspectFit
         id: sample
         objectName: "image_sample"
         asynchronous: false
         cache: false
+
 
         function reload(){
             counter = !counter
@@ -115,8 +120,12 @@ ApplicationWindow {
     Label {
         id: label_camera_settings
         x: 316
-        y: 48
+        y: 47
+        width: 121
+        height: 17
         text: qsTr("Camera Settings")
+        anchors.horizontalCenterOffset: -132
+        anchors.horizontalCenter: parent.horizontalCenter
         font.bold: true
         font.pointSize: 11
     }
@@ -398,6 +407,8 @@ ApplicationWindow {
         x: 45
         y: 768
         text: qsTr("Image Width:")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 65
         font.pointSize: 11
         font.bold: true
     }
@@ -407,6 +418,8 @@ ApplicationWindow {
         x: 39
         y: 796
         text: qsTr("Image Height:")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 37
         font.bold: true
         font.pointSize: 11
     }
@@ -416,6 +429,8 @@ ApplicationWindow {
         x: 310
         y: 796
         text: qsTr("Frame ID:")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 37
         font.bold: true
         font.pointSize: 11
     }
@@ -425,6 +440,8 @@ ApplicationWindow {
         x: 294
         y: 768
         text: qsTr("Timestamp:")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 65
         font.bold: true
         font.pointSize: 11
     }
@@ -435,6 +452,8 @@ ApplicationWindow {
         objectName: "label_frame_id_data"
         y: 796
         text: qsTr("000")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 37
         font.bold: false
         font.pointSize: 11
     }
@@ -445,6 +464,8 @@ ApplicationWindow {
         objectName: "label_timestamp_data"
         y: 768
         text: qsTr("00:00:00")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 65
         font.bold: false
         font.pointSize: 11
     }
@@ -455,6 +476,8 @@ ApplicationWindow {
         objectName: "label_width_data"
         y: 768
         text: qsTr("0")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 65
         font.bold: false
         font.pointSize: 11
     }
@@ -465,6 +488,8 @@ ApplicationWindow {
         objectName: "label_height_data"
         y: 796
         text: qsTr("0")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 37
         font.bold: false
         font.pointSize: 11
     }
@@ -638,10 +663,35 @@ ApplicationWindow {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*##^## Designer {
-    D{i:1;invisible:true}D{i:5;anchors_height:90;anchors_width:650;anchors_y:76}D{i:3;anchors_height:650;anchors_width:650;anchors_x:33;anchors_y:76}
-D{i:7;anchors_width:380;anchors_x:52}D{i:11;anchors_width:380;anchors_x:52}D{i:12;anchors_width:380;anchors_x:52}
-D{i:16;anchors_x:129}D{i:17;anchors_x:129}D{i:19;anchors_width:50;anchors_x:134}D{i:20;anchors_width:50;anchors_x:134}
+    D{i:2;anchors_width:155;anchors_x:348}D{i:1;invisible:true}D{i:5;anchors_height:90;anchors_width:650;anchors_y:76}
+D{i:3;anchors_height:655;anchors_width:650;anchors_x:33;anchors_y:70}D{i:7;anchors_width:121;anchors_x:316}
+D{i:11;anchors_width:380;anchors_x:52}D{i:12;anchors_width:380;anchors_x:52}D{i:16;anchors_x:129}
+D{i:17;anchors_x:129}D{i:19;anchors_width:50;anchors_x:134}D{i:20;anchors_width:50;anchors_x:134}
 D{i:18;anchors_width:718;anchors_x:0}D{i:21;anchors_width:50;anchors_x:14}D{i:8;anchors_width:380;anchors_x:52}
 D{i:23;anchors_width:50;anchors_x:45}D{i:24;anchors_width:50;anchors_x:39}D{i:25;anchors_x:310}
 D{i:22;anchors_width:50;anchors_x:255}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
