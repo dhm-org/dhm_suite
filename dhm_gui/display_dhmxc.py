@@ -34,7 +34,7 @@ headerStruct = struct.Struct('QQQQQQQdddddddd')
 class guiclient(QThread):
     sig_img = pyqtSignal(int,str, np.ndarray)
     sig_hist_val = pyqtSignal(int,int)
-    sig_header = pyqtSignal(int, int, int, float, int, int, int, int) #header: height, width, frameID, timestamp, gain min, gain max, exposure min, exposure max
+    sig_header = pyqtSignal(int, int, int, float, int, int, int, int, int, int) #header: height, width, frameID, timestamp, gain min, gain max, exposure min, exposure max, gain, exposure
     sig_img_complete = pyqtSignal(str)
     def __init__(self,server,port):
         QThread.__init__(self)
@@ -125,7 +125,7 @@ class guiclient(QThread):
 
             # Emit to Qt/QML that the processed image is ready to be displayed
             self.sig_img_complete.emit(current_time)
-            self.sig_header.emit(self.m_width, self.m_height, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max)
+            self.sig_header.emit(self.m_width, self.m_height, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max, self.m_gain, self.m_exposure)
             self.init = True
 
 

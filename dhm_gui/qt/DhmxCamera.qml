@@ -551,6 +551,14 @@ ApplicationWindow {
         return output;
     }
 
+    function apply_settings_on_startup(gain,exposure){
+        textField_gain.text = gain
+        slider_gain.value = gain
+        textField_exposure.text = exposure
+        slider_exposure.value = parseInt(text_to_slider(slider_exposure.from,slider_exposure.to,exposure_min,exposure_max, parseInt(exposure)))
+
+    }
+
 
 
 }

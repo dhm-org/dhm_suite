@@ -122,13 +122,13 @@ class MainWin(QObject):
    def __init__(self):
       super().__init__()
       global COMMAND_SERVER_PORT, FRAME_SERVER_PORT
+      self.startup = True
       self.camera_server_port = COMMAND_SERVER_PORT
       self.camera_frame_port = FRAME_SERVER_PORT
       self.display_t = QThread()
       self.img_data = None
       engine.load('qt/DhmxCamera.qml')
       self.win = engine.rootObjects()[0]
-
       self.win.setProperty("title", DHMXC_VERSION_STRING)
 
       # Collect QObjects
@@ -171,7 +171,7 @@ class MainWin(QObject):
    #PYQT SLOT
    # Called by display.py, this receives the header information from the camera server
    # and displays it in the dhmxc window on the bottom
-   def UpdateHeaderInfo(self, width, height, frameid, timestamp, gain_min, gain_max, exposure_min, exposure_max):
+   def UpdateHeaderInfo(self, width, height, frameid, timestamp, gain_min, gain_max, exposure_min, exposure_max, gain, exposure):
       self.label_width_data.setProperty("text",str(width))
       self.label_height_data.setProperty("text",str(height))
       self.label_timestamp_data.setProperty("text",str(timestamp))
@@ -180,6 +180,9 @@ class MainWin(QObject):
       self.win.setProperty("gain_max",gain_max)
       self.win.setProperty("exposure_min",exposure_min)
       self.win.setProperty("exposure_max",exposure_max)
+      if(self.startup):
+         self.win.apply_settings_on_startup(gain,exposure)
+         self.startup = False
 
    #PYQT SLOT
    # Called by raw_display.py.  When an image is finished being reconstructed
