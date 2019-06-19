@@ -74,7 +74,6 @@ def CameraServerCommand(cmdstr):
     global w, COMMAND_SERVER_PORT
 
     try:
-       print(cmdstr)
        cmdstr = cmdstr.strip()
        a = DHM_Command_Client(HOST, COMMAND_SERVER_PORT)
        cmd_ret = a.send(cmdstr)

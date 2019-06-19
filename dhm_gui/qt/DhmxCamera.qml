@@ -200,7 +200,13 @@ ApplicationWindow {
                     enabled: true
                     onValueChanged: {
                        // textField_exposure.text = parseInt(slider_exposure.value)
-                       textField_exposure.text = parseInt(slider_to_log(from,to,exposure_min,exposure_max,value))
+                       if(!textField_exposure.fromText){
+                          textField_exposure.text = parseInt(slider_to_log(from,to,exposure_min,exposure_max,value))
+                       }
+                       else{
+                           slider_exposure.value = parseInt(text_to_slider(from,to,exposure_min,exposure_max, parseInt(textField_exposure.text)))
+                           textField_exposure.fromText = false
+                       }
                     }
                     onPressedChanged: {
                         if(!pressed){
@@ -222,6 +228,7 @@ ApplicationWindow {
 
                 TextField {
                     id: textField_exposure
+                    property bool fromText: false
                     objectName: "textField_exposure"
                     x: 221
                     y: 28
@@ -235,12 +242,13 @@ ApplicationWindow {
                     selectByMouse: true
 
                     Keys.onReturnPressed: {
-                        if(textField_exposure.text > exposure_max){
+                        if(parseInt(textField_exposure.text) > exposure_max){
                             textField_exposure.text = exposure_max
                         }
-                        if(textField_exposure.text < exposure_min){
+                        if(parseInt(textField_exposure.text) < exposure_min){
                             textField_exposure.text = exposure_min
                         }
+                        fromText = true
                         slider_exposure.value = textField_exposure.text
                         send_cmd("EXPOSURE="+textField_exposure.text)
                     }
@@ -423,18 +431,35 @@ ApplicationWindow {
     }
 
     function slider_to_log(slider_min, slider_max, data_min, data_max, position) {
-       // position will be between 0 and 100
+       // The slider scale
        var minp = slider_min;
        var maxp = slider_max;
 
-       // The result should be between 100 an 10000000
+       // The full scale
        var minv = Math.log(data_min);
        var maxv = Math.log(data_max);
 
        // calculate adjustment factor
        var scale = (maxv-minv) / (maxp-minp);
+       var output = Math.exp(minv + scale*(position-minp));
 
-       return Math.exp(minv + scale*(position-minp));
+       return output;
+    }
+
+    function text_to_slider(slider_min, slider_max, data_min, data_max, position){
+        // The slider scale
+        var minp = slider_min;
+        var maxp = slider_max;
+
+        // The full scale
+        var minv = Math.log(data_min);
+        var maxv = Math.log(data_max);
+
+        // calculate adjustment factor
+        var scale = (maxv-minv) / (maxp-minp);
+        var output = (Math.log(position)-minv) / scale + minp;
+
+        return output;
     }
 
 
