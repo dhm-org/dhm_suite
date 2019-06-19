@@ -684,10 +684,15 @@ void FrameObserver::SetGain(int gain)
 void FrameObserver::SetExposure(int exposure)
 {
     double newexposure;
-    //VmbErrorType err = VmbErrorSuccess;
+    VmbErrorType err = VmbErrorSuccess;
     AVT::VmbAPI::FeaturePtr pFeature;
 
-    m_pCamera->GetFeatureByName("ExposureTimeAbs", pFeature);
+    err = m_pCamera->GetFeatureByName("ExposureTimeAbs", pFeature);
+    if(err != VmbErrorSuccess) {
+        // Work for USB3
+        m_pCamera->GetFeatureByName("ExposureTime", pFeature);
+    }
+    
     pFeature->SetValue((float)exposure);
     pFeature->GetValue(newexposure);
     fprintf(stderr, "Camera exposure now set to %d\n", (int)newexposure);
