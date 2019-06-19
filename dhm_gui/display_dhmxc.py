@@ -115,22 +115,6 @@ class guiclient(QThread):
             # make the array writable
             self.outdata.setflags(write=1)
 
-            #rescaled for performance increase of upwards of 40+%
-            self.outdata = self.outdata[::self.performance_val, ::self.performance_val]
-
-            # Rescale image
-            if(self.outdata.max() != 0): 
-               self.outdata *= int(255.0/self.outdata.max())
-
-            # If the user selects the histogram button and enables the histogram, compute the bins necessary to display
-            # NOTE: Histogram computations in real time are CPU costly, so it is best to only ue this if/when needed.
-            if(self.enable_histogram):
-               # calculate the histogram on the grayscale 'outdata' object from 0-255
-               # Emit the position of the histogram back to Qt/QML to update the histogram
-               self.histogram,self.bins = np.histogram(self.outdata,bins=np.arange(0,256,1))
-               for i in range(255):
-                  self.sig_hist_val.emit(i,self.histogram[i])
-
             # Create an RGB version of the received image to display absolute minimums and maximums
             self.outdata_RGB = np.stack((self.outdata,)*3, axis=-1)
             self.outdata_RGB[self.outdata == 255] = [255,0,0]
