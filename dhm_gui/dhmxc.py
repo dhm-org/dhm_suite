@@ -46,7 +46,7 @@ from telemetry import (Tlm)
 # Custom filedialog windows (QML's default implementation does not satisfy DHMx needs)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.2   06-10-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.8   06-19-2019"
 
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
