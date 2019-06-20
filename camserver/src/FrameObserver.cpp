@@ -27,6 +27,7 @@
 #include "CamFrame.h"
 #include "TIFConverter.h"
 #include "version.h"
+#include "tspec.h"
 
 // ****************************************************************************
 // ***                      Defines
@@ -329,7 +330,7 @@ void * FrameConsumerThread(void *arg)
                 }
        
                 if(!thread_assigned) {
-                    fprintf(stderr, "****** Thread not assigned. Processing in this thread\n");
+                    //fprintf(stderr, "****** Thread not assigned. Processing in this thread\n");
                     FrameReceived_TIFConvert((void*)&logargs);
                 }
 
@@ -587,8 +588,41 @@ void FrameObserver::InitFrameHeaderInfo(AVT::VmbAPI::CameraPtr pCamera)
 
 }
 
+#define MAX_FRAME_COUNT  60
+
+void FrameObserver::CountFPS()
+{
+    static int nFrames = MAX_FRAME_COUNT;
+    static struct timespec lastts;
+
+    if (nFrames == MAX_FRAME_COUNT)
+    {
+        clock_gettime(CLOCK_REALTIME, &lastts);
+
+    }
+
+    if (nFrames-- == 0) {
+
+        struct timespec et;
+        struct timespec ts;
+        double elapsed_sec;
+
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        tspec_subtract (&et, &ts, &lastts);
+
+        elapsed_sec = tspec_tosec(&et);
+
+        m_rate_measured = MAX_FRAME_COUNT / elapsed_sec;
+
+        //fprintf(stderr, "Measured FPS = %f Hz\n", m_rate_measured);
+        nFrames = MAX_FRAME_COUNT;
+    }
+}
 void FrameObserver::getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struct CamFrameHeader *header)
 {
+
+
     VmbUint32_t imgSize = 0;
     VmbUint32_t width = 0;
     VmbUint32_t height = 0;
@@ -600,6 +634,9 @@ void FrameObserver::getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struc
     pFrame->GetImageSize(imgSize);
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
+
+    // *** Measure the frame rate
+    CountFPS();
 
     header->m_timestamp = timestamp;
     header->m_frame_id = frameID;
@@ -620,6 +657,7 @@ void FrameObserver::getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struc
     header->m_rate_measured = m_rate_measured;
 
 }
+
 
 void FrameObserver::FrameReceived(const AVT::VmbAPI::FramePtr pFrame)
 {

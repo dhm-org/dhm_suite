@@ -35,6 +35,7 @@ public:
     void ShutdownFrameConsumer();
     int StartFrameConsumer();
     void getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, struct CamFrameHeader *header);
+    void CountFPS();
     void InitFrameHeaderInfo(AVT::VmbAPI::CameraPtr pCamera);
     virtual void FrameReceived(const AVT::VmbAPI::FramePtr pFrame );
 
