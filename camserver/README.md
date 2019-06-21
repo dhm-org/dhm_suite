@@ -19,6 +19,9 @@ The camserver software has the following features for a single camera per execut
 * For GigaE Cameras
   - Network card configured per [Allied Vision](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/various/installation-manual/GigE_Installation_Manual.pdf) recomendations.
   - USB3 to Ethernet or USB-C to Ethernet adapters tested.
+  - NOTE:  Ensure that you are using the proper drivers for the network card.  Linux will use
+    generic drivers which don't always give you access to card's full functionality such as
+    setting the receive buffers or setting the interrupt modulation rate.
 * Drivers
   -  Install the VIMBA driver on your machine.  You can download from [here](https://www.alliedvision.com/en/products/software.html)
 , download from this repository 'drivers' directory, or run 'install.sh -drivers' located in root of this repository. 
@@ -28,8 +31,9 @@ The camserver software has the following features for a single camera per execut
 Modify the make file so that is contains the proper path the to the VIMBA SDK directory
 
 ## Cameras tested with camserver
-* Mako U-503B
-* GT 2460
+* Mako U-503B (USB3 camera)
+* GT 2460 (GigE camera)
+* Manta G201B ASG 30fps (GigE camera)
 
 ## Reading from Two Cameras
 To read from two cameras, two instances of 'camserver' must be executed making sure the following:
@@ -45,11 +49,16 @@ Frames are sent to client at 6Hz or less if frame rate is less than 6H.  Clients
 Commanding occurs via the command port (default command port is 2001, see usage for setting port).
 The command client connection is active only for accepting the command and returning an acknowledgment, then the server closes the connection.
 * Implemented commands see [CamCommands.h](include/CamCommands.h)
-  - As of version 0.5.0, only 'enable recording' and 'disable recording' implemented.
+  - The command are case sensitive and expects no spaces between equal signs.
 
 ## Telemetry
 As of version 0.5.0, sending telemetry to clients not implemented.
 Once implemented, clients must connect to the telemetry port (default telemetry port is 2002, see usage for setting port).
+
+## Graphical User Interface
+The python3 script 'dhmxc.py' in the 'dhm_gui' directory of this repository is the GUI for the camserver.
+For each instances of the camserver, ensure that the frame port, command port, and telemetry port
+specified in the camserver are also the same psecified when running the 'dhmxc.py' script.
 
 ## Known Bugs
 * With USB cameras, sometimes the frame capture doesn't start.  Stop the camserver using
