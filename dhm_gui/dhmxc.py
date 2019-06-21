@@ -43,9 +43,6 @@ from dhm_cmd_client_server import (DHM_Command_Client)
 from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 
-# Custom filedialog windows (QML's default implementation does not satisfy DHMx needs)
-import dhmx_filedialog
-
 DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.8   06-19-2019"
 
 HOST = socket.gethostbyname('localhost')
@@ -137,6 +134,8 @@ class MainWin(QObject):
       self.label_height_data = self.win.findChild(QObject, "label_height_data")
       self.label_timestamp_data = self.win.findChild(QObject, "label_timestamp_data")
       self.label_frame_id_data = self.win.findChild(QObject, "label_frame_id_data")
+      self.label_set_fps_data = self.win.findChild(QObject, "label_set_fps_data")
+      self.label_current_fps_data = self.win.findChild(QObject, "label_current_fps_data")
       self.button_apply = self.win.findChild(QObject, "button_apply")
       self.image_sample = self.win.findChild(QObject, "image_sample")
       self.textField_exposure = self.win.findChild(QObject, "textField_exposure")
@@ -171,11 +170,13 @@ class MainWin(QObject):
    #PYQT SLOT
    # Called by display.py, this receives the header information from the camera server
    # and displays it in the dhmxc window on the bottom
-   def UpdateHeaderInfo(self, width, height, frameid, timestamp, gain_min, gain_max, exposure_min, exposure_max, gain, exposure):
+   def UpdateHeaderInfo(self, width, height, frameid, timestamp, gain_min, gain_max, exposure_min, exposure_max, gain, exposure, rate, measured_rate):
       self.label_width_data.setProperty("text",str(width))
       self.label_height_data.setProperty("text",str(height))
       self.label_timestamp_data.setProperty("text",str(timestamp))
       self.label_frame_id_data.setProperty("text",str(frameid))
+      self.label_set_fps_data.setProperty("text",str(round(rate,2)))
+      self.label_current_fps_data.setProperty("text",str(round(measured_rate,2)))
       self.win.setProperty("gain_min",gain_min)
       self.win.setProperty("gain_max",gain_max)
       self.win.setProperty("exposure_min",exposure_min)

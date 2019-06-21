@@ -21,6 +21,10 @@ ApplicationWindow {
     property int exposure_max: 1
     property int framerate: 0
 
+    onWidthChanged: {
+       /* future use - TBD */
+    }
+
     Rectangle {
         id: bg
         width: 800
@@ -35,10 +39,10 @@ ApplicationWindow {
             id: image
             y: 15
             height: 51
-            anchors.right: parent.right
-            anchors.rightMargin: 521
             anchors.left: parent.left
             anchors.leftMargin: 348
+            anchors.right: parent.right
+            anchors.rightMargin: 521
             source: "images/dhmx_blk.png"
             fillMode: Image.PreserveAspectFit
         }
@@ -426,7 +430,7 @@ ApplicationWindow {
 
     Label {
         id: label_frame_id
-        x: 310
+        x: 277
         y: 796
         text: qsTr("Frame ID:")
         anchors.bottom: parent.bottom
@@ -437,7 +441,7 @@ ApplicationWindow {
 
     Label {
         id: label_timestamp
-        x: 294
+        x: 261
         y: 768
         text: qsTr("Timestamp:")
         anchors.bottom: parent.bottom
@@ -448,7 +452,7 @@ ApplicationWindow {
 
     Label {
         id: label_frame_id_data
-        x: 388
+        x: 351
         objectName: "label_frame_id_data"
         y: 796
         text: qsTr("000")
@@ -460,7 +464,7 @@ ApplicationWindow {
 
     Label {
         id: label_timestamp_data
-        x: 388
+        x: 350
         objectName: "label_timestamp_data"
         y: 768
         text: qsTr("00:00:00")
@@ -472,7 +476,7 @@ ApplicationWindow {
 
     Label {
         id: label_width_data
-        x: 152
+        x: 145
         objectName: "label_width_data"
         y: 768
         text: qsTr("0")
@@ -484,13 +488,59 @@ ApplicationWindow {
 
     Label {
         id: label_height_data
-        x: 152
+        x: 145
         objectName: "label_height_data"
         y: 796
         text: qsTr("0")
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 37
         font.bold: false
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_set_fps
+        x: 519
+        y: 768
+        text: qsTr("Set FPS:")
+        anchors.bottom: parent.bottom
+        font.bold: true
+        anchors.bottomMargin: 65
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_set_fps_data
+        objectName: "label_set_fps_data"
+        x: 583
+        y: 768
+        text: qsTr("000.00")
+        anchors.bottom: parent.bottom
+        font.bold: false
+        anchors.bottomMargin: 65
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_current_fps
+        x: 484
+        y: 796
+        text: qsTr("Current  FPS:")
+        anchors.bottom: parent.bottom
+        font.bold: true
+        anchors.bottomMargin: 37
+        font.pointSize: 11
+    }
+
+    Label {
+        id: label_current_fps_data
+        objectName: "label_current_fps_data"
+        x: 583
+        y: 798
+        text: qsTr("000.00")
+        anchors.bottom: parent.bottom
+        font.bold: false
+        anchors.bottomMargin: 36
         font.pointSize: 11
     }
     function zoom(zoom){
@@ -695,6 +745,22 @@ ApplicationWindow {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*##^## Designer {
     D{i:2;anchors_width:155;anchors_x:348}D{i:1;invisible:true}D{i:5;anchors_height:90;anchors_width:650;anchors_y:76}
 D{i:3;anchors_height:655;anchors_width:650;anchors_x:33;anchors_y:70}D{i:7;anchors_width:121;anchors_x:316}
@@ -704,5 +770,6 @@ D{i:18;anchors_width:718;anchors_x:0}D{i:21;anchors_width:50;anchors_x:14}D{i:8;
 D{i:23;anchors_width:50;anchors_x:45}D{i:24;anchors_width:50;anchors_x:39}D{i:25;anchors_x:310}
 D{i:22;anchors_width:50;anchors_x:255}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
 D{i:29;anchors_x:152}D{i:30;anchors_x:152}D{i:31;anchors_x:152}D{i:32;anchors_x:152}
+D{i:34;anchors_x:388}D{i:35;anchors_x:152}D{i:36;anchors_x:388}D{i:37;anchors_x:152}
 }
  ##^##*/
