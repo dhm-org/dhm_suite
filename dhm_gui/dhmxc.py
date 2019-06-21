@@ -43,7 +43,7 @@ from dhm_cmd_client_server import (DHM_Command_Client)
 from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.8   06-19-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.9   06-20-2019"
 
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
