@@ -523,9 +523,9 @@ ApplicationWindow {
 
     Label {
         id: label_current_fps
-        x: 484
+        x: 487
         y: 796
-        text: qsTr("Current  FPS:")
+        text: qsTr("Current FPS:")
         anchors.bottom: parent.bottom
         font.bold: true
         anchors.bottomMargin: 37
