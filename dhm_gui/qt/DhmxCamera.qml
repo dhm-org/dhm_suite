@@ -81,7 +81,6 @@ ApplicationWindow {
             anchors.fill:parent
 
             onWheel: {
-                console.log(zoom_area.width)
                 zoom(wheel.angleDelta.y)
             }
             onMouseXChanged: {
