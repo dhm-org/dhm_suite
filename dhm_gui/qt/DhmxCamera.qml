@@ -21,8 +21,11 @@ ApplicationWindow {
     property int exposure_max: 1
     property int framerate: 0
 
+    /* This function below will help keep the view centered at all times
+     * during a resize or maximize event
+     */
     onWidthChanged: {
-       /* future use - TBD */
+        reset_view()
     }
 
     Rectangle {
@@ -542,6 +545,11 @@ ApplicationWindow {
         anchors.bottomMargin: 36
         font.pointSize: 11
     }
+    function reset_view(){
+        sample.width = flickArea.start_width
+        sample.height = flickArea.start_height
+    }
+
     function zoom(zoom){
         if(!(flickArea.start_height > sample.height)){
           sample.width += zoom
