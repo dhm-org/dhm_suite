@@ -42,8 +42,9 @@ import PyQt5.QtMultimedia
 from dhm_cmd_client_server import (DHM_Command_Client)
 from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
+import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.10   06-24-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.11   06-26-2019"
 
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
@@ -81,6 +82,36 @@ def CameraServerCommand(cmdstr):
 
 
 
+# Loading and saving files for DHMx-c
+# DHMx-c will save files as a *.ccf file in plain text.
+# The user has the option to manually modify the configuration files if they so choose as well
+def LoadFile(x,y,path,title):
+      try:
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_camera_cfg")
+         if(fd.GetFilename() != ''):
+            return open(fd.GetFilename()).read().splitlines()
+            #file = open(fd.GetFilename(),"r")
+            #return file.read()
+         else:
+            # Return something benign if nothing exists 
+            return 
+      except:
+         print("ERROR: Could not load camera configuration file.")
+         return 
+
+
+def SaveFile(cfg_file, x, y, path, title):
+      try:
+         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_camera_cfg")
+         if(fd.GetFilename() != ''):
+            if ".ccf" in fd.GetFilename():
+               file = open(fd.GetFilename(),"w")
+            else:
+               file = open(fd.GetFilename()+".ccf","w")
+            file.writelines(cfg_file)
+            file.close()
+      except:
+         print("ERROR: Could not save camera configuration file.")
 
 
 class HologramImageProvider(QQuickImageProvider, QObject):
@@ -120,6 +151,9 @@ class MainWin(QObject):
       super().__init__()
       global COMMAND_SERVER_PORT, FRAME_SERVER_PORT
       self.startup = True
+      self.update = False
+      self.wait_frames = 7
+      self.wait = 0
       self.camera_server_port = COMMAND_SERVER_PORT
       self.camera_frame_port = FRAME_SERVER_PORT
       self.display_t = QThread()
@@ -127,6 +161,7 @@ class MainWin(QObject):
       engine.load('qt/DhmxCamera.qml')
       self.win = engine.rootObjects()[0]
       self.win.setProperty("title", DHMXC_VERSION_STRING)
+      self.cfg_file = ""
 
       # Collect QObjects
       self.check_recording = self.win.findChild(QObject,"check_recording")
@@ -142,10 +177,14 @@ class MainWin(QObject):
       self.textField_gain = self.win.findChild(QObject, "textField_gain")
       self.slider_exposure = self.win.findChild(QObject, "slider_exposure")
       self.slider_gain = self.win.findChild(QObject,"slider_gain")
+      self.button_save = self.win.findChild(QObject,"button_save")
+      self.button_load = self.win.findChild(QObject,"button_load")
 
       # Connect QObject signals
       self.win.send_cmd.connect(CameraServerCommand)
       self.check_recording.qml_signal_recording.connect(self.ApplyRecording)
+      self.button_save.clicked.connect(self.SaveData)
+      self.button_load.clicked.connect(self.LoadData)
 
       # Start streaming images
       self.display_t = guiclient(HOST,FRAME_SERVER_PORT)
@@ -181,9 +220,18 @@ class MainWin(QObject):
       self.win.setProperty("gain_max",gain_max)
       self.win.setProperty("exposure_min",exposure_min)
       self.win.setProperty("exposure_max",exposure_max)
+
       if(self.startup):
-         self.win.apply_settings_on_startup(gain,exposure)
+         self.win.apply_settings(gain,exposure)
          self.startup = False
+
+      # if it's an update command, wait an extra few frames for new data
+      if(self.update):
+         if(self.wait >= self.wait_frames):
+             self.win.apply_settings(gain,exposure)
+             self.wait = 0
+             self.update = False
+         self.wait += 1
 
    #PYQT SLOT
    # Called by raw_display.py.  When an image is finished being reconstructed
@@ -191,6 +239,34 @@ class MainWin(QObject):
    def UpdateImage(self,timetag):
       self.img_data = self.display_t.outdata_RGB
       self.image_sample.reload()
+
+
+
+   def UpdateConfigFile(self):
+      self.cfg_file = ""
+      self.cfg_file += "GAIN="+self.textField_gain.property("text")+"\n"+\
+                       "EXPOSURE="+self.textField_exposure.property("text")+"\n"
+      if(self.check_recording.property("checked")):
+         self.cfg_file += "ENABLE_RECORDING"+"\n"    
+      else:
+          self.cfg_file += "DISABLE_RECORDING"+"\n"
+
+
+
+   def SaveData(self):
+      self.UpdateConfigFile()
+      SaveFile(self.cfg_file, int(self.win.property("x"))+int((self.win.property("width")/2)), \
+         int(self.win.property("y"))+ int((self.win.property("height")/2)),\
+         "/home","Save Camera Configuration File")
+
+
+   def LoadData(self):
+      command = LoadFile(int(self.win.property("x"))+int((self.win.property("width")/2)), \
+         int(self.win.property("y"))+ int((self.win.property("height")/2)),\
+         "/home","Save Camera Configuration File")
+      for line in command:
+         CameraServerCommand(line)
+      self.update = True
 
 
 ### MAIN ####

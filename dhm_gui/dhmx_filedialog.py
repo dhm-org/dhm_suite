@@ -72,6 +72,13 @@ class CreateFileDialog(QWidget):
        self.filename, _ = QFileDialog.getSaveFileName(self,self.title, self.directory,"Config Files (*.cfg);;All Files (*.*)", options=options)
     if(self.opts == "load_cfg"):
        self.filename, _ = QFileDialog.getOpenFileName(self,self.title, self.directory,"Config Files (*.cfg);;All Files (*.*)", options=options)
+
+    # Below is for dhmxc for saving and loading camera config files
+    if(self.opts == "save_camera_cfg"):
+       self.filename, _ = QFileDialog.getSaveFileName(self,self.title, self.directory,"Camera Config Files (*.ccf);;All Files (*.*)", options=options)
+    if(self.opts == "load_camera_cfg"):
+       self.filename, _ = QFileDialog.getOpenFileName(self,self.title, self.directory,"Camera Config Files (*.ccf);;All Files (*.*)", options=options)
+
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 

@@ -370,6 +370,7 @@ ApplicationWindow {
 
         Button {
             id: button_load
+            objectName: "button_load"
             x: 66
             y: 38
             width: 60
@@ -377,7 +378,7 @@ ApplicationWindow {
             text: qsTr("Load")
             anchors.right: parent.right
             anchors.rightMargin: 162
-            enabled: false
+            enabled: true
         }
 
         Button {
@@ -397,6 +398,7 @@ ApplicationWindow {
 
         Button {
             id: button_save
+            objectName: "button_save"
             x: 0
             y: 38
             width: 60
@@ -404,7 +406,7 @@ ApplicationWindow {
             text: qsTr("Save")
             anchors.right: parent.right
             anchors.rightMargin: 228
-            enabled: false
+            enabled: true
         }
     }
 
@@ -608,7 +610,7 @@ ApplicationWindow {
         return output;
     }
 
-    function apply_settings_on_startup(gain,exposure){
+    function apply_settings(gain,exposure){
         textField_gain.text = gain
         slider_gain.value = gain
         textField_exposure.text = exposure
@@ -619,148 +621,6 @@ ApplicationWindow {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
