@@ -104,6 +104,7 @@ ApplicationWindow {
         objectName: "image_sample"
         asynchronous: false
         cache: false
+        smooth: false
 
 
         function reload(){
