@@ -553,7 +553,7 @@ ApplicationWindow {
     }
 
     function zoom(zoom){
-        if(!(flickArea.start_height > sample.height)){
+        if(!(flickArea.start_height > sample.height+zoom)){
           sample.width += zoom
            sample.height += zoom
         }
