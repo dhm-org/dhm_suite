@@ -18,6 +18,8 @@ Testing has been successful on a system with the following requirements
   -  For GigE Cameras.  Network card recommended by the [Allied vision](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/various/installation-manual/GigE_Installation_Manual.pdf) or one that supports 
      jumbo packets of 9000 bytes or more, 1Gbps bandwidth.
      -  Configure Netword card per Allied Vision recommendations for optimal performance
+     -  See [camserver README.md](camserver/README.md) for instructions to configure network card
+        to read one or more cameras.
   -  USB3 and/or USB-C Ports
      -  Best for USB to Ethernet adapters
 
