@@ -30,6 +30,74 @@ The camserver software has the following features for a single camera per execut
 ## Compiling code
 Modify the make file so that is contains the proper path the to the VIMBA SDK directory
 
+## Configure Network Card
+The following steps are for configuring your network card so that the camserver (and VimbaViewer)
+can see the camera.
+
+NOTE:  These instructions expect one GigE camera per network card.  Use of a switch is not supported
+
+NOTE:  Ensure the camera is plugged into the network card and powered up.
+### One GigaE Camera Per System
+1.  Open terminal
+2.  Enter the following:  
+    * ifconfig
+3.  Identify which ethernet adapter you want to configure.  Typical names start with 'eth' or 'enp'
+4.  Open the following file with sudo privledges.  This example uses the 'vi' editor.
+    * sudo vi /etc/network/interfaces
+5.  Enter the following lines were you replace "<network_card_name>" with the name from Step 3.
+    * auto <network_card_name>
+    * iface <nework_card_name> inet static
+    * address 192.168.100.1
+    * netmask 255.255.0.0
+    * mtu 9000
+    * pre-up /sbin/ethtool -s <network_card_name> speed 1000 duplex full autoneg off
+6.  Save the file and close
+7.  Reboot the system
+8.  Once boot up, open the 'VimbaViewer' to verify that the camera can be seen.
+    * If you see the camera listed then SUCCESS!
+    * If you don't see it possibly due to the following:
+        - You configured a different network card then the one the camera is connected to.  Try connecting to 
+          another card and wait a few seconds for the VimbaViewer to list the camera
+        - The camera is not powered on.
+        - The driver install of the Vimba drivers did not run 'VimbaGigETL/Install.sh'.  Do so manually and reboot.
+
+### Two or More GigaE Camera Per System
+These instructions require that one camera per network card.
+
+NOTE:  This method assume you know the IP addresses of each of the cameras you will be using. 
+If you don't know the IP addresses of the cameras, follow the 'One GigE Camera Per System' instructions
+and connect each camera to the network card configured and write down each IP address.
+
+NOTE:  This method ties a camera to a specific network card.
+
+NOTE:  Let's assume I am connecting two cameras with the following IP address: 192.168.225.50 and 192.168.48.3.
+
+1.  Open terminal
+2.  Enter the following:  
+    * ifconfig
+3.  Identify which ethernet adapter you want to configure.  Typical names start with 'eth' or 'enp'
+4.  Open the following file with sudo privledges.  This example uses the 'vi' editor.
+    * sudo vi /etc/network/interfaces
+5.  Enter the following lines were you replace "<network_card_name>" with the name from Step 3.
+    Note that I'm using the IP address for our example.
+    * auto <network_card_name>
+    * iface <nework_card_name> inet static
+    * address x.x.x.1  # Replace the x with the associated numbers
+    * netmask 255.255.255.0
+    * mtu 9000
+    * pre-up /sbin/ethtool -s <network_card_name> speed 1000 duplex full autoneg off
+6.  Repeat Step 5 and add another set of the instructions using the other network card and the other IP address.
+7.  Save the file and close
+8.  Reboot the system
+9.  Once boot up, open the 'VimbaViewer' to verify that the cameras can be seen.
+    * If you see the cameras listed then SUCCESS!
+    * If you don't see it possibly due to the following:
+        - You configured a different network card then the one the camera is connected to.  Try connecting to 
+          another card and wait a few seconds for the VimbaViewer to list the camera
+        - The camera is not powered on.
+        - The driver install of the Vimba drivers did not run 'VimbaGigETL/Install.sh'.  Do so manually and reboot.
+
+
 ## Cameras tested with camserver
 * Mako U-503B (USB3 camera)
 * GT 2460 (GigE camera)
