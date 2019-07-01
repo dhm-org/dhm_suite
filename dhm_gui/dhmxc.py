@@ -44,8 +44,8 @@ from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.11   06-26-2019"
-
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.9.12   07-01-2019"
+CAMERA_CONVERSION_RATIO = 0.50
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
 COMMAND_SERVER_PORT = 2001
@@ -223,6 +223,9 @@ class MainWin(QObject):
 
       if(self.startup):
          self.win.apply_settings(gain,exposure)
+         self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+         self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+         self.win.reset_view()
          self.startup = False
 
       # if it's an update command, wait an extra few frames for new data
@@ -236,7 +239,7 @@ class MainWin(QObject):
    #PYQT SLOT
    # Called by raw_display.py.  When an image is finished being reconstructed
    # It writes to a file and then emits a signal that is received by this function
-   def UpdateImage(self,timetag):
+   def UpdateImage(self):
       self.img_data = self.display_t.outdata_RGB
       self.image_sample.reload()
 
