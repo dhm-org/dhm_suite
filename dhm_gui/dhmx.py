@@ -1353,11 +1353,10 @@ class HologramWin(QObject):
     # This is used to obtain the x,y pixel value from of the image canvas
     def SendMousePos(self,x,y):
         zoom = w.subwin_holo_display.property("zoom_f")
-        print("Zoom is: ", zoom)
+        #print("Zoom is: ", zoom)
         pixel_val = self.display_t.get_pixel_val((int(x/zoom)-1),(int(y/zoom)-1))
-        print("X: "+str(x)+"    Y: "+str(y))
-        print("With zoom --")
-        print("X(zoom): "+str((x/zoom))+"   Y(zoom): "+str((y/zoom)))
+        #print("X: "+str(x)+"    Y: "+str(y))
+        #print("X(zoom): "+str((x/zoom))+"   Y(zoom): "+str((y/zoom)))
         self.label_pixelval_amnt.setProperty("text", pixel_val)
 
 
