@@ -28,6 +28,9 @@ MouseArea {
     //The string that will be used to send the fourier command
     property string fourier_mask_cmd: ""
 
+    onWidthChanged: {
+        reset_view()
+    }
 
     Rectangle {
         id: bg
@@ -286,8 +289,7 @@ MouseArea {
         visible: true
         enabled: true
         clip: true
-        // color: "#ffffff"
-
+        color: "#00ffffff"
 
         Flickable{
             id: flickArea
@@ -296,6 +298,8 @@ MouseArea {
             height: parent.height
             contentWidth: sample.width*sample.scale
             contentHeight: sample.height*sample.scale
+            property int start_width: parent.width
+            property int start_height: parent.height
 
             MouseArea{
                 id: zoom_area
@@ -339,6 +343,7 @@ MouseArea {
                     objectName: "image_sample"
                     asynchronous: false
                     cache: false
+                    smooth: false
                     //sourceSize.width: 63
                     //sourceSize.height: 63
 
@@ -363,6 +368,7 @@ MouseArea {
                     cache: true
                     visible: false
                     enabled: false
+                    smooth: false
                     width: 635
                     height: 638
 
@@ -590,7 +596,10 @@ MouseArea {
         y: 775
         text: "0"
     }
-
+    function reset_view(){
+        sample.width = flickArea.start_width
+        sample.height = flickArea.start_height
+    }
 
     function update_timetag(timetag){
         /* the UTC time for HH:MM:SS including cleanup */

@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.9.13  06-07-2019"
+DHMX_VERSION_STRING = "DHMx v0.9.14  07-03-2019"
 
 import os, sys, re, time, random
 import threading
@@ -70,6 +70,7 @@ FOURIER_FRAME_PORT = 9993
 FRAMESOURCE_MODE = "None"
 MAX_WAVELENGTH = 0
 MAX_PROPAGATION_DISTANCE = 0
+CAMERA_CONVERSION_RATIO = 0.50
 open_flag = False
 w = None
 tlm = None
