@@ -102,15 +102,23 @@ class MessagePkt(object):
 ### Used for packets that from the DHM_Streaming software
 class CamServerFramePkt(object):
     def __init__(self):
-        #self.pkt_hdr_struct = struct.Struct('HHHBIIIHH')
-        # *** See "CamFrame.h" of the dhm_streaming code
+        # *** See "include/CamFrame.h" of the camserver code
         # header[0] = unsigned long long int m_width
         # header[1] = unsigned long long int m_height
         # header[2] = unsigned long long int m_imgsize
         # header[3] = unsigned long long int m_databuffersize
         # header[4] = unsigned long long int m_timestamp
         # header[5] = unsigned long long int m_frame_id
-        self.pkt_hdr_struct = struct.Struct('QQQQQQ')
+        # header[6] = unsigned long long int m_logging;
+        # header[7] = double                 m_gain;
+        # header[8] = double                 m_gain_min;
+        # header[9] = double                 m_gain_max;
+        # header[10]= double                 m_exposure;
+        # header[11]= double                 m_exposure_min;
+        # header[12]= double                 m_exposure_max;
+        # header[13]= double                 m_rate;
+        # header[14]= double                 m_rate_measured;
+        self.pkt_hdr_struct = struct.Struct('QQQQQQQdddddddd')
         self._header = None
         self._header_size = None
         self.data = b''

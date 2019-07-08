@@ -563,10 +563,8 @@ class Framesource(multiprocessing.Process):
 
                     ### If he haven't processed the header/meta, then lets.
                     if meta is None and datalen > msPkt.header_packet_size():
-                        #w, h, compval,val, size, actualsize, ts, gain, ccdtemp = msPkt.unpack_header(data)
-                        #meta = (w, h, compval, val, size,actualsize, ts, gain, ccdtemp)
-                        w, h, size, packetsize, ts, frameid = msPkt.unpack_header(data)
-                        meta = (w, h, size, packetsize, ts, frameid)
+                        w, h, size, packetsize, ts, frameid, logging, gain, gain_min, gain_max, exposure, exposure_min, exposure_max, rate, rate_measured = msPkt.unpack_header(data)
+                        meta = (w, h, size, packetsize, ts, frameid, logging, gain, gain_min, gain_max, exposure, exposure_min, exposure_max, rate, rate_measured)
                         totalbytes =  packetsize + msPkt.header_packet_size()
                         #if verbose:
                         if True:
