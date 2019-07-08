@@ -3,7 +3,7 @@ import functools
 import signal
 import select
 import socket
-import numpy as np
+import numpy as np # CAUTION: Please use numpy version 1.15.4
 import pickle
 import time
 
