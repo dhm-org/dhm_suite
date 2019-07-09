@@ -351,7 +351,7 @@ MouseArea {
                     function reload(){
                         counter = !counter
                         source = "image://"+combo_disp.textAt(combo_disp.currentIndex)+"/image?id="+counter
-                    }
+                                            }
 
                     Component.onCompleted: {
                         source = ""
@@ -365,9 +365,10 @@ MouseArea {
                     id: fourier_mask_sample
                     fillMode: Image.PreserveAspectFit
                     //source: Null
-                    cache: true
+                    cache: false
+                    asynchronous: falsee
                     visible: false
-                    enabled: false
+                    enabled: true
                     smooth: false
                     width: 635
                     height: 638
@@ -650,17 +651,17 @@ MouseArea {
         fourier_mask.enabled = true
         fourier_mask.visible = true
         fourier_mask_sample.source = sample.source
-        fourier_mask_sample.enabled = true
         fourier_mask_sample.visible = true
+        fourier_mask_sample.update()
 
     }
     function deactivate_mask_mode(){
         console.log("Disabling masking mode")
         fourier_mask.enabled = false
         fourier_mask.visible = false
-        //fourier_mask_sample.source = sample.source
-        fourier_mask_sample.enabled = false
+        fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = false
+        fourier_mask_sample.update()
     }
     function add_circle(name,x,y,radius){
         //set first command
