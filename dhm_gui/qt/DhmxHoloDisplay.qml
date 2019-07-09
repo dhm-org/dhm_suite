@@ -366,7 +366,7 @@ MouseArea {
                     fillMode: Image.PreserveAspectFit
                     //source: Null
                     cache: false
-                    asynchronous: falsee
+                    //asynchronous: false
                     visible: false
                     enabled: true
                     smooth: false

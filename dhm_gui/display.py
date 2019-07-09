@@ -124,8 +124,11 @@ class guiclient(QThread):
     # This will launch and run the Display Thread as a Qt thread
     def unpack_message(self,msg):
             self.msg = msg
-
-            self.msgid, self.srcid, self.totalbytes = headerStruct.unpack(self.msg[0:struct.calcsize(headerStruct.format)])
+            try:
+               self.msgid, self.srcid, self.totalbytes = headerStruct.unpack(self.msg[0:struct.calcsize(headerStruct.format)])
+            except:
+               print("DHMx Diplsay: Did not receive proper header.  Header missing or incomplete.")
+               return -10
             self.meta = (self.msgid, self.srcid, self.totalbytes)
             self.offset = struct.calcsize(headerStruct.format) 
             
@@ -265,7 +268,11 @@ class guiclient(QThread):
                     data += packet
                     datalen = len(data)
                     if meta is None and datalen > struct.calcsize(headerStruct.format):
-                        msg_id, srcid, totalbytes = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
+                        try:
+                            msg_id, srcid, totalbytes = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
+                        except:
+                            print("DHMx Diplsay: Did not receive proper header.  Header missing or incomplete.")
+                            return -10
                         totalbytes += struct.calcsize(headerStruct.format)
                         self.meta = (msg_id, srcid)
                         if datalen >= totalbytes: 
