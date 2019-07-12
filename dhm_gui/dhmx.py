@@ -645,6 +645,7 @@ class FourierWin(QObject):
        self.display_t = QThread()
        self.fourier_mask_cmd = ""
        self.img_data = None
+       self.startup = True
 
        self.spinBox_wavelength = w.subwin_fourier.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_fourier.findChild(QObject, "spinBox_prop_dist")
@@ -741,11 +742,20 @@ class FourierWin(QObject):
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
-    def UpdateImage(self,timetag):
+    def UpdateImage(self,timetag,width,height):
         w.subwin_fourier.update_timetag(timetag)
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
 
+        if(self.startup):
+          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_fourier.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
+          w.subwin_fourier.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_fourier.setProperty("source_width", width)
+          w.subwin_fourier.setProperty("source_height", height)
+          w.subwin_fourier.update_zoom(self.image_sample)
+          self.startup = False
 
     def EnableHistogram(self,enabled):
        # Explicity check for true or false, no else statement.  Don't want any accidents.
@@ -825,6 +835,7 @@ class PhaseWin(QObject):
        self.counter = 1
        self.display_t = QThread()
        self.img_data = None
+       self.startup = True
 
        self.spinBox_wavelength = w.subwin_phase.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_phase.findChild(QObject, "spinBox_prop_dist")
@@ -921,11 +932,20 @@ class PhaseWin(QObject):
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
-    def UpdateImage(self,timetag):
+    def UpdateImage(self,timetag,width,height):
         w.subwin_phase.update_timetag(timetag)
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
 
+        if(self.startup):
+          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_phase.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
+          w.subwin_phase.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_phase.setProperty("source_width", width)
+          w.subwin_phase.setProperty("source_height", height)
+          w.subwin_phase.update_zoom(self.image_sample)
+          self.startup = False
 
     def EnableHistogram(self,enabled):
        # Explicity check for true or false, no else statement.  Don't want any accidents.
@@ -980,6 +1000,7 @@ class IntensityWin(QObject):
        self.counter = 1
        self.display_t = QThread()
        self.img_data = None
+       self.startup = True
 
        self.spinBox_wavelength = w.subwin_intensity.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_intensity.findChild(QObject, "spinBox_prop_dist")
@@ -1075,11 +1096,20 @@ class IntensityWin(QObject):
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
-    def UpdateImage(self,timetag):
+    def UpdateImage(self,timetag,width,height):
         w.subwin_intensity.update_timetag(timetag)
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
 
+        if(self.startup):
+          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_intensity.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
+          w.subwin_intensity.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_intensity.setProperty("source_width", width)
+          w.subwin_intensity.setProperty("source_height", height)
+          w.subwin_intensity.update_zoom(self.image_sample)
+          self.startup = False
 
     def EnableHistogram(self,enabled):
        # Explicity check for true or false, no else statement.  Don't want any accidents.
@@ -1134,6 +1164,7 @@ class AmplitudeWin(QObject):
        self.counter = 1
        self.display_t = QThread()
        self.img_data = None
+       self.startup = True
 
        self.spinBox_wavelength = w.subwin_amplitude.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_amplitude.findChild(QObject, "spinBox_prop_dist")
@@ -1230,11 +1261,20 @@ class AmplitudeWin(QObject):
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
-    def UpdateImage(self,timetag):
+    def UpdateImage(self,timetag,width,height):
         w.subwin_amplitude.update_timetag(timetag)
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
 
+        if(self.startup):
+          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_amplitude.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
+          w.subwin_amplitude.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_amplitude.setProperty("source_width", width)
+          w.subwin_amplitude.setProperty("source_height", height)
+          w.subwin_amplitude.update_zoom(self.image_sample)
+          self.startup = False
 
     def EnableHistogram(self,enabled):
        # Explicity check for true or false, no else statement.  Don't want any accidents.
@@ -1289,9 +1329,12 @@ class HologramWin(QObject):
        self.counter = 1
        self.display_t = QThread()
        self.img_data = None
+       self.startup = True
 
        self.label_source = w.subwin_holo_display.findChild(QObject, "label_source")
        self.image_sample = w.subwin_holo_display.findChild(QObject, "image_sample")
+       self.canvas_area = w.subwin_holo_display.findChild(QObject, "canvas_area")
+       self.sample_area = w.subwin_holo_display.findChild(QObject,"sample_area")
        self.button_close = w.subwin_holo_display.findChild(QObject, "button_close")
        self.icon_playback_status = w.subwin_holo_display.findChild(QObject, "icon_playback_status")
        self.pixel_value = w.subwin_holo_display.findChild(QObject, "pixel_value")
@@ -1352,12 +1395,11 @@ class HologramWin(QObject):
 
     # PYQT SLOT
     # This is used to obtain the x,y pixel value from of the image canvas
+    # NOTE: display.py the x,y values are flipped. so x==y, y==x in display.py
+    # TODO: Fix the x,y flip.
     def SendMousePos(self,x,y):
         zoom = w.subwin_holo_display.property("zoom_f")
-        #print("Zoom is: ", zoom)
         pixel_val = self.display_t.get_pixel_val((int(x/zoom)-1),(int(y/zoom)-1))
-        #print("X: "+str(x)+"    Y: "+str(y))
-        #print("X(zoom): "+str((x/zoom))+"   Y(zoom): "+str((y/zoom)))
         self.label_pixelval_amnt.setProperty("text", pixel_val)
 
 
@@ -1373,10 +1415,21 @@ class HologramWin(QObject):
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
-    def UpdateImage(self,timetag):
+    def UpdateImage(self,timetag,width,height):
         w.subwin_holo_display.update_timetag(timetag)
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
+
+        if(self.startup):
+          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
+          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_holo_display.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
+          w.subwin_holo_display.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          w.subwin_holo_display.setProperty("source_width", width)
+          w.subwin_holo_display.setProperty("source_height", height)
+          w.subwin_holo_display.update_zoom(self.image_sample)
+          self.startup = False
+
 
 
     def EnableHistogram(self,enabled):

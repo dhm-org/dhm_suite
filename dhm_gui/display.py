@@ -31,7 +31,7 @@ MAX_BUFFER = 3 #since we are reading in image files, create a ring buffer and ov
 class guiclient(QThread):
     sig_img = pyqtSignal(int,str, np.ndarray)
     sig_hist_val = pyqtSignal(int,int)
-    sig_img_complete = pyqtSignal(str)
+    sig_img_complete = pyqtSignal(str,int,int)# Time, width and height
     def __init__(self,server,port):
         QThread.__init__(self)
         super().__init__()
@@ -103,8 +103,8 @@ class guiclient(QThread):
             z[i] = data[dtidx];
             dtidx += 1
         
-
-    def get_pixel_val(self,x,y):
+    # x and y values are flipped in numpy array (in dhmx.py it is transmitted as x,y).
+    def get_pixel_val(self,y,x):
        # Check if the image sending has been initialized by its first frame to sample
        if(self.init != False ):
           # Check to make sure the mouse is within bounds.  Some images may not be exactly 2048x2048
@@ -144,13 +144,13 @@ class guiclient(QThread):
 
             if self.srcid == interface.SRCID_IMAGE_FOURIER:
                 self.dtype = np.uint8
-                self.w, self.h = self.dimensions
+                self.h, self.w = self.dimensions
             elif self.srcid == interface.SRCID_IMAGE_RAW:
                 self.dtype = np.uint8
-                self.w, self.h = self.dimensions
+                self.h, self.w = self.dimensions
             else:
                 self.dtype = np.uint8
-                self.w, self.h, self.z, self.l = self.dimensions
+                self.h, self.w, self.z, self.l = self.dimensions
 
 
 
@@ -199,7 +199,8 @@ class guiclient(QThread):
                  current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
                  # Emit to Qt/QML that the processed image is ready to be displayed
-                 self.sig_img_complete.emit(current_time)
+                 # The signal will emit a UTC time, the camera width and camera height
+                 self.sig_img_complete.emit(current_time,self.w,self.h)
                  self.init = True
 
 
@@ -263,7 +264,6 @@ class guiclient(QThread):
                     packet = self.sock.recv(12582912)
                     if not packet:
                         self.exit = True
-                        self.displayQ.put_nowait(None)
                         break
                     data += packet
                     datalen = len(data)
