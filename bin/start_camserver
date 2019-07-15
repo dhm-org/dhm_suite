@@ -26,8 +26,11 @@ echo "Data Directory=$DATA_DIR"
 echo "Trigger=$TRIGGER"
 echo "Enable/disable Logging=$ENA_LOGGING"
 
-xterm -e /opt/DHM/bin/camserver $ENA_LOGGING -fp $FRAME_PORT -cp $COMMAND_PORT -tp $TELEMETRY_PORT -x $TRIGGER -l $DATA_DIR &
+xterm -e /opt/DHM/bin/camserver $ENA_LOGGING -fp $FRAME_PORT -cp $COMMAND_PORT -tp $TELEMETRY_PORT $TRIGGER -l $DATA_DIR &
 
-cd /opt/DHM/dhm_gui
-xterm -e python3 ./dhmxc.py -f $FRAME_PORT -c $COMMAND_PORT -t $TELEMETRY_PORT &
+if [ $gui -eq 1 ]
+then
+    cd /opt/DHM/dhm_gui
+    xterm -e python3 ./dhmxc.py -f $FRAME_PORT -c $COMMAND_PORT -t $TELEMETRY_PORT &
+fi
 
