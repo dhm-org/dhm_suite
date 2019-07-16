@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.9.14  07-03-2019"
+DHMX_VERSION_STRING = "DHMx v0.9.15  07-16-2019"
 
 import os, sys, re, time, random
 import threading
