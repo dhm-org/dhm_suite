@@ -28,6 +28,16 @@ MouseArea {
     //The string that will be used to send the fourier command
     property string fourier_mask_cmd: ""
 
+    //The start width and height of the frame and the source
+    //the start width is always less than the source as it is length of hte display window
+    property int start_width: 0 //the scaled width of the display
+    property int start_height: 0 //the scaled height of the display
+    property int source_width: 0 //the original source width from the camera
+    property int source_height: 0 //the original source height from the camera
+    property double aspect_ratio: 0.00 //the aspect ration of n*m or n*n
+    property int frame_width: 636 //the display window width
+    property int frame_height: 636 //the display window height
+
     onWidthChanged: {
         reset_view()
     }
@@ -282,10 +292,11 @@ MouseArea {
 
     Rectangle {
         id: sample_area
+        objectName: "sample_area"
         x: 33
         y: 70
-        width: 636
-        height: 636
+        width: frame_width
+        height: frame_height
         visible: true
         enabled: true
         clip: true
@@ -293,13 +304,13 @@ MouseArea {
 
         Flickable{
             id: flickArea
+            objectName: "canvas_area"
             //anchors {fill: parent; margins: 10;}
             width: parent.width
             height: parent.height
             contentWidth: sample.width*sample.scale
             contentHeight: sample.height*sample.scale
-            property int start_width: parent.width
-            property int start_height: parent.height
+
 
             MouseArea{
                 id: zoom_area
@@ -324,28 +335,47 @@ MouseArea {
                     id: pixel_value
                     signal qml_signal_mouse_pos(int x,int y)
                     objectName: "pixel_value"
-                    width: sample_area.width
-                    height: sample_area.height
+                    width: sample.width
+                    height: sample.height
+                    //width: sample_area.width
+                    //height: sample_area.height
                     hoverEnabled: true
 
+
+//                    Rectangle{
+//                        anchors.fill: parent
+//                        color:"purple"
+//                    }
+
                     onMouseXChanged: {
-                        var positionInRoot = mapToItem(flickArea.contentItem, mouse.x, mouse.y)
+                        var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
+                        //var positionInRoot = mapToItem(flickArea.contentItem, mouse.x, mouse.y)
                         qml_signal_mouse_pos(positionInRoot.x, positionInRoot.y)
-                       // console.log(positionInRoot.x, positionInRoot.y)
+                        //console.log(positionInRoot.x, positionInRoot.y)
                     }
                 }
 
                 Image {
                     property bool counter: false
+                    //width: sample_area.width
+                    //height: sample_area.height
+
+                    //fillMode: Image.PreserveAspectFit
+
                     id: sample
-                    width: 635
-                    height: 638
                     objectName: "image_sample"
                     asynchronous: false
                     cache: false
                     smooth: false
-                    //sourceSize.width: 63
-                    //sourceSize.height: 63
+
+//                    Rectangle{
+//                        /* Boundary Tester */
+//                        anchors.fill: parent
+//                        color: "#95668723"
+//                        onWidthChanged: {
+//                            console.log("Recntagle: "+width+"x"+height)
+//                        }
+//                    }
 
 
                     function reload(){
@@ -355,26 +385,23 @@ MouseArea {
 
                     Component.onCompleted: {
                         source = ""
-                        sample.width = sample_area.width
-                        sample.height = sample_area.height
-                        update_zoom(sample)
-
                     }
                 }
                 Image {
                     id: fourier_mask_sample
-                    fillMode: Image.PreserveAspectFit
+                    //fillMode: Image.PreserveAspectFit
                     //source: Null
-                    cache: true
+                    cache: false
+                    //asynchronous: false
                     visible: false
-                    enabled: false
+                    enabled: true
                     smooth: false
                     width: 635
                     height: 638
 
                     onSourceChanged: {
-                        fourier_mask_sample.width = sample_area.width
-                        fourier_mask_sample.height = sample_area.height
+                        fourier_mask_sample.width = sample.width
+                        fourier_mask_sample.height = sample.height
                         update_zoom(fourier_mask_sample)
                     }
                     /* The drawing canvas for fourier mode */
@@ -597,8 +624,9 @@ MouseArea {
         text: "0"
     }
     function reset_view(){
-        sample.width = flickArea.start_width
-        sample.height = flickArea.start_height
+        sample.width = start_width
+        sample.height = start_height
+        set_aspect_ratio()
     }
 
     function update_timetag(timetag){
@@ -613,7 +641,7 @@ MouseArea {
     function update_zoom(id){
         var curr_zoom
         var ammount
-        curr_zoom = id.width / 2048
+        curr_zoom = id.width / source_width
         curr_zoom = curr_zoom * 100
         ammount = curr_zoom.toFixed(2)+"%"
         label_zoom_amnt.text = ammount
@@ -622,18 +650,30 @@ MouseArea {
 
     function get_zoom_amnt(id){
         var zoom
-        zoom = id.width  / 2048
+        zoom = id.width  / source_width
         dhmx_holo_disp.zoom_f = zoom
+        set_aspect_ratio()
         return zoom
+    }
+
+    function set_aspect_ratio(){
+        aspect_ratio = start_width / start_height
     }
 
     function update_image(image_url){
         sample.source = image_url
     }
 
-    function zoom(zoom){
-        sample.width += zoom
-        sample.height += zoom
+    function zoom(zoom){     
+        if(!(start_height > sample.height+zoom)){
+            sample.width += zoom
+            sample.height += zoom/aspect_ratio
+        }
+        else{
+            sample.width = start_width
+            sample.height = start_height
+        }
+
     }
     function get_zoom(){
         return sample_width
@@ -650,17 +690,17 @@ MouseArea {
         fourier_mask.enabled = true
         fourier_mask.visible = true
         fourier_mask_sample.source = sample.source
-        fourier_mask_sample.enabled = true
         fourier_mask_sample.visible = true
+        fourier_mask_sample.update()
 
     }
     function deactivate_mask_mode(){
         console.log("Disabling masking mode")
         fourier_mask.enabled = false
         fourier_mask.visible = false
-        //fourier_mask_sample.source = sample.source
-        fourier_mask_sample.enabled = false
+        fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = false
+        fourier_mask_sample.update()
     }
     function add_circle(name,x,y,radius){
         //set first command
@@ -688,5 +728,10 @@ MouseArea {
     function update_wl(wl){
         max_wavelength = wl
         fourier_mask.max_wavelength = wl
+    }
+
+    function set_source_width_and_height(width, height){
+        source_height = width
+        source_width = height
     }
 }
