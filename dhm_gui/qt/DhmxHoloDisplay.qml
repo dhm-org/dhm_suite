@@ -30,11 +30,13 @@ MouseArea {
 
     //The start width and height of the frame and the source
     //the start width is always less than the source as it is length of hte display window
-    property int start_width: 0
-    property int start_height: 0
-    property int source_width: 0
-    property int source_height: 0
-    property double aspect_ratio: 0.00
+    property int start_width: 0 //the scaled width of the display
+    property int start_height: 0 //the scaled height of the display
+    property int source_width: 0 //the original source width from the camera
+    property int source_height: 0 //the original source height from the camera
+    property double aspect_ratio: 0.00 //the aspect ration of n*m or n*n
+    property int frame_width: 636 //the display window width
+    property int frame_height: 636 //the display window height
 
     onWidthChanged: {
         reset_view()
@@ -293,8 +295,8 @@ MouseArea {
         objectName: "sample_area"
         x: 33
         y: 70
-        width: 636
-        height: 636
+        width: frame_width
+        height: frame_height
         visible: true
         enabled: true
         clip: true

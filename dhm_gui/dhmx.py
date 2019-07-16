@@ -646,6 +646,7 @@ class FourierWin(QObject):
        self.fourier_mask_cmd = ""
        self.img_data = None
        self.startup = True
+       self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
 
        self.spinBox_wavelength = w.subwin_fourier.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_fourier.findChild(QObject, "spinBox_prop_dist")
@@ -739,6 +740,15 @@ class FourierWin(QObject):
         self.display_t.performance_val = perf
 
 
+    # This function takes in the display window width and height, as well as the camera
+    # source width and height and computes a scale which will fit completely in frame
+    # of the display window.
+    def ComputeResize(self, width, height, frame_width, frame_height):
+       # Going based on width as the width is always going to be larger than the hight
+       # for all n*m frames.
+       self.camera_scale_ratio = frame_width / width
+
+
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
@@ -748,10 +758,14 @@ class FourierWin(QObject):
         self.image_sample.reload()
 
         if(self.startup):
-          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
-          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
-          w.subwin_fourier.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
-          w.subwin_fourier.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          self.ComputeResize(width,\
+                             height,\
+                             w.subwin_fourier.property("frame_width"),\
+                             w.subwin_fourier.property("frame_height"))
+          self.image_sample.setProperty("width",width * self.camera_scale_ratio)
+          self.image_sample.setProperty("height",height * self.camera_scale_ratio)
+          w.subwin_fourier.setProperty("start_width",width * self.camera_scale_ratio)
+          w.subwin_fourier.setProperty("start_height",height * self.camera_scale_ratio)
           w.subwin_fourier.setProperty("source_width", width)
           w.subwin_fourier.setProperty("source_height", height)
           w.subwin_fourier.update_zoom(self.image_sample)
@@ -836,6 +850,7 @@ class PhaseWin(QObject):
        self.display_t = QThread()
        self.img_data = None
        self.startup = True
+       self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
 
        self.spinBox_wavelength = w.subwin_phase.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_phase.findChild(QObject, "spinBox_prop_dist")
@@ -929,6 +944,15 @@ class PhaseWin(QObject):
         self.display_t.performance_val = perf
 
 
+    # This function takes in the display window width and height, as well as the camera
+    # source width and height and computes a scale which will fit completely in frame
+    # of the display window.
+    def ComputeResize(self, width, height, frame_width, frame_height):
+       # Going based on width as the width is always going to be larger than the hight
+       # for all n*m frames.
+       self.camera_scale_ratio = frame_width / width
+
+
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
@@ -938,10 +962,14 @@ class PhaseWin(QObject):
         self.image_sample.reload()
 
         if(self.startup):
-          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
-          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
-          w.subwin_phase.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
-          w.subwin_phase.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          self.ComputeResize(width,\
+                             height,\
+                             w.subwin_phase.property("frame_width"),\
+                             w.subwin_phase.property("frame_height"))
+          self.image_sample.setProperty("width",width * self.camera_scale_ratio)
+          self.image_sample.setProperty("height",height * self.camera_scale_ratio)
+          w.subwin_phase.setProperty("start_width",width * self.camera_scale_ratio)
+          w.subwin_phase.setProperty("start_height",height * self.camera_scale_ratio)
           w.subwin_phase.setProperty("source_width", width)
           w.subwin_phase.setProperty("source_height", height)
           w.subwin_phase.update_zoom(self.image_sample)
@@ -1001,6 +1029,7 @@ class IntensityWin(QObject):
        self.display_t = QThread()
        self.img_data = None
        self.startup = True
+       self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
 
        self.spinBox_wavelength = w.subwin_intensity.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_intensity.findChild(QObject, "spinBox_prop_dist")
@@ -1093,6 +1122,15 @@ class IntensityWin(QObject):
         self.display_t.performance_val = perf
 
 
+    # This function takes in the display window width and height, as well as the camera
+    # source width and height and computes a scale which will fit completely in frame
+    # of the display window.
+    def ComputeResize(self, width, height, frame_width, frame_height):
+       # Going based on width as the width is always going to be larger than the hight
+       # for all n*m frames.
+       self.camera_scale_ratio = frame_width / width
+
+
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
@@ -1102,10 +1140,14 @@ class IntensityWin(QObject):
         self.image_sample.reload()
 
         if(self.startup):
-          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
-          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
-          w.subwin_intensity.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
-          w.subwin_intensity.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          self.ComputeResize(width,\
+                             height,\
+                             w.subwin_intensity.property("frame_width"),\
+                             w.subwin_intensity.property("frame_height"))
+          self.image_sample.setProperty("width",width * self.camera_scale_ratio)
+          self.image_sample.setProperty("height",height * self.camera_scale_ratio)
+          w.subwin_intensity.setProperty("start_width",width * self.camera_scale_ratio)
+          w.subwin_intensity.setProperty("start_height",height * self.camera_scale_ratio)
           w.subwin_intensity.setProperty("source_width", width)
           w.subwin_intensity.setProperty("source_height", height)
           w.subwin_intensity.update_zoom(self.image_sample)
@@ -1165,6 +1207,7 @@ class AmplitudeWin(QObject):
        self.display_t = QThread()
        self.img_data = None
        self.startup = True
+       self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
 
        self.spinBox_wavelength = w.subwin_amplitude.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_amplitude.findChild(QObject, "spinBox_prop_dist")
@@ -1258,6 +1301,15 @@ class AmplitudeWin(QObject):
         self.display_t.performance_val = perf
 
 
+    # This function takes in the display window width and height, as well as the camera
+    # source width and height and computes a scale which will fit completely in frame
+    # of the display window.
+    def ComputeResize(self, width, height, frame_width, frame_height):
+       # Going based on width as the width is always going to be larger than the hight
+       # for all n*m frames.
+       self.camera_scale_ratio = frame_width / width
+
+
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
@@ -1267,10 +1319,14 @@ class AmplitudeWin(QObject):
         self.image_sample.reload()
 
         if(self.startup):
-          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
-          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
-          w.subwin_amplitude.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
-          w.subwin_amplitude.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+          self.ComputeResize(width,\
+                             height,\
+                             w.subwin_amplitude.property("frame_width"),\
+                             w.subwin_amplitude.property("frame_height"))
+          self.image_sample.setProperty("width",width * self.camera_scale_ratio)
+          self.image_sample.setProperty("height",height * self.camera_scale_ratio)
+          w.subwin_amplitude.setProperty("start_width",width * self.camera_scale_ratio)
+          w.subwin_amplitude.setProperty("start_height",height * self.camera_scale_ratio)
           w.subwin_amplitude.setProperty("source_width", width)
           w.subwin_amplitude.setProperty("source_height", height)
           w.subwin_amplitude.update_zoom(self.image_sample)
@@ -1330,6 +1386,7 @@ class HologramWin(QObject):
        self.display_t = QThread()
        self.img_data = None
        self.startup = True
+       self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
 
        self.label_source = w.subwin_holo_display.findChild(QObject, "label_source")
        self.image_sample = w.subwin_holo_display.findChild(QObject, "image_sample")
@@ -1393,6 +1450,7 @@ class HologramWin(QObject):
     def SetPerformance(self,perf):
         self.display_t.performance_val = perf
 
+
     # PYQT SLOT
     # This is used to obtain the x,y pixel value from of the image canvas
     # NOTE: display.py the x,y values are flipped. so x==y, y==x in display.py
@@ -1412,6 +1470,15 @@ class HologramWin(QObject):
        self.display_t.start()
 
 
+    # This function takes in the display window width and height, as well as the camera
+    # source width and height and computes a scale which will fit completely in frame
+    # of the display window.
+    def ComputeResize(self, width, height, frame_width, frame_height):
+       # Going based on width as the width is always going to be larger than the hight
+       # for all n*m frames.
+       self.camera_scale_ratio = frame_width / width
+
+
     #PYQT SLOT
     # Called by raw_display.py.  When an image is finished being reconstructed
     # It writes to a file and then emits a signal that is received by this function
@@ -1420,11 +1487,17 @@ class HologramWin(QObject):
         self.img_data = self.display_t.outdata_RGB
         self.image_sample.reload()
 
-        if(self.startup):
-          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
-          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
-          w.subwin_holo_display.setProperty("start_width",width * CAMERA_CONVERSION_RATIO)
-          w.subwin_holo_display.setProperty("start_height",height * CAMERA_CONVERSION_RATIO)
+        if(self.startup): 
+          self.ComputeResize(width,\
+                             height,\
+                             w.subwin_holo_display.property("frame_width"),\
+                             w.subwin_holo_display.property("frame_height"))
+          print("frame size: "+str(width)+"x"+str(height))
+          print("Scaled frame size: "+str(width * self.camera_scale_ratio)+"x"+str(height * self.camera_scale_ratio))
+          self.image_sample.setProperty("width",width * self.camera_scale_ratio)
+          self.image_sample.setProperty("height",height * self.camera_scale_ratio)
+          w.subwin_holo_display.setProperty("start_width",width * self.camera_scale_ratio)
+          w.subwin_holo_display.setProperty("start_height",height * self.camera_scale_ratio)
           w.subwin_holo_display.setProperty("source_width", width)
           w.subwin_holo_display.setProperty("source_height", height)
           w.subwin_holo_display.update_zoom(self.image_sample)
