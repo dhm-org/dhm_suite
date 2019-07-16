@@ -38,9 +38,10 @@ LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', 'http://astropy.org')
 
 # Get the long description from the package's docstring
-__import__(PACKAGENAME)
-package = sys.modules[PACKAGENAME]
-LONG_DESCRIPTION = package.__doc__
+#__import__(PACKAGENAME)
+#package = sys.modules[PACKAGENAME]
+#LONG_DESCRIPTION = package.__doc__
+LONG_DESCRIPTION = "Long description"
 
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
@@ -111,8 +112,8 @@ setup(name=PACKAGENAME,
           plotting=['matplotlib'],
           docs=['sphinx_rtd_theme']
       ),
-      install_requires=['numpy', 'scipy', 'astropy', 'scikit-image',
-                        'matplotlib', 'scikit-learn', 'pyqtgraph'],
+      install_requires=['networkx>=2.0', 'numpy==1.15.1', 'scipy==1.3.0', 'astropy==3.2.1', 'scikit-image',
+                        'matplotlib', 'scikit-learn', 'pyqtgraph', 'pyfftw==0.11.1'],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
