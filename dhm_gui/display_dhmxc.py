@@ -124,8 +124,9 @@ class guiclient(QThread):
             current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
             # Emit to Qt/QML that the processed image is ready to be displayed
+            # NOTE: Had to swap the signal for width and height for QML (See dhmx for more details)
             self.sig_img_complete.emit(current_time)
-            self.sig_header.emit(self.m_width, self.m_height, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max, self.m_gain, self.m_exposure, self.m_rate, self.m_rate_measured)
+            self.sig_header.emit(self.m_height, self.m_width, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max, self.m_gain, self.m_exposure, self.m_rate, self.m_rate_measured)
             self.init = True
 
 
