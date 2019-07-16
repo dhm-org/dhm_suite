@@ -1,5 +1,11 @@
+import sys
 from laserPulseController import *
-import msvcrt as keyboard
+if sys.platform == 'win32':
+    import msvcrt as keyboard
+else:
+    import keyboard
+    pass
+
 import time
 
 
@@ -101,8 +107,11 @@ while inApp:
 		while 1:
 			keyin = keyboard.getch()
 			if keyin.isalnum():
-				key = keyin.decode('ASCII')
-				break
+                            if sys.platform == 'win32':
+                                key = keyin.decode('ASCII')
+                            else:
+                                key = keyin
+                            break
 		print(key,end='',flush=True)
 		if key == 'q':
 			inApp = 0

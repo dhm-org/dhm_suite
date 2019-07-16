@@ -26,11 +26,19 @@ class laserPulseController:
 		self.currentRunState     = 0
 		
 		self.port_found = False
-		self.serial.port = 'NONE'
+		self.serial.port = 'None'
 		lpi = ports.comports()
+		print(lpi)
 		# Iterate over the com list to find first Arduino port
 		for x in lpi[:]:
-			if x.description.find('Arduino Due Programming Port') >= 0:
+			print(x.description)
+			ArduinoText = ''
+			if sys.platform == 'win32':
+			    ArduinoText = 'Arduino Due Programming Port'
+			else:
+			    ArduinoText = 'Arduino Due Prog. Port'
+
+			if x.description.find(ArduinoText) >= 0:
 				self.serial.port = x.device
 				self.port_found = True
 				break;
