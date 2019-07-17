@@ -1,13 +1,14 @@
 import sys
-from shampoo.reconstruction import (Hologram)
+from shampoo.reconstruction import (Hologram, Mask)
 from skimage.io import imread
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 ###############################################################################
 ###  Read file
 ###############################################################################
-path = '/proj/dhm/sfregoso/data/USAF_multi.tif'
+path = os.path.dirname(os.path.abspath(__file__)) + '/data/USAF_multi.tif'
 #path = '/proj/dhm/sfregoso/git_repos/dhmsw/dhmsw/utils/snapimg.tiff'
 im = imread(path)
 #im = im[:,:,0]
@@ -63,7 +64,8 @@ mask_list[:,:,maskidx] = mask
 ###############################################################################
 import time
 start_time = time.time()
-w = holo.reconstruct(propagation_dist, fourier_mask=mask_list, chromatic_shift=chromatic_shift)
+#fourier_mask = Mask(holo.n, mask_list)
+w = holo.my_reconstruct(propagation_dist, fourier_mask=None, chromatic_shift=chromatic_shift)
 print("Elasped time to compute reconstruction: %f seconds"%(time.time()-start_time));
 #sys.exit(0)
 
@@ -71,6 +73,10 @@ print("Elasped time to compute reconstruction: %f seconds"%(time.time()-start_ti
 ###############################################################################
 ###  Plot Intensity
 ###############################################################################
+f, axes = plt.subplots(1, 1, sharex=True)
+wv = 0
+axes.imshow(np.log(np.abs(holo.ft_hologram)).astype(np.uint8))
+plt.show()
 f, axes = plt.subplots(1, 3, sharex=True)
 wv = 0
 axes[0].imshow(w.intensity[:,:,0,wv])
@@ -90,7 +96,7 @@ axes[1].imshow(w.intensity[:,:,1,wv])
 axes[2].imshow(w.intensity[:,:,2,wv])
 plt.show()
 
-#sys.exit(0)
+sys.exit(0)
 
 ###############################################################################
 ###  Plot Phase

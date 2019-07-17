@@ -28,6 +28,7 @@ import threading
 import time
 import queue
 from skimage.io import imread
+import numpy as np
 
 from . import sequence
 from . import interface
@@ -182,7 +183,8 @@ class Framesource(multiprocessing.Process):
         numfiles = len(flist)
         count = 0
         ### Send first file
-        img = imread(flist[0])
+        img = np.asarray(imread(flist[0]))
+
         if img.shape == 3:
             a = interface.Image((), img[:,:,0])
         else:
@@ -204,7 +206,7 @@ class Framesource(multiprocessing.Process):
                 if count >= numfiles:
                     break
                 self._meta.file['currentfile'] = flist[count]
-                img = imread(flist[count])
+                img = np.asarray(imread(flist[count]))
                 if img.shape == 3:
                     a = interface.Image((), img[:,:,0])
                 else:
@@ -223,7 +225,7 @@ class Framesource(multiprocessing.Process):
                     if count >= numfiles:
                         break
                     self._meta.file['currentfile'] = flist[count]
-                    img = imread(flist[count])
+                    img = np.asarray(imread(flist[count]))
                     if img.shape == 3:
                         a = interface.Image((), img[:,:,0])
                     else:
