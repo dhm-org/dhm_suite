@@ -19,16 +19,20 @@ class laserPulseController:
 		self.currentProbabilityA = 0
 		self.currentPulsewidthB  = 0
 		self.currentProbabilityB = 0
+		self.currentModulusB     = 0
 		self.currentPulsewidthC  = 0
 		self.currentModulusC     = 0
 		self.currentAtoBdelay    = 0
 		self.currentAtoCdelay    = 0
 		self.currentRunState     = 0
+		self.currentCountdown	 = 0
+		self.currentCountdownState = 0
+		self.currentExternalInterruptState = 0
+		self.currentInterruptSense = 0
 		
 		self.port_found = False
-		self.serial.port = 'None'
+		self.serial.port = 'NONE'
 		lpi = ports.comports()
-		print(lpi)
 		# Iterate over the com list to find first Arduino port
 		for x in lpi[:]:
 			print(x.description)
@@ -169,6 +173,10 @@ class laserPulseController:
 		cmd = b'set clockC_pulsewidth ' + str(width).encode('ASCII') + b'\r\n'
 		self.serial.write(cmd)
 		
+	def setModulusB(self, modulus):
+		cmd = b'set clockB_modulus ' + str(modulus).encode('ASCII') + b'\r\n'
+		self.serial.write(cmd)
+		
 	def setModulusC(self, modulus):
 		cmd = b'set clockC_modulus ' + str(modulus).encode('ASCII') + b'\r\n'
 		self.serial.write(cmd)	
@@ -220,7 +228,16 @@ class laserPulseController:
 		self.currentAtoCdelay = int(self.line)
 		self.readLine()
 		self.currentRunState = int(self.line)
-		
+		self.readLine()
+		self.currentModulusB = int(self.line)
+		self.readLine()
+		self.currentCountdown = int(self.line)
+		self.readLine()
+		self.currentCountdownState = int(self.line)
+		self.readLine()
+		self.currentExternalInterruptState = int(self.line)
+		self.readLine()
+		self.currentInterruptSense = int(self.line)
 		
 	
 	
