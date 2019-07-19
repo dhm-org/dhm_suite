@@ -44,7 +44,7 @@ from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.1   07-19-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.2   07-19-2019"
 CAMERA_CONVERSION_RATIO = 0.50
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
