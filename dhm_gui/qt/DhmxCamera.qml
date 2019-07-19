@@ -67,63 +67,63 @@ ApplicationWindow {
         anchors.left: parent.left
         anchors.leftMargin: 33
 
-    Flickable{
-        id: flickArea
-        width: parent.width
-        height: parent.height
-        contentWidth: sample.width*sample.scale
-        contentHeight: sample.height*sample.scale
-        property int start_width: parent.width
-        property int start_height: parent.height
-        anchors.fill: parent
+        Flickable{
+            id: flickArea
+            width: parent.width
+            height: parent.height
+            contentWidth: sample.width*sample.scale
+            contentHeight: sample.height*sample.scale
+            property int start_width: parent.width
+            property int start_height: parent.height
+            anchors.fill: parent
 
-        MouseArea{
-            id: zoom_area
-            height: flickArea.height
-            width: flickArea.width
-            anchors.fill:parent
+            MouseArea{
+                id: zoom_area
+                height: flickArea.height
+                width: flickArea.width
+                anchors.fill:parent
 
-            onWheel: {
-                zoom(wheel.angleDelta.y)
+                onWheel: {
+                    zoom(wheel.angleDelta.y)
+                }
+                onMouseXChanged: {
+                    flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
+
+                }
+                onMouseYChanged: {
+                    flickArea.anchors.verticalCenterOffset = zoom_area.mouseY
+
+                }
+
+                Image {
+                    property bool counter: false
+                    width: sample_area.width
+                    height: sample_area.height
+                    fillMode: Image.PreserveAspectFit
+                    id: sample
+                    objectName: "image_sample"
+                    asynchronous: false
+                    cache: false
+                    smooth: false
+
+
+                    function reload(){
+                        counter = !counter
+                        source = "image://Hologram/image?id="+counter
+                    }
+
+                    Component.onCompleted: {
+                        source = ""
+                        //sample.width = sample_area.width
+                        //sample.height = sample_area.height
+                        update_zoom(sample)
+
+                    }
+                }
             }
-            onMouseXChanged: {
-                flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
-
-            }
-            onMouseYChanged: {
-                flickArea.anchors.verticalCenterOffset = zoom_area.mouseY
-
-            }
-
-    Image {
-        property bool counter: false
-        width: sample_area.width
-        height: sample_area.height
-        fillMode: Image.PreserveAspectFit
-        id: sample
-        objectName: "image_sample"
-        asynchronous: false
-        cache: false
-        smooth: false
-
-
-        function reload(){
-            counter = !counter
-            source = "image://Hologram/image?id="+counter
         }
 
-        Component.onCompleted: {
-            source = ""
-             //sample.width = sample_area.width
-             //sample.height = sample_area.height
-             update_zoom(sample)
-
-        }
     }
-}
-    }
-
-}
     Label {
         id: label_camera_settings
         x: 316
@@ -254,14 +254,14 @@ ApplicationWindow {
                     anchors.rightMargin: 99
                     enabled: true
                     onValueChanged: {
-                       // textField_exposure.text = parseInt(slider_exposure.value)
-                       if(!textField_exposure.fromText){
-                          textField_exposure.text = parseInt(slider_to_log(from,to,exposure_min,exposure_max,value))
-                       }
-                       else{
-                           slider_exposure.value = parseInt(text_to_slider(from,to,exposure_min,exposure_max, parseInt(textField_exposure.text)))
-                           textField_exposure.fromText = false
-                       }
+                        // textField_exposure.text = parseInt(slider_exposure.value)
+                        if(!textField_exposure.fromText){
+                            textField_exposure.text = parseInt(slider_to_log(from,to,exposure_min,exposure_max,value))
+                        }
+                        else{
+                            slider_exposure.value = parseInt(text_to_slider(from,to,exposure_min,exposure_max, parseInt(textField_exposure.text)))
+                            textField_exposure.fromText = false
+                        }
                     }
                     onPressedChanged: {
                         if(!pressed){
@@ -315,7 +315,7 @@ ApplicationWindow {
         Item {
             id: item_fps
             x: 0
-            y: 321
+            y: 198
             width: 300
             height: 63
             anchors.right: parent.right
@@ -338,7 +338,7 @@ ApplicationWindow {
                 text: qsTr("Framerate (fps)")
                 font.bold: true
                 anchors.left: parent.left
-                anchors.leftMargin: 68
+                anchors.leftMargin: 15
             }
         }
 
@@ -346,14 +346,14 @@ ApplicationWindow {
             id: checkDelegate_recording
             objectName: "check_recording"
             signal qml_signal_recording(bool checked)
-            x: 140
-            y: 372
+            x: 117
+            y: 712
             text: qsTr("Enable Recording")
             anchors.right: parent.right
-            anchors.rightMargin: -2
+            anchors.rightMargin: 0
 
             onCheckedChanged:{
-              qml_signal_recording(checkDelegate_recording.checked)
+                qml_signal_recording(checkDelegate_recording.checked)
             }
         }
     }
@@ -548,6 +548,35 @@ ApplicationWindow {
         anchors.bottomMargin: 36
         font.pointSize: 11
     }
+
+    Label {
+        id: label_histogram
+        x: 736
+        y: 278
+        width: 81
+        height: 23
+        text: qsTr("Histogram")
+        anchors.right: parent.right
+        anchors.rightMargin: 207
+        font.bold: true
+    }
+
+    DhmxHistogram{
+        z:100
+        id: subwin_histogram
+        x: 651
+        y: 278
+        objectName: "subwin_histogram"
+        width: 405
+        height: 270
+        anchors.right: parent.right
+        anchors.rightMargin: -32
+        opacity: 1.0
+        enabled: true
+        visible: true
+    }
+
+
     function reset_view(){
         sample.width = flickArea.start_width
         sample.height = flickArea.start_height
@@ -555,8 +584,8 @@ ApplicationWindow {
 
     function zoom(zoom){
         if(!(flickArea.start_height > sample.height+zoom)){
-          sample.width += zoom
-           sample.height += zoom
+            sample.width += zoom
+            sample.height += zoom
         }
         else{
             sample.width = flickArea.start_width
@@ -580,19 +609,19 @@ ApplicationWindow {
     }
 
     function slider_to_log(slider_min, slider_max, data_min, data_max, position) {
-       // The slider scale
-       var minp = slider_min;
-       var maxp = slider_max;
+        // The slider scale
+        var minp = slider_min;
+        var maxp = slider_max;
 
-       // The full scale
-       var minv = Math.log(data_min);
-       var maxv = Math.log(data_max);
+        // The full scale
+        var minv = Math.log(data_min);
+        var maxv = Math.log(data_max);
 
-       // calculate adjustment factor
-       var scale = (maxv-minv) / (maxp-minp);
-       var output = Math.exp(minv + scale*(position-minp));
+        // calculate adjustment factor
+        var scale = (maxv-minv) / (maxp-minp);
+        var output = Math.exp(minv + scale*(position-minp));
 
-       return output;
+        return output;
     }
 
     function text_to_slider(slider_min, slider_max, data_min, data_max, position){
@@ -618,10 +647,54 @@ ApplicationWindow {
         slider_exposure.value = parseInt(text_to_slider(slider_exposure.from,slider_exposure.to,exposure_min,exposure_max, parseInt(exposure)))
 
     }
-
-
-
+    function set_histogram_val(iterator,value){
+        subwin_histogram.set_val(iterator,value)
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -639,5 +712,6 @@ D{i:23;anchors_width:50;anchors_x:45}D{i:24;anchors_width:50;anchors_x:39}D{i:25
 D{i:22;anchors_width:50;anchors_x:255}D{i:26;anchors_x:294}D{i:27;anchors_x:388}D{i:28;anchors_x:388}
 D{i:29;anchors_x:152}D{i:30;anchors_x:152}D{i:31;anchors_x:152}D{i:32;anchors_x:152}
 D{i:34;anchors_x:388}D{i:35;anchors_x:152}D{i:36;anchors_x:388}D{i:37;anchors_x:152}
+D{i:38;anchors_width:50;anchors_x:134}
 }
  ##^##*/

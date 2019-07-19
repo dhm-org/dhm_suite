@@ -203,8 +203,16 @@ class MainWin(QObject):
    def BeginPlayback(self):
       self.display_t.sig_header.connect(self.UpdateHeaderInfo)
       self.display_t.sig_img_complete.connect(self.UpdateImage)
+      self.display_t.sig_hist_val.connect(self.UpdateHistogram)
       self.display_t.start()
 
+
+   #PYQT SLOT
+   # Called by raw_display.py.  When a histogram is being constructed, this 
+   # function will be called and will create a graph from 0-255 with the total
+   # pixel data for each point in the graph
+   def UpdateHistogram(self,iterator,amount):
+      self.win.set_histogram_val(iterator,amount)
 
    #PYQT SLOT
    # Called by display.py, this receives the header information from the camera server
