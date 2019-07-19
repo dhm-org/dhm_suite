@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.3
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.3
-
+import QtGraphicalEffects 1.0
 
 ApplicationWindow {
     id: dhmx_camera
@@ -48,6 +48,29 @@ ApplicationWindow {
             anchors.rightMargin: 521
             source: "images/dhmx_blk.png"
             fillMode: Image.PreserveAspectFit
+        }
+
+        Rectangle {
+            id: bottom_panel
+            x: 27
+            y: 753
+            width: 648
+            height: 73
+            color: "#a7a1a1"
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 24
+            layer.enabled: enabled
+
+            /* Dropshadow effect */
+            layer.effect: DropShadow {
+                anchors.fill: bottom_panel
+                horizontalOffset: -10
+                verticalOffset: 5
+                radius: 5
+                samples: 5
+                color: "#999"
+                source: bottom_panel
+            }
         }
     }
 
@@ -150,6 +173,18 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.topMargin: 0
         border.width: 0
+        layer.enabled: enabled
+
+
+        /* Dropshadow effect */
+        layer.effect: DropShadow {
+            anchors.fill: side_panel
+            horizontalOffset: -10
+            radius: 5
+            samples: 5
+            color: "#999"
+            source: side_panel
+        }
 
         Item {
             id: item_camera_controls
