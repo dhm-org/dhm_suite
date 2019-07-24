@@ -12,7 +12,9 @@ client.connect((server, port))
 ### Setup command
 #cmd_str = "DISABLE_RECORDING"
 #cmd_str = "ENABLE_RECORDING"
-cmd_str = "GAIN=26"
+#cmd_str = "STOP_IMAGING"
+cmd_str = "EXIT"
+#cmd_str = "GAIN=26"
 cmd = cmd_str.encode().ljust(128, b'\0')
 #client.sendall(cmd_msg)
 client.sendall(cmd)
