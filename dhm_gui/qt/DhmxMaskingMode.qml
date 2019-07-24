@@ -5,7 +5,8 @@ import QtGraphicalEffects 1.0
 Item {
     id: mask
     visible: true
-
+    signal mask_pos(int mask_no, double radius, int x, int y)
+    signal remove_mask(int mask_no)
     property var wavelength1: undefined
     property var wavelength2: undefined
     property var wavelength3: undefined
@@ -14,11 +15,13 @@ Item {
     property int wavelength_ct: 0
     property double zoom_amnt: 0.3105
 
+    property string display_mask_path: ""
+
 
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
             onClicked: {
-                console.log("MASKING MODE: Wavelength: ",max_wavelength)
                 if(!wavelength1 && max_wavelength >= 1){
                   wavelength1 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2), "y": mouseY-((parent.height/3)/2), "width": parent.width / 3, "height": parent.width / 3, "name": "Wavelength 1", "mask_num":1})
                   updateCenter(wavelength1.mask_num,mouseX-((parent.width/3)/2),mouseY-((parent.height/3)/2),parent.width / 3,parent.width / 3)
@@ -59,6 +62,14 @@ Item {
        height:3
    }
 
+   /* The dark shade overlay used for masking */
+   Image{
+       id:image_display_mask
+       anchors.fill:parent
+       opacity: 0.7
+       cache: false
+   }
+
 
 
     Component {
@@ -79,7 +90,7 @@ Item {
 
             property int rulersSize: 15
             property string name: "Wavelength"
-            property double r: selComp.width/2
+            property double r: (selComp.width/2) * (1/zoom_amnt)
             property int position_x: (selComp.x + (selComp.width/2))/zoom_amnt
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
 
@@ -206,6 +217,7 @@ Item {
                 }
             }
 
+            /* This is the dragging component of the selection mask */
             MouseArea {     // drag mouse area
                 anchors.fill: parent
                 hoverEnabled: true
@@ -227,9 +239,31 @@ Item {
                        info.flip_info(true)
                     else
                        info.flip_info(false)
+
+                    /* Emit a signal of each individual wavelength that has been enabled to tell
+                     * Python to create a mask using PIL(low) so that the user can see what is
+                     * being masked off */
+                    if(wavelength1){
+                        mask_pos(1,wavelength1.r,wavelength1.position_x,wavelength1.position_y)
+                    }
+                    if(wavelength2){
+                         mask_pos(2,wavelength2.r,wavelength2.position_x,wavelength2.position_y)
+                    }
+                    if(wavelength3){
+                         mask_pos(3,wavelength3.r,wavelength3.position_x,wavelength3.position_y)
+                    }
                 }
 
                 onDoubleClicked: {
+                    if(parent.name == "Wavelength 1")
+                       remove_mask(1)
+                       mask_pos(-1,0,0,0) //throw in an invalid mask position to update the function
+                    if(parent.name == "Wavelength 2")
+                       remove_mask(2)
+                       mask_pos(-1,0,0,0) //throw in an invalid mask position to update the function
+                    if(parent.name == "Wavelength 3")
+                       remove_mask(3)
+                       mask_pos(-1,0,0,0) //throw in an invalid mask position to update the function
                     parent.destroy()        // destroy component
                 }
 
@@ -372,6 +406,10 @@ Item {
            center_point_3.x = x + width/2
            center_point_3.y = y + height/2
         }
+    }
+    function update_display_mask(path){
+        display_mask_path = path
+        image_display_mask.source = display_mask_path
     }
 }
 

@@ -44,6 +44,8 @@ public:
     void SetLogging(bool state);
     void SetGain(int gain);
     void SetExposure(int exposure);
+    void StopImaging();
+    void Exit();
     int PrepareTrigger(AVT::VmbAPI::CameraPtr camera, const char *triggerSelector, const char *triggerMode, const char *triggerSource);
 
 private:

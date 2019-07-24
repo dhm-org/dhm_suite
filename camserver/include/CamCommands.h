@@ -3,6 +3,8 @@
 
 #define MAX_CMD_LEN  128
 
+#define  EXIT_CMD             "EXIT"
+#define  STOP_IMAGING_CMD     "STOP_IMAGING"
 #define  ENA_RECORDING_CMD    "ENABLE_RECORDING"
 #define  DISA_RECORDING_CMD   "DISABLE_RECORDING"
 #define  SET_GAIN_CMD         "GAIN=" //db

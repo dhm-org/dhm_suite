@@ -182,7 +182,8 @@ void *FrameReceived_TIFConvert(void *arg)
 
     sprintf(buff, "%s/%05d_holo.tif", datadir, (int)logargs->frameID);
     Filename = buff;
-    AVT::VmbAPI::Examples::TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_width, (int)frame->header.m_height);
+    //AVT::VmbAPI::Examples::TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_width, (int)frame->header.m_height);
+    AVT::VmbAPI::Examples::TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_height, (int)frame->header.m_width);
     tifCon.convertToTIF((char *)frame->m_data);
 
     return NULL;

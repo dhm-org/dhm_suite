@@ -115,6 +115,11 @@ class guiclient(QThread):
             # make the array writable
             self.outdata.setflags(write=1)
 
+            # Bin historgram values together to display
+            self.histogram,self.bins = np.histogram(self.outdata,bins=np.arange(0,256,1))
+            for i in range(255):
+               self.sig_hist_val.emit(i,self.histogram[i])
+
             # Create an RGB version of the received image to display absolute minimums and maximums
             self.outdata_RGB = np.stack((self.outdata,)*3, axis=-1)
             self.outdata_RGB[self.outdata == 255] = [255,0,0]

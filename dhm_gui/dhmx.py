@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.9.15  07-16-2019"
+DHMX_VERSION_STRING = "DHMx v0.9.16  07-22-2019"
 
 import os, sys, re, time, random
 import threading
@@ -29,6 +29,7 @@ import socket
 import math
 import logging
 import subprocess
+from PIL import Image, ImageDraw
 
 from threading import Timer
 from datetime import datetime
@@ -647,6 +648,13 @@ class FourierWin(QObject):
        self.img_data = None
        self.startup = True
        self.camera_scale_ratio = 0.50 #Set to 0.50 as an arbitrary scale that fits most cameras decently.
+       self.width = 0
+       self.height = 0
+       self.display_mask_path = ""
+       self.display_mask_file = ["", False]
+       self.mask_001 = None
+       self.mask_002 = None
+       self.mask_003 = None
 
        self.spinBox_wavelength = w.subwin_fourier.findChild(QObject, "spinBox_wavelength")
        self.spinBox_prop_dist = w.subwin_fourier.findChild(QObject, "spinBox_prop_dist")
@@ -667,6 +675,10 @@ class FourierWin(QObject):
        self.button_close.qml_signal_stop_streaming.connect(self.CloseWin)
        self.pixel_value.qml_signal_mouse_pos.connect(self.SendMousePos)
        self.button_histogram.qml_signal_enable_historgram.connect(self.EnableHistogram)
+
+       # This signal can be emitted up to three times to create a mask display for the user
+       self.fourier_mask.mask_pos.connect(self.CreateDisplayMask)
+       self.fourier_mask.remove_mask.connect(self.RemoveDisplayMask)
 
        # Connect telemetry object to slot
        # This signal will be pickup:
@@ -740,6 +752,52 @@ class FourierWin(QObject):
         self.display_t.performance_val = perf
 
 
+    def RemoveDisplayMask(self, mask_no):
+       if(mask_no == 1):
+          self.mask_001 = None
+       if(mask_no == 2):
+          self.mask_002 = None
+       if(mask_no == 3):
+          self.mask_003 = None
+
+
+    def CreateDisplayMask(self, mask_no, radius, x, y):
+        self.display_mask_path = '/tmp/'
+        #print("Masking info: masking number - "+str(mask_no)+", radius - "+str(radius)+", x position -  "+str(x)+", y position - "+str(y))
+
+        # QML will only reload a new image if the path is different since QML caches images
+        # Below is an aglorithm that switches between true/false to update and create a new image
+        # This new miage then updates on the QML side.
+        if(self.display_mask_file[1]):
+           self.display_mask_file[0] = 'DisplayMask0.png'
+           self.display_mask_file[1] = False
+        else:
+           self.display_mask_file[0] = 'DisplayMask1.png'
+           self.display_mask_file[1] = True
+
+        # PIL Coord system: x1, y1, x2, y2
+        if(mask_no == 1):
+           self.mask_001 = (x-radius,y-radius,x+radius,y+radius)
+        if(mask_no == 2):
+           self.mask_002 = (x-radius,y-radius,x+radius,y+radius)
+        if(mask_no == 3):
+           self.mask_003 = (x-radius,y-radius,x+radius,y+radius)
+        bg = Image.new("RGBA", (self.width,self.height), (000,000,000,32))
+
+        mask=Image.new('L', bg.size, color=255)
+        draw=ImageDraw.Draw(mask)
+        if(self.mask_001):
+           draw.ellipse(self.mask_001, fill=0)
+        if(self.mask_002):
+           draw.ellipse(self.mask_002, fill=0)
+        if(self.mask_003):
+           draw.ellipse(self.mask_003, fill=0)
+
+
+        bg.putalpha(mask)
+        bg.save(self.display_mask_path + self.display_mask_file[0])
+        self.fourier_mask.update_display_mask(self.display_mask_path + self.display_mask_file[0])
+
     # This function takes in the display window width and height, as well as the camera
     # source width and height and computes a scale which will fit completely in frame
     # of the display window.
@@ -758,6 +816,8 @@ class FourierWin(QObject):
         self.image_sample.reload()
 
         if(self.startup):
+          self.width = width
+          self.height = height
           self.ComputeResize(width,\
                              height,\
                              w.subwin_fourier.property("frame_width"),\

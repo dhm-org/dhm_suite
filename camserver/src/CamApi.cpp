@@ -27,12 +27,16 @@
 #define FRAME_BUFFER_COUNT 3
 #define CIRC_BUFF_SIZE 1000
 
-CameraServer *m_camserver;
+CameraServer *m_camserver = NULL;
 
 CamApi::CamApi()
 {
     m_system = &AVT::VmbAPI::VimbaSystem::GetInstance();
     m_verbose = false;
+    //m_cameras = NULL;
+    //m_pCamera = NULL;                  // The currently streaming camera
+    m_pFrameObserver = NULL;           // Every camera has its own frame observer
+    m_circbuff = NULL;
 }
 
 int CamApi::Startup()
@@ -51,8 +55,14 @@ void CamApi::Shutdown()
 {
     fprintf(stderr, "Shutting down CamApi\n");
 
-    if(m_system != NULL)
+    if(m_camserver != NULL) {
+	fprintf(stderr, "Stopping camserver\n");
+        m_camserver->Stop();
+    }
+    if(m_system != NULL) {
+	fprintf(stderr, "Shutting down Vimba system.\n");
         m_system->Shutdown();
+    }
 }
 
 int CamApi::PrepareTrigger(AVT::VmbAPI::CameraPtr camera, const char *triggerSelector, const char *triggerMode, const char *triggerSource)
@@ -205,7 +215,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     VmbInt64_t minWidth, maxWidth, minHeight, maxHeight, width, height;
     double minRate, maxRate, rate; 
     std::string strValue;
-    //printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
+    printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
     camera = m_cameras[cameraidx];
 
 
@@ -214,6 +224,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
          printf("Error.  Unable to open CAMERA %d\n", cameraidx);
          return -1;
      }
+    fprintf(stderr, "Opened camera...\n");
     
     // *** Apply user parameters and other parameters for optimal transfer
     camera->GetFeatures(pFeatureVec);
@@ -357,8 +368,11 @@ int CamApi::StartCameraServer(int frame_port, int command_port, int telem_port)
 int CamApi::StopAsyncContinuousImageAcquisition()
 {
     fprintf(stderr, "Stoping Continous Acquisition.\n");
-    SP_ACCESS( m_pCamera )->StopContinuousImageAcquisition();
-    m_pCamera->Close();
+    if (m_pCamera) {
+        if(SP_ACCESS( m_pCamera )->StopContinuousImageAcquisition()!=VmbErrorSuccess) {
+            m_pCamera->Close();
+	}
+    }
 
     return 0;
 }
@@ -490,6 +504,19 @@ void CamApi::SetExposure(int exposure)
 #else
     PFrameObserver()->SetExposure(exposure);
 #endif
+}
+
+void CamApi::StopImaging()
+{
+    //PFrameObserver()->StopImaging();
+    StopAsyncContinuousImageAcquisition();
+}
+
+void CamApi::Exit()
+{
+    StopAsyncContinuousImageAcquisition();
+    Shutdown();
+    exit(0);
 }
 
 
