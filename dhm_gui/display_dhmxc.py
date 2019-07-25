@@ -197,24 +197,27 @@ class guiclient(QThread):
                     datalen = len(data)
                     
                     if meta is None and datalen > struct.calcsize(headerStruct.format):
-                        self.m_width, \
-                        self.m_height, \
-                        self.m_img_size, \
-                        self.m_databuffersize, \
-                        self.m_timestamp, \
-                        self.m_frame_id, \
-                        self.m_logging, \
-                        self.m_gain,\
-                        self.m_gain_min,\
-                        self.m_gain_max,\
-                        self.m_exposure,\
-                        self.m_exposure_min,\
-                        self.m_exposure_max,\
-                        self.m_rate,\
-                        self.m_rate_measured,\
-                           = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
-                        meta = (self.m_width)
-
+                        try:
+                           self.m_width, \
+                           self.m_height, \
+                           self.m_img_size, \
+                           self.m_databuffersize, \
+                           self.m_timestamp, \
+                           self.m_frame_id, \
+                           self.m_logging, \
+                           self.m_gain,\
+                           self.m_gain_min,\
+                           self.m_gain_max,\
+                           self.m_exposure,\
+                           self.m_exposure_min,\
+                           self.m_exposure_max,\
+                           self.m_rate,\
+                           self.m_rate_measured,\
+                              = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
+                           meta = (self.m_width)
+                        except:
+                           print("DHMx-c Diplsay: Did not receive proper header.  Header missing or incomplete.")
+                           return -10
                         # frame data + header = full image message
                         totalbytes = self.m_databuffersize + struct.calcsize(headerStruct.format)
                         if datalen >= totalbytes: 
