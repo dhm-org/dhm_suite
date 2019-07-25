@@ -44,7 +44,7 @@ from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.2   07-19-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.5   07-25-2019"
 CAMERA_CONVERSION_RATIO = 0.50
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
@@ -162,6 +162,7 @@ class MainWin(QObject):
       self.win = engine.rootObjects()[0]
       self.win.setProperty("title", DHMXC_VERSION_STRING)
       self.cfg_file = ""
+      self.pixel_count = 0
 
       # Collect QObjects
       self.check_recording = self.win.findChild(QObject,"check_recording")
@@ -233,6 +234,8 @@ class MainWin(QObject):
          self.win.apply_settings(gain,exposure)
          self.image_sample.setProperty("width",width * CAMERA_CONVERSION_RATIO)
          self.image_sample.setProperty("height",height * CAMERA_CONVERSION_RATIO)
+         self.pixel_count = width*height
+         self.win.set_histogram_pixel_count(self.pixel_count)
          self.win.reset_view()
          self.startup = False
 
