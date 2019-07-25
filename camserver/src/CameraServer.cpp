@@ -213,6 +213,12 @@ void CameraServer::Run()
     //pthread_join(m_serverthread, NULL);
 }
 
+void CameraServer::Stop()
+{
+    SetRunning(false);
+
+}
+
 
 void * CameraServer::FrameServerThread(void *arg)
 {
@@ -259,6 +265,18 @@ void * CameraServer::FrameServerThread(void *arg)
         struct timespec ts;
         struct timespec et;
         double ts_float;
+
+        if (!C->IsRunning()) {
+            fprintf(stderr, "CameraServer no longer running...\n");
+            for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+                int client = C->FrameServer()->Clients()[j];
+
+                if (client == SOCKET_ERROR) continue;
+		close(client);
+		fprintf(stderr, "Closed client...\n");
+	    }
+            break;
+	}
 
         clock_gettime(CLOCK_REALTIME, &ts);
 
@@ -431,6 +449,18 @@ void * CameraServer::FrameServerThread(void *arg)
                                 //fprintf(stderr, "Set Exposure to %d.\n", exposure);
                                 exposure = std::stoi(buffer+strlen(SET_EXPOSURE_CMD), nullptr, 10);
                                 C->PCamApi()->SetExposure(exposure);
+                                validcmd = true;
+                            }  
+                            else if(std::strncmp(buffer, STOP_IMAGING_CMD, strlen(STOP_IMAGING_CMD)) == 0) {
+
+                                fprintf(stderr, "Stop Imaging\n");
+                                C->PCamApi()->StopImaging();
+                                validcmd = true;
+                            }  
+                            else if(std::strncmp(buffer, EXIT_CMD, strlen(EXIT_CMD)) == 0) {
+
+                                fprintf(stderr, "Exiting...\n");
+                                C->PCamApi()->Exit();
                                 validcmd = true;
                             }  
                             else {

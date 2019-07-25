@@ -82,6 +82,26 @@ struct UserParams {
     struct StringParam camserialnum;
     struct StringParam trigger_source;
 };
+
+static CamApi *g_cam_api = NULL;
+static bool exitflag = false;
+
+void sighandler(int s) 
+{
+    fprintf(stderr, "Caught Ctrl-C...\n");
+    exitflag=true;
+}
+void CaptureSigint()
+{
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = sighandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, NULL);
+}
+
 void banner()
 {
     printf("\n");
@@ -303,6 +323,7 @@ int list_cameras(CamApi *cam_api)
 {
     int numcameras;
 
+    fprintf(stderr, "Starting up the Vimba driver...\n");
     cam_api->Startup();
     if((numcameras = cam_api->QueryConnectedCameras()) <= 0) {
         cam_api->Shutdown();
@@ -329,6 +350,7 @@ void prompt_user_select_camera(CamApi *cam_api, int numcameras, int *cameraidx, 
         }
         
         do {
+	    if (exitflag) break;
             printf("\nSelect which camera to acquire frame from [Enter number and press return]:  ");
             std::cin >> userinput;
             if (userinput > 0 && userinput <= numcameras) {
@@ -345,45 +367,56 @@ void prompt_user_select_camera(CamApi *cam_api, int numcameras, int *cameraidx, 
 int main( int argc, char* argv[] )
 {
 
-    CamApi *cam_api;
     struct UserParams userparams;
     int cameraidx;
     int numcameras;
     int count;
 
-    cam_api = new CamApi();
+    g_cam_api = new CamApi();
+
+    CaptureSigint();
 
     // *** Print banner **
     banner();
 
     // *** Set default values for parameters
+    fprintf(stderr, "Setting default user input values...\n");
     set_default(&userparams);
 
     // *** Process Command Line Arguments **
+    fprintf(stderr, "Processing command line arguments...\n");
     parse_commandline(argc, argv, &userparams);
 
     // *** List cameras in the computer
-    if((numcameras = list_cameras(cam_api)) <= 0) {
+    if((numcameras = list_cameras(g_cam_api)) <= 0) {
         return -1;
     }
     
+    fprintf(stderr, "Found %d cameras\n", numcameras);
     // *** Prompt user to select a camera
-    prompt_user_select_camera(cam_api, numcameras, &cameraidx, &userparams);
+    prompt_user_select_camera(g_cam_api, numcameras, &cameraidx, &userparams);
+
+    if (exitflag)
+        goto ExitCamserver;
 
     // *** Prompt user for addition information
     prompt_user(cameraidx, &userparams);
 
     // *** Start Acquiring
-    start_camera_server(cam_api, cameraidx, &userparams);
+    fprintf(stderr, "Start Camera Server...\n");
+    start_camera_server(g_cam_api, cameraidx, &userparams);
 
     count = 0;
     while(count++ < userparams.duration.val) {
          usleep(1e6);
          fprintf(stderr, "Sec %d\n", count);
+	 if(exitflag) break;
     }
 
+ExitCamserver:
+
     // *** Stop camera server
-    stop_camera_server(cam_api);
+    stop_camera_server(g_cam_api);
 
     return 0;
 }

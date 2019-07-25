@@ -222,8 +222,8 @@ int TIFConverter::convertToTIF(char *frame_data){
 
 	image_buf = (char*) frame_data;
 
-	TIFFSetField (tiffOut, TIFFTAG_IMAGEWIDTH, width);
-	TIFFSetField(tiffOut, TIFFTAG_IMAGELENGTH, height); 
+	TIFFSetField (tiffOut, TIFFTAG_IMAGEWIDTH, getWidth());
+	TIFFSetField(tiffOut, TIFFTAG_IMAGELENGTH, getHeight()); 
 	TIFFSetField(tiffOut, TIFFTAG_SAMPLESPERPIXEL, SAMPLE_PER_PX); 
 	TIFFSetField(tiffOut, TIFFTAG_BITSPERSAMPLE, 8);
 	TIFFSetField(tiffOut, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
@@ -235,18 +235,21 @@ int TIFConverter::convertToTIF(char *frame_data){
 	TIFFSetField(tiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 	TIFFSetField(tiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 
-	linebytes=SAMPLE_PER_PX*width;
+        linebytes=SAMPLE_PER_PX*getWidth();
 
-	if (TIFFScanlineSize(tiffOut)>linebytes)
-    	line_buf =(unsigned char *)_TIFFmalloc(linebytes);
-	else
-    	line_buf = (unsigned char *)_TIFFmalloc(TIFFScanlineSize(tiffOut));
+	//fprintf(stderr, "TIFFScanlineSize(tiffOut)>linebytes: %d > %d\n", (int)TIFFScanlineSize(tiffOut), (int)linebytes);
+	if (TIFFScanlineSize(tiffOut)>=linebytes) {
+    	    line_buf =(unsigned char *)_TIFFmalloc(linebytes);
+	}
+	else {
+    	    line_buf = (unsigned char *)_TIFFmalloc(TIFFScanlineSize(tiffOut));
+	}
     
-    TIFFSetField(tiffOut, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tiffOut, width*SAMPLE_PER_PX));
+    TIFFSetField(tiffOut, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tiffOut, linebytes));
 		
 	// Koala seems to want them written as encoded strips and barfs on WriteScanline
 	// because I'm lazy, we're trying one big strip!
-	TIFFWriteEncodedStrip(tiffOut, 0,image_buf,width*height); 
+	TIFFWriteEncodedStrip(tiffOut, 0,image_buf,getWidth()*getHeight()); 
 	// TIFFWriteEncodedStrip(tiffOut, 0,image_buf,2048*2048); 
 	TIFFClose(tiffOut); 
 	if (line_buf)

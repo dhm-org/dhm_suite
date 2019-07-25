@@ -56,6 +56,7 @@ public:
     //CameraServer(int frame_port, int command_port, int telem_port, float frame_publish_rate_hz, CircularBuffer *circbuff);
     ~CameraServer();
     void Run();
+    void Stop();
 
     Server *FrameServer() {return m_frame_server;}
     Server *CommandServer() {return m_cmd_server;}
@@ -63,6 +64,7 @@ public:
 
     float FramePublishRate(){return m_frame_publish_rate_hz;}
     void SetRunning(bool state){m_running = state;}
+    bool IsRunning(){return m_running;}
     CircularBuffer *CircBuff(){return m_circbuff;}
     CamApi *PCamApi(){return m_camapi;}
     void UpdateFrame(struct CamFrame *frame);
