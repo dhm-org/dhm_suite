@@ -305,7 +305,6 @@ MouseArea {
         Flickable{
             id: flickArea
             objectName: "canvas_area"
-            //anchors {fill: parent; margins: 10;}
             width: parent.width
             height: parent.height
             contentWidth: sample.width*sample.scale
@@ -337,46 +336,21 @@ MouseArea {
                     objectName: "pixel_value"
                     width: sample.width
                     height: sample.height
-                    //width: sample_area.width
-                    //height: sample_area.height
                     hoverEnabled: true
-
-
-//                    Rectangle{
-//                        anchors.fill: parent
-//                        color:"purple"
-//                    }
 
                     onMouseXChanged: {
                         var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
-                        //var positionInRoot = mapToItem(flickArea.contentItem, mouse.x, mouse.y)
                         qml_signal_mouse_pos(positionInRoot.x, positionInRoot.y)
-                        //console.log(positionInRoot.x, positionInRoot.y)
                     }
                 }
 
                 Image {
                     property bool counter: false
-                    //width: sample_area.width
-                    //height: sample_area.height
-
-                    //fillMode: Image.PreserveAspectFit
-
                     id: sample
                     objectName: "image_sample"
                     asynchronous: false
                     cache: false
                     smooth: false
-
-//                    Rectangle{
-//                        /* Boundary Tester */
-//                        anchors.fill: parent
-//                        color: "#95668723"
-//                        onWidthChanged: {
-//                            console.log("Recntagle: "+width+"x"+height)
-//                        }
-//                    }
-
 
                     function reload(){
                         counter = !counter
@@ -389,10 +363,7 @@ MouseArea {
                 }
                 Image {
                     id: fourier_mask_sample
-                    //fillMode: Image.PreserveAspectFit
-                    //source: Null
                     cache: false
-                    //asynchronous: false
                     visible: false
                     enabled: true
                     smooth: false
@@ -733,5 +704,9 @@ MouseArea {
     function set_source_width_and_height(width, height){
         source_height = width
         source_width = height
+    }
+
+    function set_histogram_pixel_count(pixel_count){
+        subwin_histogram.bin_amnt = pixel_count
     }
 }
