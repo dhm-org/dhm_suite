@@ -320,6 +320,7 @@ MouseArea {
                 onWheel: {
                     zoom(wheel.angleDelta.y)
                     update_zoom(sample)
+                    update_zoom(fourier_mask_sample)
                 }
                 onMouseXChanged: {
                     flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
@@ -374,6 +375,7 @@ MouseArea {
                         fourier_mask_sample.width = sample.width
                         fourier_mask_sample.height = sample.height
                         update_zoom(fourier_mask_sample)
+                        fourier_mask.zoom_amnt = get_zoom_amnt(fourier_mask_sample)
                     }
                     /* The drawing canvas for fourier mode */
                     DhmxMaskingMode{
@@ -383,6 +385,7 @@ MouseArea {
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
+
                     }
                 }
 
