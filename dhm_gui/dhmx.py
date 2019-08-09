@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.10.0  08-06-2019"
+DHMX_VERSION_STRING = "DHMx v0.10.1  08-08-2019"
 
 import os, sys, re, time, random
 import threading
@@ -792,7 +792,6 @@ class FourierWin(QObject):
            draw.ellipse(self.mask_002, fill=0)
         if(self.mask_003):
            draw.ellipse(self.mask_003, fill=0)
-
 
         bg.putalpha(mask)
         bg.save(self.display_mask_path + self.display_mask_file[0])

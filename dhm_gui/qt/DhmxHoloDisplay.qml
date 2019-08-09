@@ -320,7 +320,7 @@ MouseArea {
                 onWheel: {
                     zoom(wheel.angleDelta.y)
                     update_zoom(sample)
-                    update_zoom(fourier_mask_sample)
+                    //update_zoom(fourier_mask_sample)
                 }
                 onMouseXChanged: {
                     flickArea.anchors.horizontalCenterOffset = zoom_area.mouseX
@@ -368,10 +368,10 @@ MouseArea {
                     visible: false
                     enabled: true
                     smooth: false
-                    width: 635
-                    height: 638
+                    width: frame_width
+                    height: frame_height
 
-                    onSourceChanged: {
+                    onVisibleChanged: {
                         fourier_mask_sample.width = sample.width
                         fourier_mask_sample.height = sample.height
                         update_zoom(fourier_mask_sample)
@@ -382,10 +382,12 @@ MouseArea {
                         id: fourier_mask
                         objectName: "fourier_mask"
                         anchors.fill:parent
+                        //width: 636
+                        //height: 636
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
-
+                        //scale: (1/0.6211)* zoom_f
                     }
                 }
 

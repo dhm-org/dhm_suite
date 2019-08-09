@@ -5,6 +5,7 @@ import QtGraphicalEffects 1.0
 Item {
     id: mask
     visible: true
+
     signal mask_pos(int mask_no, double radius, int x, int y)
     signal remove_mask(int mask_no)
     property var wavelength1: undefined
@@ -15,49 +16,51 @@ Item {
     property int wavelength_ct: 0
     property double zoom_amnt: 0.3105
 
+    property int default_wavelength_diameter: 250
     property string display_mask_path: ""
-
 
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: {
                 if(!wavelength1 && max_wavelength >= 1){
-                  wavelength1 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2), "y": mouseY-((parent.height/3)/2), "width": parent.width / 3, "height": parent.width / 3, "name": "Wavelength 1", "mask_num":1})
-                  updateCenter(wavelength1.mask_num,mouseX-((parent.width/3)/2),mouseY-((parent.height/3)/2),parent.width / 3,parent.width / 3)
+                  wavelength1 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 1", "mask_num":1})
+                  updateCenter(wavelength1.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt, mouseY-((parent.height/3)/2)*zoom_amnt, (parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
                 }
                 else if(!wavelength2 && max_wavelength >= 2){
-                  wavelength2 = selectionComponent.createObject(parent, {"x":  mouseX-((parent.width/3)/2), "y": mouseY-((parent.height/3)/2), "width": parent.width / 3, "height": parent.width / 3, "name": "Wavelength 2","mask_num":2})
-                  updateCenter(wavelength2.mask_num,mouseX-((parent.width/3)/2),mouseY-((parent.height/3)/2),parent.width / 3,parent.width / 3)
+                  wavelength2 = selectionComponent.createObject(parent, {"x":  mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 2","mask_num":2})
+                  updateCenter(wavelength2.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
                 }
                 else if(!wavelength3 && max_wavelength >= 3){
-                  wavelength3 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2), "y": mouseY-((parent.height/3)/2), "width": parent.width / 3, "height": parent.width / 3, "name": "Wavelength 3","mask_num":3})
-                  updateCenter(wavelength3.mask_num,mouseX-((parent.width/3)/2),mouseY-((parent.height/3)/2),parent.width / 3,parent.width / 3)
+                  wavelength3 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 3","mask_num":3})
+                  updateCenter(wavelength3.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt,(parent.width / 3)*zoom_amnt)
                 }
             }
+            // onMouseXChanged: console.log(mask.width)
+           // onMouseXChanged: console.log(center_point_1.x+" , "+center_point_1.y)
         }
 
    Rectangle{
        id: center_point_1
        visible: false
-       x:250
-       y:250
+       x:250/zoom_amnt
+       y:250/zoom_amnt
        width:3
        height:3
    }
    Rectangle{
        id: center_point_2
        visible: false
-       x:250
-       y:250
+       x:250/zoom_amnt
+       y:250/zoom_amnt
        width:3
        height:3
    }
    Rectangle{
        id: center_point_3
        visible: false
-       x:250
-       y:250
+       x:250/zoom_amnt
+       y:250/zoom_amnt
        width:3
        height:3
    }
@@ -77,22 +80,20 @@ Item {
         Rectangle {
             id: selComp
             property int mask_num: 0
-
-            anchors.centerIn: center_point_1
-            radius: width*0.5 //to create a circle
-
-            border {
-                width: 2
-                color: "steelblue"
-            }
-            color: "#004682B4"
-            //color: "white"
-
             property int rulersSize: 15
             property string name: "Wavelength"
             property double r: (selComp.width/2) * (1/zoom_amnt)
             property int position_x: (selComp.x + (selComp.width/2))/zoom_amnt
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
+
+            anchors.centerIn: center_point_1
+            radius: width*0.5 //to create a circle
+            border {
+                width: 2
+                color: "steelblue"
+            }
+            color: "#004682B4"
+
 
             /* RETICULE */
             Item{
