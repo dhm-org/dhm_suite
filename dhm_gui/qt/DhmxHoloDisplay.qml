@@ -207,6 +207,9 @@ MouseArea {
                     button_load.enabled = true
                     button_save.enabled = true
                     bg.state = "masking"
+                    fourier_mask.zoom_amnt = zoom_f
+                    fourier_mask.width = sample.width
+                    fourier_mask.height = sample.height
                 }
                 else{
                     deactivate_mask_mode()
@@ -357,26 +360,11 @@ MouseArea {
 
                 Image {
                     property bool counter: false
-                    //width: sample_area.width
-                    //height: sample_area.height
-
-                    //fillMode: Image.PreserveAspectFit
-
                     id: sample
                     objectName: "image_sample"
                     asynchronous: false
                     cache: false
                     smooth: false
-
-//                    Rectangle{
-//                        /* Boundary Tester */
-//                        anchors.fill: parent
-//                        color: "#95668723"
-//                        onWidthChanged: {
-//                            console.log("Recntagle: "+width+"x"+height)
-//                        }
-//                    }
-
 
                     function reload(){
                         counter = !counter
@@ -412,6 +400,13 @@ MouseArea {
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
+
+                        onVisibleChanged: {
+                            fourier_mask_sample.width = sample.width
+                            fourier_mask_sample.height = sample.height
+                            update_zoom(fourier_mask_sample)
+                            fourier_mask.update_all_positions(zoom_f)
+                        }
                     }
                 }
 

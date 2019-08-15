@@ -17,6 +17,36 @@ Item {
 
     property string display_mask_path: ""
 
+    /* Previous frame width and height to get exact pixel differences for mask placement */
+    property int width_prev: 000
+    property int height_prev: 000
+
+    property int w1_prev_width: 000
+    property int w1_prev_height: 000
+
+    property int w2_prev_width: 000
+    property int w2_prev_height: 000
+
+    property int w3_prev_width: 000
+    property int w3_prev_height: 000
+    onVisibleChanged: {
+        if(!visible){
+            width_prev = width
+            height_prev = height
+            if(wavelength1){
+               w1_prev_width = wavelength1.width
+               w1_prev_height = wavelength1.height
+            }
+            if(wavelength2){
+               w2_prev_width = wavelength2.width
+               w2_prev_height = wavelength2.height
+            }
+            if(wavelength3){
+               w3_prev_width = wavelength3.width
+               w3_prev_height = wavelength3.height
+            }
+        }
+    }
 
         MouseArea {
             anchors.fill: parent
@@ -93,6 +123,8 @@ Item {
             property double r: (selComp.width/2) * (1/zoom_amnt)
             property int position_x: (selComp.x + (selComp.width/2))/zoom_amnt
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
+            property int wavelength_width: selComp.width
+            property int wavelength_height: selComp.height
 
             /* RETICULE */
             Item{
@@ -231,7 +263,43 @@ Item {
                     maximumY: parent.parent.height
                     smoothed: true
                 }
+
+                /* This timer was designed to update the shadow masks and is used only when
+                 * the user initially starts the masking mode.  Since Qt does not receive
+                 * the positional change immedietly due to the Qt engine, this is called
+                 * to constantly update the positional values of hte masks until the user
+                 * moves their mouse and forces an update */
+                Timer{
+                    id: timer_shadow_mask
+                    interval: 60
+                    running: true
+                    repeat: true
+                    onTriggered: {
+                        if(wavelength1){
+                            mask_pos(1,wavelength1.r,wavelength1.position_x,wavelength1.position_y)
+                        }
+                        if(wavelength2){
+                             mask_pos(2,wavelength2.r,wavelength2.position_x,wavelength2.position_y)
+                        }
+                        if(wavelength3){
+                             mask_pos(3,wavelength3.r,wavelength3.position_x,wavelength3.position_y)
+                        }
+                    }
+                }
+
+                /* When the visiblity is changed to true, fire the timer to update the canvas */
+                onVisibleChanged: {
+                    if(visible)
+                       timer_shadow_mask.running = true
+                    if(!visible)
+                        timer_shadow_mask.running = false
+                }
+
+                /* Either mouseX or MouseY could be used.  MouseX was chosen arbitrarily.
+                 * This will update the info position of each mask with each pixel movement
+                 * and will also send masking positions to dhmx.py to update PIL(low)*/
                 onMouseXChanged: {
+                    timer_shadow_mask.running = false
                     /* 500 pixels is used to compensate for the width of the text as
                      * there is no direct way to access how much width the text consumes */
                     /* TODO: Find a better solution instead of a "magic number" */
@@ -410,6 +478,27 @@ Item {
     function update_display_mask(path){
         display_mask_path = path
         image_display_mask.source = display_mask_path
+    }
+
+    function update_all_positions(){
+        if(wavelength1){
+           wavelength1.width = wavelength1.width + (width - width_prev)
+           wavelength1.height = wavelength1.height + (height - height_prev)
+           center_point_1.x = center_point_1.x + (width - width_prev) - (wavelength1.width/2 - w1_prev_width/2)
+           center_point_1.y = center_point_1.y + (height - height_prev) - (wavelength1.height/2 - w1_prev_height/2)
+        }
+        if(wavelength2){
+           wavelength2.width = wavelength2.width + (width - width_prev)
+           wavelength2.height = wavelength2.height + (height - height_prev)
+           center_point_2.x = center_point_2.x + (width - width_prev) - (wavelength2.width/2 - w2_prev_width/2)
+           center_point_2.y = center_point_2.y + (height - height_prev) - (wavelength2.height/2 - w2_prev_height/2)
+        }
+        if(wavelength3){
+           wavelength3.width = wavelength3.width + (width - width_prev)
+           wavelength3.height = wavelength3.height + (height - height_prev)
+           center_point_3.x = center_point_3.x + (width - width_prev) - (wavelength3.width/2 - w3_prev_width/2)
+           center_point_3.y = center_point_3.y + (height - height_prev) - (wavelength3.height/2 - w3_prev_height/2)
+        }
     }
 }
 
