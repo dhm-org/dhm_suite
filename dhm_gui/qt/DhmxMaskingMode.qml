@@ -21,8 +21,6 @@ Item {
     property int default_wavelength_diameter: 250
     property string display_mask_path: ""
 
-<<<<<<< HEAD
-=======
     /* Previous frame width and height to get exact pixel differences for mask placement */
     property int width_prev: 000
     property int height_prev: 000
@@ -55,7 +53,7 @@ Item {
         }
     }
 
->>>>>>> master
+
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
@@ -116,23 +114,10 @@ Item {
         id: selectionComponent
         Rectangle {
             id: selComp
-            property int mask_num: 0
-            property int rulersSize: 15
-            property string name: "Wavelength"
-            property double r: (selComp.width/2) * (1/zoom_amnt)
-            property int position_x: (selComp.x + (selComp.width/2))/zoom_amnt
-            property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
-
             anchors.centerIn: center_point_1
             radius: width*0.5 //to create a circle
-            border {
-                width: 2
-                color: "steelblue"
-            }
-            color: "#004682B4"
 
-<<<<<<< HEAD
-=======
+            property int mask_num: 0
             property int rulersSize: 15
             property string name: "Wavelength"
             property double r: (selComp.width/2) * (1/zoom_amnt)
@@ -141,6 +126,12 @@ Item {
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
             property int wavelength_width: selComp.width
             property int wavelength_height: selComp.height
+
+            border {
+                width: 2
+                color: "steelblue"
+            }
+            color: "#004682B4"
 
             /* This rectangle is used as a reference for width/height/radius when zooming in/out */
             Rectangle{
@@ -154,7 +145,6 @@ Item {
                 }
 
             }
->>>>>>> master
 
             /* RETICULE */
             Item{

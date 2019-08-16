@@ -390,9 +390,6 @@ MouseArea {
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
-<<<<<<< HEAD
-                        //scale: (1/0.6211)* zoom_f
-=======
 
                         onVisibleChanged: {
                             fourier_mask_sample.width = sample.width
@@ -400,7 +397,6 @@ MouseArea {
                             update_zoom(fourier_mask_sample)
                             fourier_mask.update_all_positions(zoom_f)
                         }
->>>>>>> master
                     }
                 }
 
