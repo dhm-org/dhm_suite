@@ -14,6 +14,8 @@ Item {
     property int max_wavelength: 0
     property int wavelength_ct: 0
     property double zoom_amnt: 0.3105
+    /* This property does not change */
+    property double zoom_initial: -1.00
 
     property string display_mask_path: ""
 
@@ -30,6 +32,7 @@ Item {
     property int w3_prev_width: 000
     property int w3_prev_height: 000
     onVisibleChanged: {
+
         if(!visible){
             width_prev = width
             height_prev = height
@@ -121,10 +124,24 @@ Item {
             property int rulersSize: 15
             property string name: "Wavelength"
             property double r: (selComp.width/2) * (1/zoom_amnt)
+            property double r_actual: (selComp_ref.width/2) * (1/zoom_initial)
             property int position_x: (selComp.x + (selComp.width/2))/zoom_amnt
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
             property int wavelength_width: selComp.width
             property int wavelength_height: selComp.height
+
+            /* This rectangle is used as a reference for width/height/radius when zooming in/out */
+            Rectangle{
+                id:selComp_ref
+                anchors.centerIn: parent
+                visible: false
+                Component.onCompleted: {
+                    width = selComp.width
+                    height = selComp.height
+                    radius = width *0.5
+                }
+
+            }
 
             /* RETICULE */
             Item{
@@ -191,7 +208,7 @@ Item {
                             }
                             Label{
                                 id: label_r
-                                text: "Radius: "+selComp.r
+                                text: "Radius: "+selComp.r_actual
                                 font.bold: true
                                 color: "white"
                                 opacity: 0.6
@@ -363,6 +380,9 @@ Item {
                     drag{ target: parent; axis: Drag.XAxis }
                     onMouseXChanged: {
                         if(drag.active){
+                            selComp_ref.width = selComp_ref.width - mouseX
+                            selComp_ref.height = selComp_ref.height - mouseX
+
                             selComp.width = selComp.width - mouseX
                             //selComp.x = selComp.width + mouseX
                             selComp.height = selComp.height - mouseX
@@ -387,6 +407,9 @@ Item {
                     drag{ target: parent; axis: Drag.XAxis }
                     onMouseXChanged: {
                         if(drag.active){
+                            selComp_ref.width = selComp_ref.width + mouseX
+                            selComp_ref.height = selComp_ref.height + mouseX
+
                             selComp.width = selComp.width + mouseX
                             selComp.height = selComp.height + mouseX
                             if(selComp.width < 50)
@@ -411,6 +434,9 @@ Item {
                     drag{ target: parent; axis: Drag.YAxis }
                     onMouseYChanged: {
                         if(drag.active){
+                            selComp_ref.width = selComp_ref.width - mouseY
+                            selComp_ref.height = selComp_ref.height - mouseY
+
                             selComp.height = selComp.height - mouseY
                             selComp.width = selComp.width - mouseY
                             selComp.y = selComp.y + mouseY
@@ -437,6 +463,9 @@ Item {
                     drag{ target: parent; axis: Drag.YAxis }
                     onMouseYChanged: {
                         if(drag.active){
+                            selComp_ref.width = selComp_ref.width + mouseY
+                            selComp_ref.height = selComp_ref.height + mouseY
+
                             selComp.height = selComp.height + mouseY
                             selComp.width = selComp.width + mouseY
                             if(selComp.height < 50)
@@ -461,6 +490,13 @@ Item {
             }
         }
     }
+
+    function set_initial_zoom(zoom){
+        if(zoom_initial == -1.00){
+            zoom_initial = zoom
+        }
+    }
+
     function updateCenter(masking_number,x,y,width,height){
         if(masking_number == 1){
            center_point_1.x = x + width/2

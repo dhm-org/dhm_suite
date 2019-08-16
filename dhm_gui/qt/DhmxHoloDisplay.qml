@@ -648,6 +648,7 @@ MouseArea {
         zoom = id.width  / source_width
         dhmx_holo_disp.zoom_f = zoom
         set_aspect_ratio()
+        fourier_mask.set_initial_zoom(zoom)
         return zoom
     }
 
@@ -709,13 +710,13 @@ MouseArea {
     }
     function pack_cmd(){
         if(fourier_mask.wavelength1 != undefined){
-            add_circle("circle_1",fourier_mask.wavelength1.position_x,fourier_mask.wavelength1.position_y,fourier_mask.wavelength1.r)
+            add_circle("circle_1",fourier_mask.wavelength1.position_x,fourier_mask.wavelength1.position_y,fourier_mask.wavelength1.r_actual)
         }
         if(fourier_mask.wavelength2 != undefined){
-            add_circle("circle_2",fourier_mask.wavelength2.position_x,fourier_mask.wavelength2.position_y,fourier_mask.wavelength2.r)
+            add_circle("circle_2",fourier_mask.wavelength2.position_x,fourier_mask.wavelength2.position_y,fourier_mask.wavelength2.r_actual)
         }
         if(fourier_mask.wavelength3 != undefined){
-            add_circle("circle_3",fourier_mask.wavelength3.position_x,fourier_mask.wavelength3.position_y,fourier_mask.wavelength3.r)
+            add_circle("circle_3",fourier_mask.wavelength3.position_x,fourier_mask.wavelength3.position_y,fourier_mask.wavelength3.r_actual)
         }
         fourier_mask_cmd = ""
 
