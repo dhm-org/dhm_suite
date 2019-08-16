@@ -1058,7 +1058,7 @@ MouseArea {
             update_prop_distances()
 
                 /* Send command only on release */
-                if(clicked){
+                if(!clicked){
                     if(spinBox_num_dist.value == 1)
                        pack_cmd("reconst propagation_distance=["+spinBox_prop_1.realValue+"]")
                     if(spinBox_num_dist.value == 2)
