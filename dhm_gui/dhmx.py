@@ -16,11 +16,8 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-<<<<<<< HEAD
-DHMX_VERSION_STRING = "DHMx v0.10.1  08-08-2019"
-=======
 DHMX_VERSION_STRING = "DHMx v0.10.1  08-14-2019"
->>>>>>> master
+
 
 import os, sys, re, time, random
 import threading
