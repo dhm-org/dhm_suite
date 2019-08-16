@@ -207,6 +207,9 @@ MouseArea {
                     button_load.enabled = true
                     button_save.enabled = true
                     bg.state = "masking"
+                    fourier_mask.zoom_amnt = zoom_f
+                    fourier_mask.width = sample.width
+                    fourier_mask.height = sample.height
                 }
                 else{
                     deactivate_mask_mode()
@@ -387,7 +390,17 @@ MouseArea {
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
+<<<<<<< HEAD
                         //scale: (1/0.6211)* zoom_f
+=======
+
+                        onVisibleChanged: {
+                            fourier_mask_sample.width = sample.width
+                            fourier_mask_sample.height = sample.height
+                            update_zoom(fourier_mask_sample)
+                            fourier_mask.update_all_positions(zoom_f)
+                        }
+>>>>>>> master
                     }
                 }
 
@@ -629,6 +642,7 @@ MouseArea {
         zoom = id.width  / source_width
         dhmx_holo_disp.zoom_f = zoom
         set_aspect_ratio()
+        fourier_mask.set_initial_zoom(zoom)
         return zoom
     }
 
@@ -690,13 +704,13 @@ MouseArea {
     }
     function pack_cmd(){
         if(fourier_mask.wavelength1 != undefined){
-            add_circle("circle_1",fourier_mask.wavelength1.position_x,fourier_mask.wavelength1.position_y,fourier_mask.wavelength1.r)
+            add_circle("circle_1",fourier_mask.wavelength1.position_x,fourier_mask.wavelength1.position_y,fourier_mask.wavelength1.r_actual)
         }
         if(fourier_mask.wavelength2 != undefined){
-            add_circle("circle_2",fourier_mask.wavelength2.position_x,fourier_mask.wavelength2.position_y,fourier_mask.wavelength2.r)
+            add_circle("circle_2",fourier_mask.wavelength2.position_x,fourier_mask.wavelength2.position_y,fourier_mask.wavelength2.r_actual)
         }
         if(fourier_mask.wavelength3 != undefined){
-            add_circle("circle_3",fourier_mask.wavelength3.position_x,fourier_mask.wavelength3.position_y,fourier_mask.wavelength3.r)
+            add_circle("circle_3",fourier_mask.wavelength3.position_x,fourier_mask.wavelength3.position_y,fourier_mask.wavelength3.r_actual)
         }
         fourier_mask_cmd = ""
 

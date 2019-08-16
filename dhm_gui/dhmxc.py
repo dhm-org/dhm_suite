@@ -44,7 +44,7 @@ from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.5   07-25-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.6   08-14-2019"
 CAMERA_CONVERSION_RATIO = 0.50
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
@@ -86,33 +86,39 @@ def CameraServerCommand(cmdstr):
 # DHMx-c will save files as a *.ccf file in plain text.
 # The user has the option to manually modify the configuration files if they so choose as well
 def LoadFile(x,y,path,title):
-      try:
-         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_camera_cfg")
-         if(fd.GetFilename() != ''):
-            return open(fd.GetFilename()).read().splitlines()
-            #file = open(fd.GetFilename(),"r")
-            #return file.read()
-         else:
-            # Return something benign if nothing exists 
-            return 
-      except:
-         print("ERROR: Could not load camera configuration file.")
-         return 
+      if(path != "" and path != None):
+         try:
+            fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_camera_cfg")
+            if(fd.GetFilename() != ''):
+               return open(fd.GetFilename()).read().splitlines()
+               #file = open(fd.GetFilename(),"r")
+               #return file.read()
+            else:
+               # Return something benign if nothing exists 
+               return 
+         except:
+            print("ERROR: Could not load camera configuration file.")
+            return
+      else: 
+         print("No configuration file selected, skipping loading process...")
+         return
 
 
 def SaveFile(cfg_file, x, y, path, title):
-      try:
-         fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_camera_cfg")
-         if(fd.GetFilename() != ''):
-            if ".ccf" in fd.GetFilename():
-               file = open(fd.GetFilename(),"w")
-            else:
-               file = open(fd.GetFilename()+".ccf","w")
-            file.writelines(cfg_file)
-            file.close()
-      except:
-         print("ERROR: Could not save camera configuration file.")
-
+      if(path != "" and path != None):
+         try:
+            fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "save_camera_cfg")
+            if(fd.GetFilename() != ''):
+               if ".ccf" in fd.GetFilename():
+                  file = open(fd.GetFilename(),"w")
+               else:
+                  file = open(fd.GetFilename()+".ccf","w")
+               file.writelines(cfg_file)
+               file.close()
+         except:
+            print("ERROR: Could not save camera configuration file.")
+      else:
+         print("No configuration file saved, skipping saving proces...")
 
 class HologramImageProvider(QQuickImageProvider, QObject):
     def __init__(self):
@@ -269,18 +275,29 @@ class MainWin(QObject):
 
    def SaveData(self):
       self.UpdateConfigFile()
-      SaveFile(self.cfg_file, int(self.win.property("x"))+int((self.win.property("width")/2)), \
-         int(self.win.property("y"))+ int((self.win.property("height")/2)),\
-         "/home","Save Camera Configuration File")
+      try:
+         SaveFile(self.cfg_file, int(self.win.property("x"))+int((self.win.property("width")/2)), \
+            int(self.win.property("y"))+ int((self.win.property("height")/2)),\
+            "/home","Save Camera Configuration File")
+      except:
+         print("Could not save configuration file.")
 
 
+   
    def LoadData(self):
-      command = LoadFile(int(self.win.property("x"))+int((self.win.property("width")/2)), \
-         int(self.win.property("y"))+ int((self.win.property("height")/2)),\
-         "/home","Save Camera Configuration File")
-      for line in command:
-         CameraServerCommand(line)
-      self.update = True
+      try:
+         command = LoadFile(int(self.win.property("x"))+int((self.win.property("width")/2)), \
+            int(self.win.property("y"))+ int((self.win.property("height")/2)),\
+            "/home","Save Camera Configuration File")
+         for line in command:
+            CameraServerCommand(line)
+         self.update = True
+      except:
+         print("Could not load configuration file.")
+
+
+
+
 
 
 ### MAIN ####
@@ -299,11 +316,9 @@ if __name__ == "__main__":
     # parse in the arguments
     (opts, args) = parser.parse_args()
 
-
     # Prepare the QML engine
     app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
-
 
     provider_hologram = HologramImageProvider()
     engine.addImageProvider("Hologram", provider_hologram)

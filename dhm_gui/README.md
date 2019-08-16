@@ -9,6 +9,7 @@ The DHM Graphical User Interface to be used with DHMSW.
   - Linux: http://download.qt.io/official_releases/qt/5.11/5.11.2/qt-opensource-linux-x64-5.11.2.run
   - Windows: http://download.qt.io/official_releases/qt/5.11/5.11.2/qt-opensource-windows-x86-5.11.2.exe
 * PyQt5
+* numpy version 1.15.4 (Do NOT use 1.16)
 * Approximately 2GB of free space
 * 2GB of available RAM
 
