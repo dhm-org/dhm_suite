@@ -1949,25 +1949,6 @@ class ReconstructionWin(QObject):
            #"phase_unwrapping_enable="+str())
 
 
-        #self.cfg_file = ("reconst num_propagation_distance="+str(tlm_manager.reconstruction["num_propagation_distance"])+"\n,"+
-        #   "propagation_distance=["+str(tlm_manager.reconstruction["propagation_distance_1"])+\
-        #       ","+str(tlm_manager.reconstruction["propagation_distance_2"])+\
-        #       ","+str(tlm_manager.reconstruction["propagation_distance_3"])+"]\n,"+ 
-        #   "num_chromatic_shift="+str(tlm_manager.reconstruction["num_chromatic_shift"])+"\n,"+
-        #   "chromatic_shift=["+str(tlm_manager.reconstruction["chromatic_shift_1"])+","+str(tlm_manager.reconstruction["chromatic_shift_2"])+"]\n,"+  
-        #   "fitting_mode="+str(tlm_manager.reconstruction["fitting_mode"])+"\n,"+
-        #   "fitting_order="+str(tlm_manager.reconstruction["fitting_order"])+"\n,"+
-        #   "roi_offset_x="+str(tlm_manager.reconstruction["roi_offset_x"])+"\n,"+
-        #   "roi_offset_y="+str(tlm_manager.reconstruction["roi_offset_y"])+"\n,"+
-        #   "roi_size_x="+str(tlm_manager.reconstruction["roi_size_x"])+"\n,"+
-        #   "roi_size_y="+str(tlm_manager.reconstruction["roi_size_y"])+"\n,"+
-        #   "center_image="+str(tlm_manager.reconstruction["center_image"])+"\n,"+
-        #   "center_image_and_tilt="+str(tlm_manager.reconstruction["center_image_and_tilt"])+"\n,"+
-        #   "ref_holo_enable="+str(tlm_manager.reconstruction["ref_holo_enable"])+"\n,"+
-        #   "ref_holo_averaging_sec="+str(tlm_manager.reconstruction["ref_holo_averaging_sec"])+"\n,"+
-        #   "phase_unwrapping_enable="+str(tlm_manager.reconstruction["phase_unwrapping_enabled"]))
-
-
     def SetTlmMode(self,decision):
        self.recon_open_flag = decision
 
