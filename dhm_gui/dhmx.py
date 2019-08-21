@@ -763,9 +763,16 @@ class FourierWin(QObject):
 
 
     def CreateDisplayMask(self, mask_no, radius, x, y):
+        # Set shadowmask image directory to temp.
         self.display_mask_path = '/tmp/'
-        self.performance_scalar = 4
-        #print("Masking info: masking number - "+str(mask_no)+", radius - "+str(radius)+", x position -  "+str(x)+", y position - "+str(y))
+
+        # This object is used to boost performance of shadow mask.
+        # Shadow mask image does not need to be native resolution (e.g. 2048x2048).
+        # Its only purpose is to separate the mask circle with the background.
+        # So a scalar was made to reduce the resolution to a resolution more managable
+        # for real-time applications.
+        # chose "5" because 2048/5 = ~409 and that closely matches dhmx display dimensions
+        self.performance_scalar = 5
 
         # QML will only reload a new image if the path is different since QML caches images
         # Below is an aglorithm that switches between true/false to update and create a new image
