@@ -34,7 +34,6 @@ Item {
     property int w3_prev_width: 000
     property int w3_prev_height: 000
     onVisibleChanged: {
-
         if(!visible){
             width_prev = width
             height_prev = height
@@ -383,15 +382,13 @@ Item {
                     drag{ target: parent; axis: Drag.XAxis }
                     onMouseXChanged: {
                         if(drag.active){
-                            selComp_ref.width = selComp_ref.width - mouseX
-                            selComp_ref.height = selComp_ref.height - mouseX
-
-                            selComp.width = selComp.width - mouseX
-                            //selComp.x = selComp.width + mouseX
-                            selComp.height = selComp.height - mouseX
-                            selComp.x = selComp.x + mouseX
-                            if(selComp.width < 30)
-                                selComp.width = 30
+                            if(selComp_ref.width-mouseX > rulersSize && selComp_ref.height-mouseX > rulersSize){
+                                selComp_ref.width = selComp_ref.width - mouseX
+                                selComp_ref.height = selComp_ref.height - mouseX
+                                selComp.width = selComp.width - mouseX
+                                selComp.height = selComp.height - mouseX
+                                selComp.x = selComp.x + mouseX
+                            }
                         }
                     }
                 }
@@ -410,13 +407,12 @@ Item {
                     drag{ target: parent; axis: Drag.XAxis }
                     onMouseXChanged: {
                         if(drag.active){
-                            selComp_ref.width = selComp_ref.width + mouseX
-                            selComp_ref.height = selComp_ref.height + mouseX
-
-                            selComp.width = selComp.width + mouseX
-                            selComp.height = selComp.height + mouseX
-                            if(selComp.width < 50)
-                                selComp.width = 50
+                            if(selComp_ref.width+mouseX > rulersSize && selComp_ref.height+mouseX > rulersSize){
+                                selComp_ref.width = selComp_ref.width + mouseX
+                                selComp_ref.height = selComp_ref.height + mouseX
+                                selComp.width = selComp.width + mouseX
+                                selComp.height = selComp.height + mouseX
+                            }
                         }
                     }
                 }
@@ -437,14 +433,13 @@ Item {
                     drag{ target: parent; axis: Drag.YAxis }
                     onMouseYChanged: {
                         if(drag.active){
-                            selComp_ref.width = selComp_ref.width - mouseY
-                            selComp_ref.height = selComp_ref.height - mouseY
-
-                            selComp.height = selComp.height - mouseY
-                            selComp.width = selComp.width - mouseY
-                            selComp.y = selComp.y + mouseY
-                            if(selComp.height < 50)
-                                selComp.height = 50
+                            if(selComp_ref.width-mouseY > rulersSize && selComp_ref.height-mouseY > rulersSize){
+                                selComp_ref.width = selComp_ref.width - mouseY
+                                selComp_ref.height = selComp_ref.height - mouseY
+                                selComp.height = selComp.height - mouseY
+                                selComp.width = selComp.width - mouseY
+                                selComp.y = selComp.y + mouseY
+                            }
                         }
                     }
                 }
@@ -466,13 +461,12 @@ Item {
                     drag{ target: parent; axis: Drag.YAxis }
                     onMouseYChanged: {
                         if(drag.active){
-                            selComp_ref.width = selComp_ref.width + mouseY
-                            selComp_ref.height = selComp_ref.height + mouseY
-
-                            selComp.height = selComp.height + mouseY
-                            selComp.width = selComp.width + mouseY
-                            if(selComp.height < 50)
-                                selComp.height = 50
+                            if(selComp_ref.width+mouseY > rulersSize && selComp_ref.height+mouseY > rulersSize){
+                                selComp_ref.width = selComp_ref.width + mouseY
+                                selComp_ref.height = selComp_ref.height + mouseY
+                                selComp.height = selComp.height + mouseY
+                                selComp.width = selComp.width + mouseY
+                            }
                         }
                     }
                 }
