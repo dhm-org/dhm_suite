@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.10.1  08-14-2019"
+DHMX_VERSION_STRING = "DHMx v0.10.2  08-21-2019"
 
 
 import os, sys, re, time, random
@@ -764,6 +764,7 @@ class FourierWin(QObject):
 
     def CreateDisplayMask(self, mask_no, radius, x, y):
         self.display_mask_path = '/tmp/'
+        self.performance_scalar = 4
         #print("Masking info: masking number - "+str(mask_no)+", radius - "+str(radius)+", x position -  "+str(x)+", y position - "+str(y))
 
         # QML will only reload a new image if the path is different since QML caches images
@@ -778,12 +779,21 @@ class FourierWin(QObject):
 
         # PIL Coord system: x1, y1, x2, y2
         if(mask_no == 1):
-           self.mask_001 = (x-radius,y-radius,x+radius,y+radius)
+           self.mask_001 = (int((x-radius)/self.performance_scalar),\
+                            int((y-radius)/self.performance_scalar),\
+                            int((x+radius)/self.performance_scalar),\
+                            int((y+radius)/self.performance_scalar))
         if(mask_no == 2):
-           self.mask_002 = (x-radius,y-radius,x+radius,y+radius)
+           self.mask_002 = (int((x-radius)/self.performance_scalar),\
+                            int((y-radius)/self.performance_scalar),\
+                            int((x+radius)/self.performance_scalar),\
+                            int((y+radius)/self.performance_scalar))
         if(mask_no == 3):
-           self.mask_003 = (x-radius,y-radius,x+radius,y+radius)
-        bg = Image.new("RGBA", (self.width,self.height), (000,000,000,32))
+           self.mask_003 = (int((x-radius)/self.performance_scalar),\
+                            int((y-radius)/self.performance_scalar),\
+                            int((x+radius)/self.performance_scalar),\
+                            int((y+radius)/self.performance_scalar))
+        bg = Image.new("RGBA", (int(self.width/self.performance_scalar),int(self.height/self.performance_scalar)), (000,000,000,2))#32
 
         mask=Image.new('L', bg.size, color=255)
         draw=ImageDraw.Draw(mask)
