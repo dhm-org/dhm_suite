@@ -70,8 +70,6 @@ Item {
                   updateCenter(wavelength3.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt,(parent.width / 3)*zoom_amnt)
                 }
             }
-            // onMouseXChanged: console.log(mask.width)
-           // onMouseXChanged: console.log(center_point_1.x+" , "+center_point_1.y)
         }
 
    Rectangle{
