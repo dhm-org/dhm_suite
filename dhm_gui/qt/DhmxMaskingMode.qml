@@ -152,22 +152,22 @@ Item {
                 y: selComp.height / 2
                 Rectangle{
                     id: ret_x_axis
-                    color: "steelblue"
+                    color: "purple"
                     x: -width/2
                     y: -height/2
 
-                    width: 10
-                    height: 2
+                    width: 20
+                    height: 4
 
                     opacity: 0.4
                 }
                 Rectangle{
                     id: ret_y_axis
-                    color: "steelblue"
+                    color: "purple"
                     y: -height/2
                     x: -width/2
-                    width: 2
-                    height: 10
+                    width: 4
+                    height: 20
 
                     opacity: 0.4
                 }
