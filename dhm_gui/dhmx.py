@@ -158,6 +158,9 @@ def SaveFile(file_type,cfg_file, x, y, path, title):
                file = open(fd.GetFilename()+".ses","w")
             file.writelines(cfg_file)
             file.close()
+            return 1
+         else:
+            return None
       except:
          print("ERROR: Could not save session file.")
 
@@ -172,6 +175,9 @@ def SaveFile(file_type,cfg_file, x, y, path, title):
                file = open(fd.GetFilename()+".cfg","w")
             file.writelines(cfg_file)
             file.close()
+            return 1
+         else:
+            return None
       except:
          print("ERROR: Could not save configuration file.")
 
@@ -1635,6 +1641,7 @@ class ConfigurationWin(QObject):
       self.button_close = w.subwin_conf.findChild(QObject, 'button_close')
       self.button_load = w.subwin_conf.findChild(QObject, 'button_load')
       self.button_save = w.subwin_conf.findChild(QObject, 'button_save')
+      self.button_apply = w.subwin_conf.findChild(QObject, 'button_apply')
 
       # Session Defaults - initialize to null/None for now
       # The session defaults will be read in once the first telemetry packet
@@ -1662,12 +1669,17 @@ class ConfigurationWin(QObject):
       self.button_close.qml_signal_close.connect(self.CloseWin)
       self.button_load.clicked.connect(self.LoadCfgFile)
       self.button_save.clicked.connect(self.SaveCfgFile)
+      self.button_apply.clicked.connect(lambda:self.LaunchPopupWin("The session configuration has been applied."))
       
       OutputDebug("Configuration Window created")
 
 
     def CloseWin(self):
        w.toolbutton_new_session.setUnselected()
+
+    def LaunchPopupWin(self,popup_str):
+       w.win.launch_popup(popup_str)
+
 
     def SaveCfgFile(self):
        # Call reconst to ensure that all values are updated properly and written to the config file string
@@ -1676,16 +1688,19 @@ class ConfigurationWin(QObject):
        self.UpdateConfigFile()
 
        # Launch save window and write to file
-       SaveFile("ses",self.cfg_file, int(w.subwin_conf.property("x"))+int((w.subwin_conf.property("width")/2)), \
+       ret_save = SaveFile("ses",self.cfg_file, int(w.subwin_conf.property("x"))+int((w.subwin_conf.property("width")/2)), \
             int(w.subwin_conf.property("y"))+ int((w.subwin_conf.property("height")/2)),\
             "/home","Save Session File")
+       if(ret_save): w.win.launch_popup("Session file successfully saved.")
 
        
     def LoadCfgFile(self):
        cfg = LoadFile("ses",int(w.subwin_conf.property("x"))+int((w.subwin_conf.property("width")/2)), \
                int(w.subwin_conf.property("y"))+ int((w.subwin_conf.property("height")/2)),\
                "/home","Load Session File")
-       DhmCommand(cfg)
+       
+       cmd_ret = DhmCommand(cfg)
+       if(cfg & cmd_ret): w.win.launch_popup("Configuration file successfully loaded.")
        self.SetTlmMode(True)
        DhmCommand("session")
 

@@ -9,8 +9,8 @@ ApplicationWindow {
     id: dhmx_win
     objectName: "dhmx_win"
     visible: true
-    width: 2100
-    height: 1100
+    width: 1920
+    height: 1080
     color: "black"
     title: qsTr("DHMX")
     visibility: Window.Maximized
@@ -36,6 +36,45 @@ ApplicationWindow {
         qml_signal_close()
     }
 
+
+    Popup{
+        id: popup
+        property string popup_text: "Sample Text"
+        width: 350
+        height: 110
+        modal: true
+        focus: true
+        x: Math.round((parent.width - width)/2)
+        y: Math.round((parent.height - height)/2)
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            anchors.fill: parent
+            color: "#c1bebe"
+            border.color: "#242424"
+            border.width: 4
+        }
+
+        ColumnLayout{
+
+            anchors.fill: parent
+
+            Text{
+                width: popup.width - 10
+                text: popup.popup_text
+                wrapMode: Text.WrapAnywhere
+            }
+
+            /* For single confirmation-only popup dialogs */
+
+            Button{
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+                text: "Okay"
+                onClicked: {
+                    popup.close()
+                }
+            }
+        }
+    }
 
     header: ToolBar {
         anchors.left: parent.left
@@ -2102,6 +2141,13 @@ ApplicationWindow {
         if(window != subwin_fourier && subwin_fourier.z == 9 && subwin_fourier.z > 1){
             subwin_fourier.z -= 1
         }
+    }
+
+
+    function launch_popup(popup_text){
+        popup.popup_text = popup_text
+        popup.open()
+        console.log("popup window launched. with text: ",popup_text)
     }
 
 }

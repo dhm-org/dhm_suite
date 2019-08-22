@@ -7,7 +7,6 @@ import QtQuick.Dialogs 1.0
 
 MouseArea {
     signal pack_cmd(string cmd)
-
     id: dhmx_config
     visible: true
     width: 700
