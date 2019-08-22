@@ -123,6 +123,7 @@ def LoadFile(file_type,x,y,path,title):
          fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_ses")
          if(fd.GetFilename() != ''):
             file = open(fd.GetFilename(),"r")
+            w.win.launch_popup("Session file successfully loaded.")
             return file.read()
          else:
             # Return something benign if nothing exists 
@@ -137,6 +138,7 @@ def LoadFile(file_type,x,y,path,title):
          fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_cfg")
          if(fd.GetFilename() != ''):
             file = open(fd.GetFilename(),"r")
+            w.win.launch_popup("Configuration file successfully loaded.")
             return file.read()
          else:
             # Return something benign if nothing exists 
@@ -1700,7 +1702,6 @@ class ConfigurationWin(QObject):
                "/home","Load Session File")
        
        cmd_ret = DhmCommand(cfg)
-       if(cfg & cmd_ret): w.win.launch_popup("Configuration file successfully loaded.")
        self.SetTlmMode(True)
        DhmCommand("session")
 
