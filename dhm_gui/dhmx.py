@@ -123,7 +123,7 @@ def LoadFile(file_type,x,y,path,title):
          fd = dhmx_filedialog.CreateFileDialog(x, y, path, title, "load_ses")
          if(fd.GetFilename() != ''):
             file = open(fd.GetFilename(),"r")
-            w.win.launch_popup("Session file successfully loaded.")
+            w.win.launch_popup("Session configuration successfully loaded.")
             return file.read()
          else:
             # Return something benign if nothing exists 
@@ -160,6 +160,7 @@ def SaveFile(file_type,cfg_file, x, y, path, title):
                file = open(fd.GetFilename()+".ses","w")
             file.writelines(cfg_file)
             file.close()
+            w.win.launch_popup("Session configuration successfully saved.")
             return 1
          else:
             return None
@@ -177,6 +178,7 @@ def SaveFile(file_type,cfg_file, x, y, path, title):
                file = open(fd.GetFilename()+".cfg","w")
             file.writelines(cfg_file)
             file.close()
+            w.win.launch_popup("Configuration successfully saved.")
             return 1
          else:
             return None
@@ -1693,7 +1695,6 @@ class ConfigurationWin(QObject):
        ret_save = SaveFile("ses",self.cfg_file, int(w.subwin_conf.property("x"))+int((w.subwin_conf.property("width")/2)), \
             int(w.subwin_conf.property("y"))+ int((w.subwin_conf.property("height")/2)),\
             "/home","Save Session File")
-       if(ret_save): w.win.launch_popup("Session file successfully saved.")
 
        
     def LoadCfgFile(self):
