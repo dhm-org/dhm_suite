@@ -379,7 +379,9 @@ MouseArea {
                         fourier_mask_sample.height = sample.height
                         update_zoom(fourier_mask_sample)
                         fourier_mask.zoom_amnt = get_zoom_amnt(fourier_mask_sample)
+                        fourier_mask_sample.source = ""
                         fourier_mask_sample.source = sample.source
+
                     }
                     /* The drawing canvas for fourier mode */
                     DhmxMaskingMode{
@@ -397,6 +399,7 @@ MouseArea {
                             fourier_mask_sample.height = sample.height
                             update_zoom(fourier_mask_sample)
                             fourier_mask.update_all_positions(zoom_f)
+                            fourier_mask_sample.source = ""
                             fourier_mask_sample.source = sample.source
                         }
                     }
@@ -677,6 +680,7 @@ MouseArea {
         fourier_mask.zoom_amnt = get_zoom_amnt(fourier_mask_sample)
         fourier_mask.enabled = true
         fourier_mask.visible = true
+        fourier_mask_sample.source = ""
         fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = true
         fourier_mask_sample.update()
@@ -686,6 +690,7 @@ MouseArea {
         console.log("Disabling masking mode")
         fourier_mask.enabled = false
         fourier_mask.visible = false
+        fourier_mask_sample.source = ""
         fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = false
         fourier_mask_sample.update()
