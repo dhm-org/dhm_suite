@@ -1461,23 +1461,27 @@ ApplicationWindow {
             MenuItem {
                 objectName: "menu_open_session"
                 text: "Open Session..."
-                enabled: false
+                enabled: true
+                onClicked: {
+                    open_session.onMenuBar()
+                }
             }
             MenuItem {
+                signal qml_signal_save_session
                 objectName: "menu_save_session"
                 text: "Save Session..."
-                enabled: false
+                enabled: true
+                /* Since no global signal exists for launching a save window via QML, a signal must be passed into python */
+                onClicked: {
+                    qml_signal_save_session()
+                }
             }
-            MenuItem {
-                objectName: "menu_save_session_as"
-                text: "Save Session As..."
-                enabled: false
-            }
-            MenuItem {
-                objectName: "menu_close_session"
-                text: "Close Session"
-                enabled: false
-            }
+            /* Commented out for a possible future feature addition */
+//            MenuItem {
+//                objectName: "menu_close_session"
+//                text: "Close Session"
+//                enabled: false
+//            }
             MenuItem {
                 signal qml_signal_quit
                 objectName: "menu_exit"

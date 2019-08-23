@@ -16,7 +16,7 @@
 # information to foreign countries or providing access to foreign persons.
 
 
-DHMX_VERSION_STRING = "DHMx v0.10.2  08-21-2019"
+DHMX_VERSION_STRING = "DHMx v0.10.3  08-21-2019"
 
 
 import os, sys, re, time, random
@@ -2339,8 +2339,7 @@ class MainWin(QObject):
         self.menu_new_session = self.win.findChild(QObject, 'menu_new_session')
         self.menu_open_session = self.win.findChild(QObject, 'menu_open_session')
         self.menu_save_session = self.win.findChild(QObject, 'menu_save_session')
-        self.menu_save_Session_as = self.win.findChild(QObject, 'menu_save_session_as')
-        self.menu_close_session = self.win.findChild(QObject, 'menu_close_session')
+        #self.menu_close_session = self.win.findChild(QObject, 'menu_close_session')
         self.menu_exit = self.win.findChild(QObject, 'menu_exit')
         #MENU -> FRAME SOURCE
         self.menu_camera_server = self.win.findChild(QObject, 'menu_camera_server')
@@ -2477,6 +2476,7 @@ class MainWin(QObject):
         self.menu_hologram.qml_signal_hologram_open_fd.connect(self.OpenHologram)
         self.menu_to_disk.qml_signal_to_disk_open_fd.connect(self.OpenToDisk)
         self.toolbutton_open_session.qml_signal_open_session.connect(self.LoadSessionCfgFile)
+        self.menu_save_session.qml_signal_save_session.connect(self.SaveSessionFile)
 
 
         # The file dialog signal / slot to return a filepath along with the command that opened it 
@@ -2705,6 +2705,12 @@ class MainWin(QObject):
        global COMMAND_SERVER_PORT
        subprocess.Popen([sys.executable,"dhmxc.py","--cmdserver", str(COMMAND_SERVER_PORT),"--frameserver",str(FRAME_SERVER_PORT), "--tlmserver",str(TELEMETRY_SERVER_PORT) ])
 
+
+    def SaveSessionFile(self):
+        if(self.ConfWin == None):
+           self.win.launch_popup("Unable to save - Please Create a session first.")
+        else:
+           self.ConfWin.SaveCfgFile()
 
 
     def UpdateTlm(self,tlm_data):
