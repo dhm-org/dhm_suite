@@ -379,6 +379,7 @@ MouseArea {
                         fourier_mask_sample.height = sample.height
                         update_zoom(fourier_mask_sample)
                         fourier_mask.zoom_amnt = get_zoom_amnt(fourier_mask_sample)
+                        fourier_mask_sample.source = sample.source
                     }
                     /* The drawing canvas for fourier mode */
                     DhmxMaskingMode{
@@ -396,6 +397,7 @@ MouseArea {
                             fourier_mask_sample.height = sample.height
                             update_zoom(fourier_mask_sample)
                             fourier_mask.update_all_positions(zoom_f)
+                            fourier_mask_sample.source = sample.source
                         }
                     }
                 }
