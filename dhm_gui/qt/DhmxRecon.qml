@@ -517,7 +517,7 @@ MouseArea {
             RadioDelegate {
                 id: radio_t1_1d_seg
                 objectName: "radio_t1_1d_seg"
-                x: 379
+                x: 372
                 y: 587
                 text: qsTr("1D Segments")
                 enabled: false
@@ -530,7 +530,7 @@ MouseArea {
 
             ComboBox {
                 id: comboBox_t1_1d_seg
-                x: 524
+                x: 517
                 y: 593
                 width: 187
                 height: 40
@@ -542,7 +542,7 @@ MouseArea {
             RadioDelegate {
                 id: radio_t1_2d_seg
                 objectName: "radio_t1_2d_seg"
-                x: 379
+                x: 372
                 y: 640
                 text: qsTr("2D Segments")
                 enabled: false
@@ -555,7 +555,7 @@ MouseArea {
 
             ComboBox {
                 id: comboBox_t1_2d_seg
-                x: 524
+                x: 517
                 y: 646
                 width: 187
                 height: 40
@@ -565,7 +565,7 @@ MouseArea {
 
             SpinBox {
                 id: spinBox_t1_fit_order
-                x: 524
+                x: 517
                 y: 697
                 width: 187
                 height: 40
@@ -579,7 +579,7 @@ MouseArea {
 
             Label {
                 id: label_t1_fit_order
-                x: 455
+                x: 448
                 y: 709
                 color: "#a3a4a5"
                 text: qsTr("Fit Order")
@@ -587,7 +587,7 @@ MouseArea {
 
             Button {
                 id: button_t1_perform_fit
-                x: 611
+                x: 604
                 y: 754
                 text: qsTr("Perform Fit")
                 enabled: false
@@ -655,8 +655,8 @@ MouseArea {
             Button {
                 id: button_t1_center
                 objectName: "button_t1_center"
-                x: 465
-                y: 860
+                x: 448
+                y: 852
                 text: qsTr("Center Image")
                 onClicked: {
                     pack_cmd("reconst center_image=yes")
@@ -666,8 +666,8 @@ MouseArea {
             Button {
                 id: button_t1_center_tilt
                 objectName: "button_t1_center_tilt"
-                x: 587
-                y: 860
+                x: 570
+                y: 852
                 text: qsTr("Center Image + Tilt")
                 onClicked: {
                     pack_cmd("reconst center_image_and_tilt=yes")

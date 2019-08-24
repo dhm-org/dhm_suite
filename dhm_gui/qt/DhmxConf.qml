@@ -58,7 +58,7 @@ MouseArea {
     Button {
         id: button_save
         objectName: "button_save"
-        x: 123
+        x: 126
         y: 537
         text: qsTr("Save to File")
 
@@ -537,7 +537,7 @@ MouseArea {
 
     Button {
         id: button_apply
-        x: 229
+        x: 235
         y: 537
         text: qsTr("Apply")
         objectName: "button_apply"

@@ -15,6 +15,8 @@ ApplicationWindow {
     title: qsTr("DHMX")
     visibility: Window.Maximized
 
+    minimumWidth: 1200
+
     /* VERSION STRING */
     /* Set by Python in Main Window */
     property string version: ""
@@ -36,6 +38,14 @@ ApplicationWindow {
         qml_signal_close()
     }
 
+    onWidthChanged: {
+        if(width < 1800){
+            status.smallMode()
+        }
+        else{
+            status.bigMode()
+        }
+    }
 
     Popup{
         id: popup
@@ -1195,10 +1205,37 @@ ApplicationWindow {
             /* Server & Heartbeat Status */
             Column{
                 Item{
+                   id: status
+                   x: 900
+                   y: 10
+
+                   function smallMode(){
+                       x = -290
+                       y = 80
+
+                       text_controller_status.color = "white"
+                       text_datalogger_status.color = "white"
+                       text_framesource_status.color = "white"
+                       text_gui_server_status.color = "white"
+                       text_reconstructor_status.color = "white"
+                       text_heartbeat_status.color = "white"
+                   }
+                   function bigMode(){
+                       x = 900
+                       y = 10
+
+                       text_controller_status.color = "black"
+                       text_datalogger_status.color = "black"
+                       text_framesource_status.color = "black"
+                       text_gui_server_status.color = "black"
+                       text_reconstructor_status.color = "black"
+                       text_heartbeat_status.color = "black"
+                   }
+
+                Item{
                     /* all of this position is just for "feel good" looks */
                     id: heartbeat_status
-                    x: 920 + 300
-                    y: 10
+                    x: 300
 
                     Image{
                         id: icon_heartbeat_status
@@ -1245,6 +1282,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_heartbeat_status
                         text: "Heartbeat Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1258,8 +1296,8 @@ ApplicationWindow {
                 Item{
                     /* all of this position is just for "feel good" looks */
                     id: datalogger_status
-                    x: 600 + 620
-                    y: 35
+                    x: 300
+                    y: 25
 
                     Image{
                         id: icon_datalogger_status
@@ -1274,6 +1312,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_datalogger_status
                         text: "Datalogger Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1287,8 +1326,7 @@ ApplicationWindow {
                 Item{
                     /* all of this position is just for "feel good" looks */
                     id: controller_status
-                    x: 800 + 620
-                    y: 10
+                    x: heartbeat_status.x + 200
 
                     Image{
                         id: icon_controller_status
@@ -1303,6 +1341,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_controller_status
                         text: "controller Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1315,8 +1354,8 @@ ApplicationWindow {
                 Item{
                     /* all of this position is just for "feel good" looks */
                     id: guiserver_status
-                    x: 800 +620
-                    y: 35
+                    x: datalogger_status.x + 200
+                    y: 25
 
                     Image{
                         id: icon_guiserver_status
@@ -1331,6 +1370,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_gui_server_status
                         text: "GUI Server Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1343,8 +1383,7 @@ ApplicationWindow {
                 Item{
                     /* all of this position is just for "feel good" looks */
                     id: reconstructor_status
-                    x: 1000 + 620
-                    y: 10
+                    x: controller_status.x + 200
 
                     Image{
                         id: icon_reconstructor_status
@@ -1359,6 +1398,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_reconstructor_status
                         text: "Reconstructor Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1370,8 +1410,8 @@ ApplicationWindow {
                 Item{
                     /* all of this position is just for "feel good" looks */
                     id: framesource_status
-                    x: 1000 + 620
-                    y: 35
+                    x: guiserver_status.x + 200
+                    y: 25
 
                     Image{
                         id: icon_framesource_status
@@ -1387,6 +1427,7 @@ ApplicationWindow {
                         }
                     }
                     Text{
+                        id: text_framesource_status
                         text: "Framesource Status"
                         font.family: "arial"
                         font.pointSize: 12
@@ -1398,6 +1439,8 @@ ApplicationWindow {
 
 
             }
+
+            }//
 
             /* Fills remainder of the toolbar space so that icons are close together */
             Item {Layout.fillWidth: true }
@@ -1461,23 +1504,27 @@ ApplicationWindow {
             MenuItem {
                 objectName: "menu_open_session"
                 text: "Open Session..."
-                enabled: false
+                enabled: true
+                onClicked: {
+                    open_session.onMenuBar()
+                }
             }
             MenuItem {
+                signal qml_signal_save_session
                 objectName: "menu_save_session"
                 text: "Save Session..."
-                enabled: false
+                enabled: true
+                /* Since no global signal exists for launching a save window via QML, a signal must be passed into python */
+                onClicked: {
+                    qml_signal_save_session()
+                }
             }
-            MenuItem {
-                objectName: "menu_save_session_as"
-                text: "Save Session As..."
-                enabled: false
-            }
-            MenuItem {
-                objectName: "menu_close_session"
-                text: "Close Session"
-                enabled: false
-            }
+            /* Commented out for a possible future feature addition */
+//            MenuItem {
+//                objectName: "menu_close_session"
+//                text: "Close Session"
+//                enabled: false
+//            }
             MenuItem {
                 signal qml_signal_quit
                 objectName: "menu_exit"
