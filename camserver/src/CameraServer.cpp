@@ -463,6 +463,12 @@ void * CameraServer::FrameServerThread(void *arg)
                                 C->PCamApi()->Exit();
                                 validcmd = true;
                             }  
+                            else if(std::strncmp(buffer, SNAP_CMD, strlen(SNAP_CMD)) == 0) {
+
+                                fprintf(stderr, "Snap Image...\n");
+                                C->PCamApi()->Snap();
+                                validcmd = true;
+                            }  
                             else {
                                 snprintf(errstr, sizeof(errstr), "Unknown command.");
                             }

@@ -474,6 +474,11 @@ void CamApi::SetLogging(bool state)
     PFrameObserver()->SetLogging(state);
 }
 
+void CamApi::Snap()
+{
+    PFrameObserver()->Snap();
+}
+
 void CamApi::SetGain(int gain)
 {
 #if 0
@@ -518,6 +523,7 @@ void CamApi::Exit()
     Shutdown();
     exit(0);
 }
+
 
 
 

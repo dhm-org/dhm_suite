@@ -35,12 +35,13 @@
 
  0.7.0 - Added gain, gain range, exposure, exposure range, and rate to 
          frame header
+ 0.8.0 - Added SNAP command
  ******************************************************************************
  */
 #ifndef __DHM_STREAMING_VERSION_H__
 #define __DHM_STREAMING_VERSION_H__
 
 //
-#define DHM_STREAMING_VERSION "0.6.0"
+#define DHM_STREAMING_VERSION "0.8.0"
 
 #endif

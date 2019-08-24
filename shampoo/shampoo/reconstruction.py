@@ -519,15 +519,21 @@ class Hologram(object):
             int array (wavelength.size, 1) containing Y center of mask
         """
 
-        #Fh = np.zeros((self.n, self.n, self.wavelength.size), dtype=ft_hologram.dtype)
-        Fh = np.zeros((self.n, self.n, len(self.wavelength)), dtype=ft_hologram.dtype)
-        #for l in range(self.wavelength.size):
-        for l in range(len(self.wavelength)):
-            centerx = x_peak[l]
-            centery = y_peak[l]
+        Fh = np.zeros((self.n, self.n, self.wavelength.size), dtype=ft_hologram.dtype)
+        #Fh = np.zeros((self.n, self.n, len(self.wavelength)), dtype=ft_hologram.dtype)
+        for l in range(self.wavelength.size):
+        #for l in range(len(self.wavelength)):
+            if(l < x_peak.size):
+                centerx = x_peak[l]
+            if(l < y_peak.size):
+                centery = y_peak[l]
             # NOTE: The axes centers used are reversed
             #print("get_masked_spectral: ", ft_hologram.shape, mask[:,:,l].shape)
-            Fh[:,:,l] = arrshift(ft_hologram * mask[:,:,l], [-centerx, -centery], axes=(0,1))
+            if(l < mask.shape[2]):
+                m = mask[:,:,l];
+            else:
+                m = mask[:,:,0];
+            Fh[:,:,l] = arrshift(ft_hologram * m, [-centerx, -centery], axes=(0,1))
         return Fh
 
     #@profile
@@ -589,12 +595,17 @@ class Hologram(object):
                 x_peak[_] = fourier_mask.circle_list[_].centery 
                 y_peak[_] = fourier_mask.circle_list[_].centerx 
 
+        if self.mask is not None:
+            self.mask = np.atleast_3d(self.mask)
+
+        print("propagation_distance.size=%d, self.wavelength.size=%d, self.mask=%d"%(propagation_distance.size, self.wavelength.size, self.mask.size))
         wave = np.zeros((self.n, self.n, propagation_distance.size, self.wavelength.size), dtype=ft_hologram.dtype)
 
         ### Apply mask to FFT of hologram and move to center 
 
         Fh = self.get_masked_spectra(ft_hologram, self.mask, x_peak, y_peak)
 
+        print("Size of Fh: ", Fh.shape)
         if compute_digital_phase_mask:
             ################################################################################
             ###  Compute R (reference wave?)  digital Phase Mask
@@ -626,13 +637,13 @@ class Hologram(object):
             for di in range(propagation_distance.size):
                 a = ifft3(Fh * self.G[:,:,di,:])
                 wave[:,:,di,:] = fftshift(a)
-            #for li in range(self.wavelength.size):
-            #    for di in range(propagation_distance.size):
+#            for li in range(self.wavelength.size):
+#                for di in range(propagation_distance.size):
 #                    #a = Fh[:,:,li] * self.G[:,:,di,li]
 #                    #b = ifft2(a)
 #                    #c = fftshift(b)
 #                    #wave[:,:,di,li] = c
-            #        wave[:,:,di,li] = fftshift(ifft2(Fh[:,:,li] * self.G[:,:,di,li]))
+#                    wave[:,:,di,li] = fftshift(ifft2(Fh[:,:,li] * self.G[:,:,di,li]))
 
         #print("my_reconstruction Execution Time: %f sec"%(time.time()-start_time))
         return ReconstructedWave(reconstructed_wave = wave, fourier_mask = self.mask, 

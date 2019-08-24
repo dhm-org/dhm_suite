@@ -8,7 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Process, Queue
-import interface
+from . import interface
 import struct
 PLOT = True
 
@@ -93,10 +93,12 @@ class guiclient(object):
                     w, h = dimensions
                 #elif srcid == interface.SRCID_IMAGE_AMPLITUDE or srcid == interface.SRCID_IMAGE_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
                 else:
-                    dtype = np.float32
+                    dtype = np.uint8
                     w, h, z, l = dimensions
     
-                outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
+                print(offset, offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize), w, h, z, l)
+
+                outdata = np.frombuffer(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
     
                 offset += (functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)
                 print("&&&&& Max=%f, Min=%f, QueueSize=%d"%(np.max(outdata[:,:]), np.min(outdata[:,:]), self.displayQ.qsize()))
@@ -111,7 +113,7 @@ class guiclient(object):
                         axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
                     else:
                         axes.clear()
-                        axes.imshow(outdata[:,:,0,0], extent=[0,h,0,w], aspect="auto")
+                        axes.imshow(outdata[:,:,0,1], extent=[0,h,0,w], aspect="auto")
                         axes.set_title('Max=%.3f'%(np.max(outdata[:,:,0,0])))
                     
                     plt.suptitle(repr(time.time()))
@@ -212,7 +214,7 @@ class guiclient(object):
 
 if __name__ == "__main__":
     a = guiclient()
-    host= socket.gethostname()
+    host= 'localhost' #socket.gethostname()
     port = 9994
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 

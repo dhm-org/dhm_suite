@@ -8,7 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Process, Queue
-import interface
+from . import interface
 import struct
 PLOT = True
 
@@ -206,7 +206,7 @@ class guiclient(object):
 
 if __name__ == "__main__":
     a = guiclient()
-    host= socket.gethostname()
+    host= 'localhost' #socket.gethostname()
     port = 9995
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 

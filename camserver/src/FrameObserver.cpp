@@ -51,6 +51,7 @@ struct ThreadArgs
 {
     CircularBuffer *circbuff;
     bool *logging_enabled;
+    bool *snap_enabled;
     bool *running;
     char *datadir;
     char *sessiondir;
@@ -272,9 +273,10 @@ void * FrameConsumerThread(void *arg)
 
         if((frame_ptr = args->circbuff->Get()) != NULL) {
         //if((frame_ptr = args->circbuff->GetOnSignal()) != NULL) {
-            if(*args->logging_enabled) {
+            if(*args->logging_enabled || *args->snap_enabled) {
                 struct LogArgs logargs;
 
+                
                 logargs.frame = frame_ptr;
                 logargs.datadir = args->datadir;
                 logargs.sessiondir = args->sessiondir;
@@ -344,6 +346,7 @@ void * FrameConsumerThread(void *arg)
             else {
                 reset = true;
             }
+            *args->snap_enabled = false;
         }
         else {
             if(grab_till_empty) break;
@@ -487,6 +490,7 @@ bool FrameObserver::Verbose() {return m_verbose;}
 FrameObserver::FrameObserver(AVT::VmbAPI::CameraPtr pCamera, CircularBuffer *circbuff, bool logging_enabled, int maxWidth, int maxHeight, char *rootdir, char *datadir, char *sessiondir, bool verbose)
     :   IFrameObserver( pCamera )
     ,   m_logging_enabled (logging_enabled)
+    ,   m_snap_enabled (false)
     ,   m_verbose (verbose)
 {
 
@@ -527,6 +531,7 @@ int FrameObserver::StartFrameConsumer()
 
     consumer_thread_args.circbuff = m_circbuff;
     consumer_thread_args.logging_enabled = &m_logging_enabled;
+    consumer_thread_args.snap_enabled = &m_snap_enabled;
     consumer_thread_args.running = &m_running;
     consumer_thread_args.datadir = m_datadir;
     consumer_thread_args.sessiondir = m_sessiondir;
@@ -704,6 +709,22 @@ void FrameObserver::SetLogging(bool state)
         create_camera_metadata(m_pCamera, m_sessiondir);
     }
     m_logging_enabled=state;
+}
+
+void FrameObserver::Snap()
+{
+    bool curloggingstate = m_logging_enabled;
+    bool cursnapstate = m_snap_enabled;
+
+    // Logging is OFF and snap is off, then thats when we snap... Oh snap!
+    if(curloggingstate == false && cursnapstate == false) {
+        create_datadir(m_rootdir, m_datadir, m_sessiondir);
+        create_camera_metadata(m_pCamera, m_sessiondir);
+        m_snap_enabled=true;
+    }
+    else {
+        fprintf(stderr, "Logging is enabled.  Snap only works when logging is disabled.\n");
+    }
 }
 
 void FrameObserver::SetGain(int gain)

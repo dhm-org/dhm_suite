@@ -41,12 +41,14 @@ public:
 
     bool IsLoggingEnabled(); 
     void SetLogging(bool state);
+    void Snap();
     void SetGain(int gain);
     void SetExposure(int exposure);
     bool Verbose(); 
     int CreateDataDir(int cameraidx);
 private:
     bool m_logging_enabled;
+    bool m_snap_enabled;
     bool m_running;
     bool m_verbose;
     char m_rootdir[256];

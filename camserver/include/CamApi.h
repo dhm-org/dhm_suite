@@ -46,6 +46,7 @@ public:
     void SetExposure(int exposure);
     void StopImaging();
     void Exit();
+    void Snap();
     int PrepareTrigger(AVT::VmbAPI::CameraPtr camera, const char *triggerSelector, const char *triggerMode, const char *triggerSource);
 
 private:
