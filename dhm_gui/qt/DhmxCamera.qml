@@ -401,11 +401,11 @@ ApplicationWindow {
             id: checkDelegate_recording
             objectName: "check_recording"
             signal qml_signal_recording(bool checked)
-            x: 117
-            y: 712
+            x: 140
+            y: 742
             text: qsTr("Enable Recording")
             anchors.right: parent.right
-            anchors.rightMargin: 0
+            anchors.rightMargin: -2
 
             onCheckedChanged:{
                 qml_signal_recording(checkDelegate_recording.checked)
@@ -666,6 +666,26 @@ ApplicationWindow {
         }
     }
 
+    Button {
+        id: button_snap
+        objectName: "button_snap"
+        x: 736
+        y: 756
+        width: 61
+        height: 29
+        text: qsTr("Snap")
+        anchors.right: parent.right
+        anchors.rightMargin: 227
+        focus: true
+        onClicked: send_cmd("SNAP")
+
+        Keys.onPressed: {
+            if(event.key == Qt.Key_S){
+                send_cmd("SNAP")
+            }
+        }
+    }
+
 
     function reset_view(){
         sample.width = flickArea.start_width
@@ -744,6 +764,10 @@ ApplicationWindow {
         subwin_histogram.update_bins(pixel_count)
     }
 }
+
+
+
+
 
 
 
