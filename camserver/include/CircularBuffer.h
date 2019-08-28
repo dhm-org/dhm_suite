@@ -56,7 +56,7 @@ private:
     struct CamFrame *m_buf;
     size_t m_head = 0;
     size_t m_tail = 0;
-    const size_t m_max_size;
+    size_t m_max_size;
     int m_width;
     int m_height;
     bool m_full = 0;

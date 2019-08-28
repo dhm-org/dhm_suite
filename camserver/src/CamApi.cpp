@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <math.h> //ceil
 #include <string.h>
+#include <sys/sysinfo.h> //For sysinfo()
 #include "CamApi.h"
 #include "CameraServer.h"
 #include "FrameObserver.h"
@@ -170,9 +171,9 @@ int CamApi::QueryConnectedCameras()
         return -1;
     }
 
-    printf("Number of cameras found: %zu\n", m_cameras.size());
+    printf("\nNumber of cameras found: %zu\n", m_cameras.size());
     if(m_cameras.size() < 0) {
-        printf("No cameras connected.\n");
+        printf("\nNo cameras connected.\n");
         return -1;
     }
 
@@ -206,6 +207,7 @@ int CamApi::QueryConnectedCameras()
     return m_cameras.size();
 }
 
+
 int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, double rate_in, const char *configfile, const char *triggersource)
 {
     VmbErrorType err = VmbErrorSuccess;
@@ -215,8 +217,10 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     VmbInt64_t minWidth, maxWidth, minHeight, maxHeight, width, height;
     double minRate, maxRate, rate; 
     std::string strValue;
+
     printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
     camera = m_cameras[cameraidx];
+
 
 
     // *** Open camera is full access
@@ -347,7 +351,8 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     }
 
     camera->Close();
-    
+
+    // Required is CIRC_BUFF_SIZE * sizeof(struct CamFrame) + (CIRC_BUFF_SIZE * width * height)
     m_circbuff = new CircularBuffer(CIRC_BUFF_SIZE, (int)width_in, (int)height_in);
     m_circbuff->TouchReset();
 

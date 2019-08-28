@@ -202,6 +202,7 @@ typedef struct LogThread
 
     bool is_busy;
     bool data_ready;
+    bool is_waiting_to_run;
     pthread_mutex_t mutex;
     pthread_cond_t  cv;
     
@@ -223,6 +224,7 @@ void *FrameLoggerThread(void *arg)
                 pthread_cond_wait(&threadargs->cv, &threadargs->mutex);
 
             //*** Set flag that processing data 
+            threadargs->is_waiting_to_run = false;
             threadargs->is_busy = true;
             
             //*** Log the data
@@ -251,6 +253,7 @@ void * FrameConsumerThread(void *arg)
 
     for (int i = 0; i < MAX_NUM_THREADS; i++) {
         log_threads[i].is_running = false;
+        log_threads[i].is_waiting_to_run = false;
         log_threads[i].id=i;
         log_threads[i].is_busy=false;
 
@@ -286,7 +289,7 @@ void * FrameConsumerThread(void *arg)
                 for(int i = 0; i < MAX_NUM_THREADS; i++) {
 #if LOG_THREAD_ALWAYS_ON == 1
 
-                    if(!thread_assigned) {
+                    if(!thread_assigned && !log_threads[i].is_waiting_to_run) {
                         int rettrylock= pthread_mutex_trylock(&log_threads[i].mutex);
                         if(rettrylock != 0) continue;
 #else
@@ -302,6 +305,7 @@ void * FrameConsumerThread(void *arg)
 #if LOG_THREAD_ALWAYS_ON == 1
                         log_threads[i].data_ready = true;
                         log_threads[i].is_running = true;
+                        log_threads[i].is_waiting_to_run = true;
                         pthread_cond_signal(&log_threads[i].cv);
                         pthread_mutex_unlock(&log_threads[i].mutex);
 #else
