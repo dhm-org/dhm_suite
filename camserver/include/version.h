@@ -35,13 +35,16 @@
 
  0.7.0 - Added gain, gain range, exposure, exposure range, and rate to 
          frame header
+
  0.8.0 - Added SNAP command
+
+ 0.8.1 - Fixed "Dropped Camera Frame #13" issue
  ******************************************************************************
  */
 #ifndef __DHM_STREAMING_VERSION_H__
 #define __DHM_STREAMING_VERSION_H__
 
 //
-#define DHM_STREAMING_VERSION "0.8.0"
+#define DHM_STREAMING_VERSION "0.8.1"
 
 #endif
