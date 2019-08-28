@@ -171,9 +171,9 @@ int CamApi::QueryConnectedCameras()
         return -1;
     }
 
-    printf("Number of cameras found: %zu\n", m_cameras.size());
+    printf("\nNumber of cameras found: %zu\n", m_cameras.size());
     if(m_cameras.size() < 0) {
-        printf("No cameras connected.\n");
+        printf("\nNo cameras connected.\n");
         return -1;
     }
 

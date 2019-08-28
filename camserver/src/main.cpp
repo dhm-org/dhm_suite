@@ -380,11 +380,11 @@ int main( int argc, char* argv[] )
     banner();
 
     // *** Set default values for parameters
-    fprintf(stderr, "Setting default user input values...\n");
+    //fprintf(stderr, "Setting default user input values...\n");
     set_default(&userparams);
 
     // *** Process Command Line Arguments **
-    fprintf(stderr, "Processing command line arguments...\n");
+    //fprintf(stderr, "Processing command line arguments...\n");
     parse_commandline(argc, argv, &userparams);
 
     // *** List cameras in the computer
