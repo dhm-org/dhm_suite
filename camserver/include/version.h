@@ -41,12 +41,14 @@
  0.8.1 - Fixed "Dropped Camera Frame #13" issue
 
  0.8.2 - Adjust size of circular buffer to be 10% of free RAM if the default of 1000 is too large.
+
+ 0.8.3 - Return error and abort execution if camera is already opened by another process.
  ******************************************************************************
  */
 #ifndef __DHM_STREAMING_VERSION_H__
 #define __DHM_STREAMING_VERSION_H__
 
 //
-#define DHM_STREAMING_VERSION "0.8.2"
+#define DHM_STREAMING_VERSION "0.8.3"
 
 #endif

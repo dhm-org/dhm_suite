@@ -217,10 +217,22 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
     VmbInt64_t minWidth, maxWidth, minHeight, maxHeight, width, height;
     double minRate, maxRate, rate; 
     std::string strValue;
+    VmbAccessModeType eAccessMode = VmbAccessModeNone;
 
     printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
     camera = m_cameras[cameraidx];
 
+    // *** If camera is LIMITED access then we must stop. Must do before opening
+    if((err = camera->GetPermittedAccess( eAccessMode )) != VmbErrorSuccess) {
+        fprintf(stderr, "Error.  Unable to get camera's permitted access.  err=%d\n", err);
+        camera->Close();
+        return -1;
+    }
+    if(!(VmbAccessModeFull == (VmbAccessModeFull & eAccessMode))) {
+        fprintf(stderr, "Error.  Camera has LIMITED ACCESS.  Cannot continue. Make sure no other process has a hold of the camera.\n");
+        camera->Close();
+        return -1; 
+    }
 
 
     // *** Open camera is full access
@@ -230,6 +242,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
      }
     fprintf(stderr, "Opened camera...\n");
     
+
     // *** Apply user parameters and other parameters for optimal transfer
     camera->GetFeatures(pFeatureVec);
     pFeature = pFeatureVec.at(0);
