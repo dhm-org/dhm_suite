@@ -28,6 +28,20 @@ ApplicationWindow {
         reset_view()
     }
 
+    /* Keyboard shortcuts */
+    Action{
+        id:action_snap
+        shortcut: "s"
+        onTriggered:send_cmd("SNAP")
+    }
+
+    Action{
+        id: action_log
+        shortcut: "l"
+        onTriggered: checkDelegate_recording.onShortcut()
+    }
+
+
     Rectangle {
         id: bg
         width: 800
@@ -37,7 +51,6 @@ ApplicationWindow {
         color: "#c1bebe"
         border.color: "#242424"
         border.width: 0
-
         Image {
             id: texture_bg
             anchors.fill: parent
@@ -410,6 +423,10 @@ ApplicationWindow {
             onCheckedChanged:{
                 qml_signal_recording(checkDelegate_recording.checked)
             }
+            function onShortcut(){
+                qml_signal_recording(checkDelegate_recording.checked)
+            }
+
         }
     }
 
@@ -678,12 +695,6 @@ ApplicationWindow {
         anchors.rightMargin: 227
         focus: true
         onClicked: send_cmd("SNAP")
-
-        Keys.onPressed: {
-            if(event.key == Qt.Key_S){
-                send_cmd("SNAP")
-            }
-        }
     }
 
 
