@@ -308,7 +308,11 @@ int stop_camera_server(CamApi *cam_api)
 int start_camera_server(CamApi *cam_api, int cameraidx, struct UserParams *userparams)
 {
     cam_api->SetVerbose(userparams->verbose.val);
-    cam_api->OpenAndConfigCamera(cameraidx, userparams->width.val, userparams->height.val, userparams->rate.val, userparams->configfile.val, userparams->trigger_source.val);
+    if(cam_api->OpenAndConfigCamera(cameraidx, userparams->width.val, userparams->height.val, userparams->rate.val, userparams->configfile.val, userparams->trigger_source.val) < 0) {
+        fprintf(stderr, "Error.  Open and Configure Camera failed.  Aborting.\n");
+        cam_api->Shutdown();
+        exit(-1);
+    }
 
     cam_api->StartCameraServer(userparams->frame_port.val, userparams->command_port.val, userparams->telem_port.val);
     if(cam_api->StartAsyncContinuousImageAcquisition(cameraidx, userparams->logging_enabled.val, userparams->rootdir.val, userparams->datadir.val, userparams->sessiondir.val) < 0) {
