@@ -676,7 +676,14 @@ ApplicationWindow {
         text: qsTr("Snap")
         anchors.right: parent.right
         anchors.rightMargin: 227
+        focus: true
         onClicked: send_cmd("SNAP")
+
+        Keys.onPressed: {
+            if(event.key == Qt.Key_S){
+                send_cmd("SNAP")
+            }
+        }
     }
 
 
