@@ -5,6 +5,7 @@ The DHM Graphical User Interface to be used with DHMSW.
 * A 64-bit operating system
 * Preferably Linux (Ubuntu 16.04 or any debian distribution that is 16.04)
 * 3D Hardware acceleration (OpenGL 2.x or higher)
+* A system resolution no smaller than 1280x720 pixels
 * Qt 5.11.x
   - Linux: http://download.qt.io/official_releases/qt/5.11/5.11.2/qt-opensource-linux-x64-5.11.2.run
   - Windows: http://download.qt.io/official_releases/qt/5.11/5.11.2/qt-opensource-windows-x86-5.11.2.exe
@@ -20,12 +21,12 @@ The DHM Graphical User Interface to be used with DHMSW.
 * Windows - TBA
 
 ## DHMx-c
-DHMx-c can be used for accessing, monitoring and calibrating your camera(s).
-* DHMx-c can be launched as python3 dhmxc.py
+DHMx-c can be used for accessing, monitoring and calibrating the camera(s) being used for the session.
+* DHMx-c can be launched via the terminal as: python3 dhmxc.py
 * Shortcuts
   - 'S' key - will create a snapshot of what is being viewed
   - 'L' key - will enable/disable logging
-* For any additional information about how to launch DHMx-c, please use the -h / --help launch argument and it will provide you with more information.
+* For any additional information about how to launch DHMx-c, please use the -h / --help launch argument and it will provide the user with more information.
 
 ## Authors
 * Frank Lima
