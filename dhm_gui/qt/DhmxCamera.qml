@@ -426,7 +426,11 @@ ApplicationWindow {
                 qml_signal_recording(checkDelegate_recording.checked)
             }
             function onShortcut(){
-                qml_signal_recording(checkDelegate_recording.checked)
+                if(checkDelegate_recording.checked)
+                    checkDelegate_recording.checked = false
+                else
+                    checkDelegate_recording.checked = true
+                 qml_signal_recording(checkDelegate_recording.checked)
             }
 
         }
