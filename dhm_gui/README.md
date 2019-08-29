@@ -19,6 +19,13 @@ The DHM Graphical User Interface to be used with DHMSW.
 
 * Windows - TBA
 
+## DHMx-c
+DHMx-c can be used for accessing, monitoring and calibrating your camera(s).
+* DHMx-c can be launched as python3 dhmxc.py
+* Shortcuts
+  - 'S' key - will create a snapshot of what is being viewed
+  - 'L' key - will enable/disable logging
+* For any additional information about how to launch DHMx-c, please use the -h / --help launch argument and it will provide you with more information.
 
 ## Authors
 * Frank Lima
