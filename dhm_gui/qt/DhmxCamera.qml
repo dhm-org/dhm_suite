@@ -422,9 +422,11 @@ ApplicationWindow {
             anchors.right: parent.right
             anchors.rightMargin: -2
 
-            onCheckedChanged:{
+            onClicked: {
                 qml_signal_recording(checkDelegate_recording.checked)
             }
+
+
             function onShortcut(){
                 if(checkDelegate_recording.checked)
                     checkDelegate_recording.checked = false
