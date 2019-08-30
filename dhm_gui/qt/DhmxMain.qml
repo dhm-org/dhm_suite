@@ -1273,10 +1273,11 @@ ApplicationWindow {
                         Timer{
                             id:heartbeat
                             running: false
-                            interval: 3500 //3 seconds default
+                            interval: 5000 //5 seconds default
 
                             onTriggered: {
                                 icon_heartbeat_status.source = "images/icon_status_bad.png"
+                                launch_popup("Heartbeat failed.  \nPlease investgate connection.")
                                 icon_heartbeat_status.reset = true
                             }
                         }
