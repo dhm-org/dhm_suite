@@ -124,6 +124,7 @@ MouseArea {
             }
 
             onPressedChanged: {
+                console.log("slider_1 press changed")
                 /* Send command only on release */
                 if(!pressed){
                     if(spinBox_num_dist.value == 1)

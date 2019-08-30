@@ -38,7 +38,7 @@ import QtQuick.Controls 2.1
         }
         valueFromText: function(text, locale) {
             //realValue = Number.fromLocaleString(locale, text) * 100
-            realValue = Number.fromLocaleString(locale, text) * factor
+            value = Number.fromLocaleString(locale, text) * factor
             return Number.fromLocaleString(locale, text) * factor
         }
 
