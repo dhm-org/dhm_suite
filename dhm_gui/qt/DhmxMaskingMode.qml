@@ -33,6 +33,13 @@ Item {
 
     property int w3_prev_width: 000
     property int w3_prev_height: 000
+
+    /* Masking info */
+    property int curr_mask_no: 0
+    property int curr_mask_x: 0
+    property int curr_mask_y: 0
+    property double curr_mask_r: 0
+
     onVisibleChanged: {
         if(!visible){
             width_prev = width
@@ -123,6 +130,7 @@ Item {
             property int position_y: (selComp.y + (selComp.height/2))/zoom_amnt
             property int wavelength_width: selComp.width
             property int wavelength_height: selComp.height
+            property bool selected: true
 
             border {
                 width: 2
@@ -171,100 +179,6 @@ Item {
                 }
             }
 
-            /* X,Y, RADIUS INFO */
-            Item{
-                id: info
-                x: selComp.width
-                y: selComp.height/2
-
-                Rectangle{
-                    id: uix_1
-                    width:40
-                    height:1
-                    color: "steelblue"
-
-                    Rectangle{
-                        id: uix_2
-                        width:60
-                        height:1
-                        x: parent.width - 10
-                        y: -20
-                        rotation: -45
-                        color: "steelblue"
-
-                        Item{
-                            id: info_text
-                            rotation: 45
-                            x: parent.width + 20 // for asthetics
-                            y: parent.height - 10 // for asthetics
-
-                            Label{
-                                id: label_wl_
-                                text: selComp.name
-                                font.bold: true
-                                color: "white"
-                                opacity: 0.6
-
-                            }
-                            Label{
-                                id: label_r
-                                text: "Radius: "+selComp.r_actual
-                                font.bold: true
-                                color: "white"
-                                opacity: 0.6
-                                y: label_wl_.font.pixelSize + 3
-                            }
-                            Label{
-                                id: label_x
-                                text: "x: "+selComp.position_x
-                                font.bold: true
-                                color: "white"
-                                opacity: 0.6
-                                y: label_r.y + label_r.font.pixelSize + 3
-                            }
-                            Label{
-                                id: label_y
-                                text: "y: "+selComp.position_y
-                                font.bold: true
-                                color: "white"
-                                opacity: 0.6
-                                y: label_x.y + label_x.font.pixelSize + 3
-                            }
-                        }
-
-                    }
-                }
-
-                states: [
-                    State { name: "visible";
-                        PropertyChanges { target: info; opacity: 1.0}
-                    },
-                    State { name: "invisible";
-                        PropertyChanges { target: info; opacity: 0.0}
-                    }
-                ]
-                transitions: Transition{
-                    NumberAnimation {property: "opacity"; duration: 500}
-                }
-                function flip_info(status){
-                    if(status){
-                        info.x = -uix_1.width
-                        uix_2.x = -uix_1.width - 10
-                        uix_2.rotation = 45
-                        info_text.rotation = -45
-                        info_text.x = -80 // for asthetics
-                        info_text.y = -10 // for asthetics
-                    }
-                    else{
-                        info.x = selComp.width
-                        uix_2.x = uix_1.width - 10
-                        uix_2.rotation = -45
-                        info_text.rotation = 45
-                        info_text.x = uix_2.width + 20 // for asthetics
-                        info_text.y = uix_2.height - 10 // for asthetics
-                    }
-                }
-            }
 
             /* This is the dragging component of the selection mask */
             MouseArea {     // drag mouse area
@@ -279,6 +193,17 @@ Item {
                     maximumX: parent.parent.width
                     maximumY: parent.parent.height
                     smoothed: true
+                }
+
+                onHoveredChanged: {
+                    if(containsMouse){
+                       selComp.selected = true
+                       update_mask_info(selComp.mask_num, selComp.position_x, selComp.position_y, selComp.r)
+                    }
+                    else{
+                       selComp.selected = false
+                       update_mask_info(0,0,0,0)
+                    }
                 }
 
                 /* This timer was designed to update the shadow masks and is used only when
@@ -317,14 +242,6 @@ Item {
                  * and will also send masking positions to dhmx.py to update PIL(low)*/
                 onMouseXChanged: {
                     timer_shadow_mask.running = false
-                    /* 500 pixels is used to compensate for the width of the text as
-                     * there is no direct way to access how much width the text consumes */
-                    /* TODO: Find a better solution instead of a "magic number" */
-                    if(position_x + (selComp.width*2) + 500 >(mask.width/zoom_amnt))
-                       info.flip_info(true)
-                    else
-                       info.flip_info(false)
-
                     /* Emit a signal of each individual wavelength that has been enabled to tell
                      * Python to create a mask using PIL(low) so that the user can see what is
                      * being masked off */
@@ -337,6 +254,9 @@ Item {
                     if(wavelength3){
                          mask_pos(3,wavelength3.r,wavelength3.position_x,wavelength3.position_y)
                     }
+
+                    /* This will update the mask information of the specific selected mask and transfer it to the main display window */
+                    update_mask_info(selComp.mask_num, selComp.position_x, selComp.position_y, selComp.r)
                 }
 
                 onDoubleClicked: {
@@ -350,20 +270,6 @@ Item {
                        remove_mask(3)
                        mask_pos(-1,0,0,0) //throw in an invalid mask position to update the function
                     parent.destroy()        // destroy component
-                }
-
-                onEntered: {
-                    /* 500 pixels is used to compensate for the width of the text as
-                     * there is no direct way to access how much width the text consumes */
-                    /* TODO: Find a better solution instead of a "magic number" */
-                    if(position_x + (selComp.width*2) + 500 >(mask.width/zoom_amnt))
-                       info.flip_info(true)
-                    else
-                       info.flip_info(false)
-                    info.state = "visible"
-                }
-                onExited: {
-                    info.state = "invisible"
                 }
             }
 
@@ -530,6 +436,12 @@ Item {
            center_point_3.x = center_point_3.x + (width - width_prev) - (wavelength3.width/2 - w3_prev_width/2)
            center_point_3.y = center_point_3.y + (height - height_prev) - (wavelength3.height/2 - w3_prev_height/2)
         }
+    }
+    function update_mask_info(mask_no, x_pos, y_pos, radius){
+        curr_mask_no = mask_no
+        curr_mask_r = radius
+        curr_mask_x = x_pos
+        curr_mask_y = y_pos
     }
 }
 

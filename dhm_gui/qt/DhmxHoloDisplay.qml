@@ -345,6 +345,7 @@ MouseArea {
                     onMouseXChanged: {
                         var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
                         qml_signal_mouse_pos(positionInRoot.x, positionInRoot.y)
+
                     }
                 }
 
@@ -393,6 +394,14 @@ MouseArea {
                         visible: false
                         enabled: false
                         max_wavelength: max_wavelength
+
+                        onMask_pos: {
+                            label_mask_no_info.text = fourier_mask.curr_mask_no
+                            label_mask_x_info.text = fourier_mask.curr_mask_x
+                            label_mask_y_info.text = fourier_mask.curr_mask_y
+                            label_mask_r_info.text = fourier_mask.curr_mask_r
+                        }
+
 
                         onVisibleChanged: {
                             fourier_mask_sample.width = sample.width
@@ -487,7 +496,7 @@ MouseArea {
         }
         Label {
             id: label_prop_dist
-            x: 350
+            x: 361
             y: 750
             text: "Propagation Distance Index"
             font.bold: true
@@ -613,6 +622,67 @@ MouseArea {
         y: 775
         text: "0"
     }
+
+    Item {
+        id: mask_info
+        x: 382
+        y: 736
+        width: 212
+        height: 80
+
+        visible: false
+
+        Label{
+            id: label_mask_no
+            text: "Wavelength: "
+            font.bold: true
+
+        }
+        Label{
+            id: label_mask_no_info
+            text: fourier_mask.curr_mask_no
+            x: 80
+        }
+        Label{
+            id: label_mask_x
+            x: 65
+            text: "x:"
+            y: label_mask_no.font.pixelSize + 5
+            font.bold: true
+        }
+        Label{
+            id: label_mask_x_info
+            text: fourier_mask.curr_mask_x
+            y: label_mask_no.font.pixelSize + 5
+            x: 80
+        }
+        Label{
+            id: label_mask_y
+            x: 65
+            text: "y:"
+            y: (label_mask_no.font.pixelSize * 2) + 10
+            font.bold: true
+        }
+        Label{
+            id: label_mask_y_info
+            text: fourier_mask.curr_mask_y
+            y: (label_mask_no.font.pixelSize * 2) + 10
+            x: 80
+        }
+        Label{
+            id: label_mask_r
+            x: 30
+            y: (label_mask_no.font.pixelSize * 3) + 15
+            text: "Radius:"
+            font.bold: true
+        }
+        Label{
+            id: label_mask_r_info
+            y: (label_mask_no.font.pixelSize * 3) + 15
+            x: 80
+            text: fourier_mask.curr_mask_r
+        }
+    }
     function reset_view(){
         sample.width = start_width
         sample.height = start_height
@@ -655,7 +725,7 @@ MouseArea {
         sample.source = image_url
     }
 
-    function zoom(zoom){     
+    function zoom(zoom){
         if(!(start_height > sample.height+zoom)){
             sample.width += zoom
             sample.height += zoom/aspect_ratio
@@ -684,6 +754,7 @@ MouseArea {
         fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = true
         fourier_mask_sample.update()
+        mask_info.visible = true
 
     }
     function deactivate_mask_mode(){
@@ -694,6 +765,7 @@ MouseArea {
         fourier_mask_sample.source = sample.source
         fourier_mask_sample.visible = false
         fourier_mask_sample.update()
+        mask_info.visible = false
     }
     function add_circle(name,x,y,radius){
         //set first command
