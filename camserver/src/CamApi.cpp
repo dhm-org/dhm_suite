@@ -363,7 +363,8 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
         PrepareTrigger(camera, "FrameStart", "On", triggersource);
     }
 
-    camera->Close();
+    // Comment out because closing then reopening else where is an issue in systems like UDOO
+    //camera->Close();
 
     // Required is CIRC_BUFF_SIZE * sizeof(struct CamFrame) + (CIRC_BUFF_SIZE * width * height)
     m_circbuff = new CircularBuffer(CIRC_BUFF_SIZE, (int)width_in, (int)height_in);
@@ -407,10 +408,12 @@ int CamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_ena
     camera = m_cameras[cameraidx];
 
     // *** Open camera is full access
+    /*
+     // *** Commented out because I did not close in OpenAndConfigure()  
     if((err = camera->Open(VmbAccessModeFull)) != VmbErrorSuccess) {
          printf("Error.  Unable to open CAMERA %d\n", cameraidx);
          return -1;
-    }
+    }*/
 
     camera->GetFeatureByName("Width", pFeature);
     err = pFeature->GetValue(width);

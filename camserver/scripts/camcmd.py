@@ -13,6 +13,9 @@ class CamCmd():
         self._client.connect((server, port))
 
     def send(self, cmd_str):
+        cmd_str = cmd_str.rstrip('\n')
+
+        print("Sending [%s]..."%(cmd_str))
         cmd = cmd_str.upper().encode().ljust(128, b'\0')
         self._client.sendall(cmd)
         resp = self._client.recv(256)
@@ -30,13 +33,22 @@ def usage():
 
 ### Setup command
 #cmd_str = "DISABLE_RECORDING"
-cmd_str = "ENABLE_RECORDING"
+#cmd_str = "ENABLE_RECORDING"
 #cmd_str = "STOP_IMAGING"
 #cmd_str = "EXIT"
 #cmd_str = "SNAP"
 #cmd_str = "GAIN=26"
 
 if __name__ == "__main__":
-    print(usage())
+
+    if len(sys.argv) <= 1:
+        raise ValueError('Must have one or more parameters as input')
+    else:
+        if len(sys.argv) == 2:
+            cmd_str = sys.argv[1]
+        else:
+            cmd_str = " ".join(sys.argv[1,:])
+            
+    print("Sending [%s]..."%(cmd_str))
     a = CamCmd()
-    a.send("disable_recording")
+    a.send(cmd_str)
