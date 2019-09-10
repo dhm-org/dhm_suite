@@ -9,10 +9,17 @@ class CamCmd():
         self._server = server
         self._client = None
 
-        self._client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._client.connect((server, port))
+
+    def connect(self):
+
+        if self._client is None:
+            self._client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._client.connect((self._server, self._port))
 
     def send(self, cmd_str):
+
+        self.connect()
+
         cmd_str = cmd_str.rstrip('\n')
 
         print("Sending [%s]..."%(cmd_str))
@@ -20,6 +27,11 @@ class CamCmd():
         self._client.sendall(cmd)
         resp = self._client.recv(256)
         print(resp)
+        try:
+            self._client.close()
+        except Exception as e:
+            pass
+        self._client = None
 
         pass
 
