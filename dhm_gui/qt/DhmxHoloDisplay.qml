@@ -38,6 +38,8 @@ MouseArea {
     property int frame_width: 636 //the display window width
     property int frame_height: 636 //the display window height
 
+
+
     onWidthChanged: {
         reset_view()
     }
@@ -334,9 +336,14 @@ MouseArea {
 
                 }
 
+                /* Pixel value is also used for getting a general position of the mouse.
+                 * This will be used for centering fourier masks
+                 */
                 MouseArea{
                     id: pixel_value
                     signal qml_signal_mouse_pos(int x,int y)
+                    property int position_x
+                    property int position_y
                     objectName: "pixel_value"
                     width: sample.width
                     height: sample.height
@@ -344,6 +351,8 @@ MouseArea {
 
                     onMouseXChanged: {
                         var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
+                        position_x = positionInRoot.x
+                        position_y = positionInRoot.y
                         qml_signal_mouse_pos(positionInRoot.x, positionInRoot.y)
 
                     }
@@ -386,6 +395,8 @@ MouseArea {
                     }
                     /* The drawing canvas for fourier mode */
                     DhmxMaskingMode{
+                        /* A QML signal to send to python for beginning the centering process */
+                      //  signal qml_signal_begin_centering(int pos_x, int pos_y, int width, int height)
                         id: fourier_mask
                         objectName: "fourier_mask"
                         anchors.fill:parent
@@ -402,6 +413,13 @@ MouseArea {
                             label_mask_r_info.text = fourier_mask.curr_mask_r
                         }
 
+                        onCenter_mask: {
+                            /* Take the x, y position of the mouse and an arbitrary length and width (100x100 in this case)
+                             * And use this info to create a new numpy array of the selected area and to find the brightest
+                             * value within that */
+                         //   qml_signal_begin_centering(fourier_mask.position_x, fourier_mask.position_y, 100, 100)
+                        }
+
 
                         onVisibleChanged: {
                             fourier_mask_sample.width = sample.width
@@ -412,6 +430,24 @@ MouseArea {
                             fourier_mask_sample.source = sample.source
                         }
                     }
+
+                    /* This is similar to the pixel value QML object, however this object is
+                     * only used for mouse positioning while using masking mode */
+//                    MouseArea{
+//                        id: masking_mouse_pos
+//                        property int position_x
+//                        property int position_y
+//                        width: sample.width
+//                        height: sample.height
+//                        hoverEnabled: true
+//                        propagateComposedEvents: true
+
+//                        onMouseXChanged: {
+//                            var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
+//                            position_x = positionInRoot.x * (1/zoom_f)
+//                            position_y = positionInRoot.y * (1/zoom_f)
+//                        }
+//                    }
                 }
 
             }

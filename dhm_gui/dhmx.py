@@ -691,6 +691,9 @@ class FourierWin(QObject):
        self.fourier_mask.mask_pos.connect(self.CreateDisplayMask)
        self.fourier_mask.remove_mask.connect(self.RemoveDisplayMask)
 
+       # Mask Centering
+       self.fourier_mask.qml_signal_begin_centering.connect(self.CenterMask)
+
        # Connect telemetry object to slot
        # This signal will be pickup:
        #  1. start/stop
@@ -751,6 +754,7 @@ class FourierWin(QObject):
     def BeginPlayback(self):
        self.display_t.sig_img_complete.connect(self.UpdateImage)
        self.display_t.sig_hist_val.connect(self.UpdateHistogram)
+       self.display_t.sig_centering_complete.connect(self.UpdateCentering)
        self.display_t.set_mode("reconst")
        self.display_t.set_win("fourier")
        self.display_t.start()
@@ -770,6 +774,21 @@ class FourierWin(QObject):
           self.mask_002 = None
        if(mask_no == 3):
           self.mask_003 = None
+
+
+    # This function is called from QML (from DhmxHoloDisplay) via QML Signal.  The signal contains a 
+    # mouse X, Y position and an arbitrary width and height to center in on.
+    # Once the brightest pixel is found, it will return with an X, Y coordinate to forward to the
+    # DhmxMaskingMode to reposition the mask.
+    def CenterMask(self,x,y,width,height):
+        print(x)
+        print(y)
+        self.display_t.find_brightest_pixel(x,y,width,height)
+
+    # This slot is called after display_t has completed its mask centering process and returns the
+    # result as an offset to the display window.
+    def UpdateCentering(self,x_offset,y_offset):
+        self.fourier_mask.centering_complete(x_offset,y_offset)        
 
 
     def CreateDisplayMask(self, mask_no, radius, x, y):
@@ -2719,8 +2738,8 @@ class MainWin(QObject):
       # If for any reason the heartbeat stops, all other services go red
       #self.icon_heartbeat_status
       if(self.arm_heartbeat == True):
-         # arm the heartbeat by setting expiration of 2 seconds
-         self.icon_heartbeat_status.armTimer(2000)
+         # arm the heartbeat by setting expiration of 5 seconds
+         self.icon_heartbeat_status.armTimer(5000)
          # Heartbeat armed.
          self.arm_heartbeat = False
       # Telemetry is received within 3 seconds, reset the timer.

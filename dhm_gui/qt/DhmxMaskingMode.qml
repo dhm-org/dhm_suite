@@ -7,6 +7,9 @@ Item {
     visible: true
 
     signal mask_pos(int mask_no, double radius, int x, int y)
+    signal qml_signal_begin_centering(int x, int y, int width, int height)
+    /* For centering on a point, emit this signal, which then gets handled by DhmxHoloDisplay */
+    signal center_mask()
     signal remove_mask(int mask_no)
     property var wavelength1: undefined
     property var wavelength2: undefined
@@ -40,6 +43,10 @@ Item {
     property int curr_mask_y: 0
     property double curr_mask_r: 0
 
+    /* For centering masks */
+    property int position_x: 0
+    property int position_y: 0
+
     onVisibleChanged: {
         if(!visible){
             width_prev = width
@@ -63,20 +70,38 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: {
-                if(!wavelength1 && max_wavelength >= 1){
-                  wavelength1 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 1", "mask_num":1})
-                  updateCenter(wavelength1.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt, mouseY-((parent.height/3)/2)*zoom_amnt, (parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
+                if(mouse.button & Qt.LeftButton){
+                    if(!wavelength1 && max_wavelength >= 1){
+                        wavelength1 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 1", "mask_num":1})
+                        updateCenter(wavelength1.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt, mouseY-((parent.height/3)/2)*zoom_amnt, (parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
+                    }
+                    else if(!wavelength2 && max_wavelength >= 2){
+                        wavelength2 = selectionComponent.createObject(parent, {"x":  mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 2","mask_num":2})
+                        updateCenter(wavelength2.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
+                    }
+                    else if(!wavelength3 && max_wavelength >= 3){
+                        wavelength3 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 3","mask_num":3})
+                        updateCenter(wavelength3.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt,(parent.width / 3)*zoom_amnt)
+                    }
                 }
-                else if(!wavelength2 && max_wavelength >= 2){
-                  wavelength2 = selectionComponent.createObject(parent, {"x":  mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 2","mask_num":2})
-                  updateCenter(wavelength2.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt, (parent.width / 3)*zoom_amnt)
-                }
-                else if(!wavelength3 && max_wavelength >= 3){
-                  wavelength3 = selectionComponent.createObject(parent, {"x": mouseX-((parent.width/3)/2)*zoom_amnt, "y": mouseY-((parent.height/3)/2)*zoom_amnt, "width": default_wavelength_diameter, "height": default_wavelength_diameter, "name": "Wavelength 3","mask_num":3})
-                  updateCenter(wavelength3.mask_num,mouseX-((parent.width/3)/2)*zoom_amnt,mouseY-((parent.height/3)/2)*zoom_amnt,(parent.width / 3)*zoom_amnt,(parent.width / 3)*zoom_amnt)
+
+                if(mouse.button & Qt.RightButton){
+                   //center_mask()
+                    qml_signal_begin_centering(center_point_1.x * (1/zoom_f), center_point_1.y * (1/zoom_f), wavelength1.r * zoom_f, wavelength1.r * zoom_f)
+
                 }
             }
+
+            /* This event is used for getting the x,y position of the mouse, this will be used for mask centering */
+//            onMouseXChanged: {
+//                var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
+//                position_x = positionInRoot.x * (1/zoom_f)
+//                position_y = positionInRoot.y * (1/zoom_f)
+//            }
+
+
         }
 
    Rectangle{
@@ -442,6 +467,22 @@ Item {
         curr_mask_r = radius
         curr_mask_x = x_pos
         curr_mask_y = y_pos
+    }
+
+    function centering_complete(x_offset, y_offset){
+        if(wavelength1){
+            center_point_1.x -= x_offset * zoom_amnt
+            center_point_1.y -= y_offset * zoom_amnt
+
+            console.log("Centering Mask 1 complete")
+        }
+    }
+
+    function test_move(x,y){
+        if(wavelength1){
+            center_point_1.x = x
+            center_point_1.y = y
+        }
     }
 }
 
