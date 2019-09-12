@@ -87,19 +87,13 @@ Item {
                     }
                 }
 
+                /* This event is used for getting the x,y position of the mouse, this will be used for mask centering */
                 if(mouse.button & Qt.RightButton){
-                   //center_mask()
-                    qml_signal_begin_centering(center_point_1.x * (1/zoom_f), center_point_1.y * (1/zoom_f), wavelength1.r * zoom_f, wavelength1.r * zoom_f)
+                    if(wavelength1)
+                       qml_signal_begin_centering(center_point_1.x * (1/zoom_f), center_point_1.y * (1/zoom_f), wavelength1.r * zoom_f, wavelength1.r * zoom_f)
 
                 }
             }
-
-            /* This event is used for getting the x,y position of the mouse, this will be used for mask centering */
-//            onMouseXChanged: {
-//                var positionInRoot = mapToItem(sample, mouse.x, mouse.y)
-//                position_x = positionInRoot.x * (1/zoom_f)
-//                position_y = positionInRoot.y * (1/zoom_f)
-//            }
 
 
         }
