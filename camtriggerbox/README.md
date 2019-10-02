@@ -1,16 +1,17 @@
-# Laser-Pulse-Controller (aka TriggerBox)
-This was meant to be a simple, terminal-based program to interact with the LPC blue boxes via the USB serial port.
-It was orignially developed under Windows, within a Python 3.56 installation.
-Additionally, two windows upport packages were added, pywin32-224.win-amd64-py3.5.exe, and PySerial-3.4. I have included these
-in the zipped file 'WindowsPythonPackages.zip' which should work with a Windows Python 3.5.6 installation.
+# Laser-Pulse-Controller Version 3
 
-At this writing I cannot guarantee that there is equivalent functionality within the Linux environment. I'm confident
-that the code could be ported, but I'm not sure how much effort is involved.
+This version of 'startLaserPulseController' contains two main updates:
+1) External Trigger options added to menu.
+2) Program can now run copies of itself for each plugged-in trigger box.
 
-The main code body is called 'startLaserPulseController.py', and uses the class 'laserPulseController.py' to do most of
-the heavy lifting. It employs much of the PySerial functions, as well as some 'fancy pants' COM port discovery calls that
-may be specific to pyWin32. I know I had install that module to get the 'keyboard.kbhit()' function. Hopefully there are Linux
-analogs.
+A box can be placed in external trigger mode. This means another clock source can cause a clock burst out of that box. This gives the
+user the ability to make more clock pulses with their own pulse width and phase with respect to the trigger input. 
 
-So if you can compile 'startLaserPulseController.py', then you should be close. In Windows, you just have to plug the Blue box
-into any USB port, and it should find it.
+For multiple instances to work all of the trigger boxes must be plugged-in, a USB3 extention hub
+works fine. When starting the program for the first trigger box, type either python3 startLaserPulseController3.py 0,
+or just python3 startLaserPulseController3.py (when no index is present, it defaults to 0). To start for second trigger
+box, type: python3 startLaserPulseController3.py 1. This will work for as many boxes one can plug in, Each instance requires
+its own configuration file. The filenames look like lpc_set3.0, lpc_set3.1, lpc_set3.2, lpc_set3.3 etc. There must be configuration
+file for every box plugged in. If for example, you have 5 boxes, then lpc_set3.4 must exist! One can easily create one by copying
+an existing file into a new one with the new file name. This approach seemed better than having several program instances trying to
+access the same file! The config files are stored in the directory where the program executes.

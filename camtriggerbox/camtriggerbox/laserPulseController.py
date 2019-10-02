@@ -7,7 +7,7 @@ import serial.tools.list_ports as ports
 # Class for DHM Laser Controller
 # for python 3
 class laserPulseController:
-	def __init__(self):
+	def __init__(self,instance = 0):
 		self.serial = serial.Serial()
 		self.serial.portBaudrate  = 9600
 		self.serial.timeout = 0.5
@@ -29,6 +29,8 @@ class laserPulseController:
 		self.currentCountdownState = 0
 		self.currentExternalInterruptState = 0
 		self.currentInterruptSense = 0
+                self.deviceInstance = instance
+                self.recordSize = 128
 		
 		self.port_found = False
 		self.serial.port = 'NONE'
@@ -43,9 +45,11 @@ class laserPulseController:
 			    ArduinoText = 'Arduino Due Prog. Port'
 
 			if x.description.find(ArduinoText) >= 0:
+                            if(instance == 0):
 				self.serial.port = x.device
 				self.port_found = True
 				break;
+                            else: instance -= 1
 		
 	def open(self):
 		if(self.port_found):
