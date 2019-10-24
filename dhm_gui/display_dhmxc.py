@@ -6,6 +6,7 @@ import socket
 import numpy as np
 import pickle
 import time
+import platform
 
 from io import BytesIO
 from pylab import figure,axes,pie,title,show 
@@ -79,8 +80,9 @@ class guiclient(QThread):
         self.m_rate = None
         self.m_rate_measured = None
 
-        for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
-            signal.signal(sig, self.signal_handler)
+        if platform.system() == 'Linux':
+            for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
+                signal.signal(sig, self.signal_handler)
 
 
 
@@ -113,7 +115,8 @@ class guiclient(QThread):
                return -1
 
             # make the array writable
-            self.outdata.setflags(write=1)
+            if platform.system() == 'Linux':
+                self.outdata.setflags(write=1)
 
             # Bin historgram values together to display
             self.histogram,self.bins = np.histogram(self.outdata,bins=np.arange(0,256,1))

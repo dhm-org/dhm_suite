@@ -60,6 +60,10 @@ def SetFrameServerPort(port_num):
    global FRAME_SERVER_PORT
    FRAME_SERVER_PORT = int(port_num)
 
+def SetHostname(hostname):
+   global HOST
+   HOST = hostname
+
 def SetTelemetryServerPort(port_num):
    global TELEMETRY_SERVER_PORT
    TELEMETRY_SERVER_PORT = int(port_num)
@@ -312,6 +316,8 @@ if __name__ == "__main__":
                     help="This argument will override the default port for the Command Server to a port of your choosing.")
     parser.add_option("-t","--tlmserver", dest="telemetryServerPort",
                     help="This argument will override the default port for the Telemetry Server to a port of your choosing.")
+    parser.add_option("-j","--host", dest="hostnameOrIP",
+                    help="This argument will override the default host for the host of your choosing.")
 
     # parse in the arguments
     (opts, args) = parser.parse_args()
@@ -332,6 +338,9 @@ if __name__ == "__main__":
 
     if(opts.telemetryServerPort):
        SetTelemetryServerPort(opts.telemetryServerPort)
+
+    if(opts.hostnameOrIP):
+       SetHostname(opts.hostnameOrIP)
 
     w = MainWin()
 
