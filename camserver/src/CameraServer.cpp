@@ -44,7 +44,7 @@ int read_from_client(int client, char *buffer, int len)
 {
     int nbytes;
 
-    nbytes = read(client, buffer, len);
+    nbytes = MP_read(client, buffer, len);
     if(nbytes < 0) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Read from socket failed: %s\n", strerror(err));
@@ -126,6 +126,9 @@ Server::Server(int port) :
         m_clients[i] = __INVALID_SOCKET__;
 
     m_serverfd = BindServer(m_port);
+    if (m_serverfd == __INVALID_SOCKET__) {
+        throw std::runtime_error("CameraServer:  Bind socket failed");
+    }
 }
 
 CameraServer::CameraServer(int frame_port, int command_port, int telem_port, float frame_publish_rate_hz) :
@@ -358,7 +361,7 @@ void * CameraServer::FrameServerThread(void *arg)
                             ssize_t sentbytes;
                             int totalsent = 0;
                             while (totalsent < framedatabufferlen) {
-                                sentbytes = write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
+                                sentbytes = MP_write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
                                 if(sentbytes < 0) {
                                     int err = errno;
                                     fprintf(stderr, "CameraServer: Error on writting frame. errno=%d, strerror = [%s]\n", err, strerror(err));
@@ -458,7 +461,7 @@ void * CameraServer::FrameServerThread(void *arg)
                                 snprintf(retstatus, sizeof(retstatus), "ERR: %s\n", errstr);
                             }
 
-                            if(write(client, retstatus, strlen(retstatus)) < 0) {
+                            if(MP_write(client, retstatus, strlen(retstatus)) < 0) {
                                 int err = errno;
                                 fprintf(stderr, "CameraServer: Error on writting command response. errno=%d, strerror=[%s]\n", err, strerror(err));
                             }

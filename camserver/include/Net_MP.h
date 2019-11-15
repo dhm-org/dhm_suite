@@ -12,14 +12,14 @@
 #ifdef _WIN32
 #define __INVALID_SOCKET__     INVALID_SOCKET
 #else
-#define __INVALID_SOCKET__     SOCKET_ERROR
+#define __INVALID_SOCKET__     -1
 #endif
 
-#define __SOCKET_ERROR__       SOCKET_ERROR
+#define __SOCKET_ERROR__       -1
 
-int  Mp_read(int, char*, int);
-int  Mp_write(int, char*, int);
-void Mp_close(int);
+int  MP_read(int, char*, int);
+int  MP_write(int, char*, int);
+void MP_close(int);
 int BindServer(int port);
 
 #pragma once
