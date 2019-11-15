@@ -16,7 +16,9 @@
   @par Description:  Convert frame buffer to TIF file.
  ******************************************************************************
  */
+#include "MultiPlatform.h"
 #include <iostream>
+#include <tiffio.h>
 #include "TIFConverter.h"
 #include <iostream>
 #include <stdio.h>
@@ -24,11 +26,6 @@
 #include <stdarg.h>
 #include <iomanip>
 #include <string>
-#if defined(_WIN32)
-#else
-#include <tiffio.h>
-#include <pthread.h>
-#endif
 #include "VimbaC/Include/VimbaC.h"
 
 #define SAMPLE_PER_PX 	1
@@ -53,7 +50,7 @@ TIFConverter::TIFConverter(std::string fname, FramePtr Data){
     setWidth(width);
     setHeight(height);
     setImageSize(imgSize);
-    frameID = frameId;
+    frameID = (int)(frameId);
 }
 
 TIFConverter::TIFConverter(std::string fname, int frame_id, int imgSize, int width, int height){

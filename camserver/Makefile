@@ -55,6 +55,7 @@ CFLAGS              = $(COMMON_CFLAGS) \
                       $(VIMBAIMAGETRANSFORM_CFLAGS)
 
 OBJ_FILES           = $(OBJ_DIR)/FrameObserver.o \
+                      $(OBJ_DIR)/MultiPlatform.o \
                       $(OBJ_DIR)/main.o \
                       $(OBJ_DIR)/CamApi.o \
                       $(OBJ_DIR)/CircularBuffer.o \

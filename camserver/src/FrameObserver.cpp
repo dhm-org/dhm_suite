@@ -16,10 +16,10 @@
   @par Description:  Gets frames from the camera and places into circular buffer
  ******************************************************************************
  */
+
+#include "MultiPlatform.h"
 #include <string.h>
 #include <fstream> //ofstream
-#include <sys/time.h> //struct timezone
-#include <unistd.h> //usleep
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "FrameObserver.h"
@@ -28,6 +28,7 @@
 #include "TIFConverter.h"
 #include "version.h"
 #include "tspec.h"
+
 
 // ****************************************************************************
 // ***                      Defines
@@ -94,15 +95,20 @@ char *FrameStatus( VmbFrameStatusType eFrameStatus)
 
 std::string stampstart()
 {
-    struct timeval  tv;
-    struct timezone tz;
-    struct tm      *tm;
- 
+char output[200];
+#ifdef _WIN32
+	SYSTEMTIME tm;
+	GetSystemTime(&tm);
+	sprintf(output, "%d:%02d:%02d.%03d", tm.wHour,tm.wMinute, tm.wSecond, tm.wMilliseconds);
+#else
+	struct timeval  tv;
+	struct tm      *tm;
+	struct timezone tz;
     gettimeofday(&tv, &tz);
     tm = localtime(&tv.tv_sec);
-    char output [200];
     sprintf(output, "%d:%02d:%02d.%03d", tm->tm_hour,
            tm->tm_min, tm->tm_sec, (int)(tv.tv_usec/1000));
+#endif
     std::string str(output);
     return str;
 }
@@ -193,6 +199,7 @@ void *FrameReceived_TIFConvert(void *arg)
 
 #if THREAD_PER_FRAME == 1
 
+
 typedef struct LogThread
 {
     pthread_t thread;
@@ -261,13 +268,13 @@ void * FrameConsumerThread(void *arg)
         pthread_mutex_init(&log_threads[i].mutex, NULL);
     }
 
-#if LOG_THREAD_ALWAYS_ON == 1
-    //*** Spawn logger threads
-    for (int i = 0; i < MAX_NUM_THREADS; i++) {
-        pthread_create(&log_threads[i].thread, NULL, &FrameLoggerThread, &log_threads[i]);
-    }
-    usleep(1000);
-#endif
+	#if LOG_THREAD_ALWAYS_ON == 1
+		//*** Spawn logger threads
+		for (int i = 0; i < MAX_NUM_THREADS; i++) {
+			pthread_create(&log_threads[i].thread, NULL, &FrameLoggerThread, &log_threads[i]);
+		}
+		MP_Sleep(1);
+	#endif
 #endif
     bool grab_till_empty = false;
     struct CamFrame *frame_ptr;
@@ -321,7 +328,7 @@ void * FrameConsumerThread(void *arg)
 #if LOG_THREAD_ALWAYS_ON == 1
 #else
                     
-                    clock_gettime(CLOCK_REALTIME, &ts);
+                    MP_clock_gettime(CLOCK_REALTIME, &ts);
                     ts.tv_nsec += 1000;
                     if(ts.tv_nsec >= 1E9) {ts.tv_sec+=1; ts.tv_nsec-=1E9;}
                     if(log_threads[i].is_running) {
@@ -355,7 +362,8 @@ void * FrameConsumerThread(void *arg)
         else {
             if(grab_till_empty) break;
             //usleep(45454/2); //44Hz
-            usleep(45454); //22Hz
+			MP_Sleep(46);
+			//usleep(45454); //22Hz
         }
 
         if(!consumer_thread_running) {
@@ -386,9 +394,10 @@ void * FrameConsumerThread(void *arg)
 
 static int create_datadir(char *rootdir, char *datadir, char *sessiondir) //struct UserParams *params)
 {
-
+	
     time_t curtime;
-    struct tm *loctime;   
+    struct tm *loctime;
+	int milli;
     char timestr[PATHLEN];
     char tempdir[PATHLEN];
     //ofstream metafile;
@@ -415,15 +424,13 @@ static int create_datadir(char *rootdir, char *datadir, char *sessiondir) //stru
 
     //Check if daily directory exists, else create it
     if (stat(datadir, &info) == -1) {
-        mkdir(datadir, 0700);
+		MP_mkdir(datadir, 0700);
     }
 
     //*** If daily session already exists ususally means another instance of the camserver
     //created the directory at the same time
     while(1) {
-        timeval curTime;
-        gettimeofday(&curTime, NULL);
-        int milli = curTime.tv_usec / 1000;
+		milli = MP_getMsTime();
 
         // Session directory
         strcpy(tempdir, datadir);
@@ -434,13 +441,13 @@ static int create_datadir(char *rootdir, char *datadir, char *sessiondir) //stru
         if(stat(tempdir, &info) == -1) {
             //Create daily folder
             //strcpy(datadir, tempdir);
-            mkdir(tempdir, 0700);
+			MP_mkdir(tempdir, 0700);
             break;
         }
         else if (info.st_mode & S_IFDIR) {
         //    strcpy(datadir, tempdir);
         }
-        usleep(1000);
+		MP_Sleep(1);
     }
 
     strcpy(sessiondir, tempdir);
@@ -449,7 +456,7 @@ static int create_datadir(char *rootdir, char *datadir, char *sessiondir) //stru
     strcat(tempdir, "Holograms/");
     if(stat(tempdir, &info) == -1) {
         //Create daily folder
-        mkdir(tempdir, 0700);
+		MP_mkdir(tempdir,0700);
         printf("Writting data to location: %s\n", tempdir);
     }
     else if (info.st_mode & S_IFDIR) {
@@ -600,14 +607,15 @@ void FrameObserver::InitFrameHeaderInfo(AVT::VmbAPI::CameraPtr pCamera)
 
 #define MAX_FRAME_COUNT  60
 
+
 void FrameObserver::CountFPS()
 {
     static int nFrames = MAX_FRAME_COUNT;
     static struct timespec lastts;
-
+	
     if (nFrames == MAX_FRAME_COUNT)
     {
-        clock_gettime(CLOCK_REALTIME, &lastts);
+        MP_clock_gettime(CLOCK_REALTIME, &lastts);
 
     }
 
@@ -616,8 +624,7 @@ void FrameObserver::CountFPS()
         struct timespec et;
         struct timespec ts;
         double elapsed_sec;
-
-        clock_gettime(CLOCK_REALTIME, &ts);
+        MP_clock_gettime(CLOCK_REALTIME, &ts);
 
         tspec_subtract (&et, &ts, &lastts);
 
@@ -691,8 +698,8 @@ void FrameObserver::FrameReceived(const AVT::VmbAPI::FramePtr pFrame)
 
             if(m_verbose) {
                 struct timespec ts;
-                clock_gettime(CLOCK_REALTIME, &ts);
-                fprintf(stderr, "%ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
+                MP_clock_gettime(CLOCK_REALTIME, &ts);
+                fprintf(stderr, "%ld.%09ld\n", (long)(ts.tv_sec), (long)(ts.tv_nsec));
             }
 
         }

@@ -16,7 +16,8 @@
   @par Description:  Main for the camera server.
  ******************************************************************************
  */
-#include <signal.h>
+
+#include "MultiPlatform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,19 +25,9 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
-#if defined(_WIN32)
-#else
-#include <tiffio.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <strings.h>
-#include <pthread.h>
-#endif
-
 #include "CamApi.h"
 
+extern bool exitflag;
 
 #define MAX_RECORD_TIME_SECONDS 2147483647
 #define SERVER_BASE_PORT 2000
@@ -56,13 +47,14 @@ struct DoubleParam {
     bool cmdline;
 };
 struct BoolParam {
-    float val;
+    bool val;
     bool cmdline;
 };
 struct StringParam {
     char val[PATHLEN];
     bool cmdline;
 };
+
 
 struct UserParams {
     struct IntParam numcameras;
@@ -84,23 +76,11 @@ struct UserParams {
 };
 
 static CamApi *g_cam_api = NULL;
-static bool exitflag = false;
 
-void sighandler(int s) 
-{
-    fprintf(stderr, "Caught Ctrl-C...\n");
-    exitflag=true;
-}
 void CaptureSigint()
-{
-    struct sigaction sigIntHandler;
-
-    sigIntHandler.sa_handler = sighandler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-
-    sigaction(SIGINT, &sigIntHandler, NULL);
-}
+	{
+	MP_catchCtrlC();    
+	}
 
 void banner()
 {
@@ -234,7 +214,7 @@ void set_default(struct UserParams *params)
     char rootdir[PATHLEN];
 
     // Get current working directory
-    if (getcwd(rootdir, sizeof(rootdir)) == NULL) {
+    if (MP_getcwd(rootdir, sizeof(rootdir)) == NULL) {
         perror("getcwd() error");
         exit(-1);
     }
@@ -307,15 +287,21 @@ int stop_camera_server(CamApi *cam_api)
 
 int start_camera_server(CamApi *cam_api, int cameraidx, struct UserParams *userparams)
 {
-    cam_api->SetVerbose(userparams->verbose.val);
-    if(cam_api->OpenAndConfigCamera(cameraidx, userparams->width.val, userparams->height.val, userparams->rate.val, userparams->configfile.val, userparams->trigger_source.val) < 0) {
+	int result;
+    cam_api->SetVerbose((bool)(userparams->verbose.val));
+	result = cam_api->OpenAndConfigCamera(cameraidx, userparams->width.val, userparams->height.val, userparams->rate.val, userparams->configfile.val, userparams->trigger_source.val);
+    if(result < 0) {
         fprintf(stderr, "Error.  Open and Configure Camera failed.  Aborting.\n");
         cam_api->Shutdown();
         exit(-1);
     }
+	else   
+	   fprintf(stderr, "Open and Configure Camera Success.\n");
+
 
     cam_api->StartCameraServer(userparams->frame_port.val, userparams->command_port.val, userparams->telem_port.val);
-    if(cam_api->StartAsyncContinuousImageAcquisition(cameraidx, userparams->logging_enabled.val, userparams->rootdir.val, userparams->datadir.val, userparams->sessiondir.val) < 0) {
+	result = cam_api->StartAsyncContinuousImageAcquisition(cameraidx, userparams->logging_enabled.val, userparams->rootdir.val, userparams->datadir.val, userparams->sessiondir.val);
+    if(result < 0) {
         fprintf(stderr, "Error.  Start of acqusition failed.  Aborting.\n");
         cam_api->Shutdown();
         exit(-1);
@@ -412,8 +398,8 @@ int main( int argc, char* argv[] )
 
     count = 0;
     while(count++ < userparams.duration.val) {
-         usleep(1e6);
-         fprintf(stderr, "Sec %d\n", count);
+		MP_Sleep(1000);
+        fprintf(stderr, "Sec %d\n", count);
 	 if(exitflag) break;
     }
 

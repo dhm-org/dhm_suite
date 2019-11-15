@@ -102,7 +102,7 @@ int BindServer(int port)
         fprintf(stderr, "CameraServer:  Error.  Unable to create server socket: strerror=%s\n", errstr);
         return __INVALID_SOCKET__;
     }
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == __SOCKET_ERROR__) {
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == __SOCKET_ERROR__) {
 
         err = WSAGetLastError();
         LPSTR errstr = NULL;
