@@ -30,11 +30,11 @@
 
 #include "CameraServer.h"
 #include "CamCommands.h"
+#include "Net_MP.h"
 
 // ****************************************************************************
 // ***                    Defines
 // ****************************************************************************
-#define SOCKET_ERROR -1
 
 // ****************************************************************************
 // ***                    Support Functions
@@ -84,45 +84,6 @@ double tsFloat(struct timespec time)
     return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
 }
 
-int BindServer(int port)
-{
-    int err;
-    int ret;
-    int opt = 1;
-    struct sockaddr_in address;
-    int fd;
-
-
-    // *** Create server socket
-    fd = SOCKET_ERROR;
-
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to create server socket: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR;
-    }
-
-    // *** Set socket options
-    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to set server socket options: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR; 
-    }
-
-    // *** Bind
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(port);
-
-    if((ret = bind(fd, (struct sockaddr *)&address, sizeof(address))) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to bind server socket: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR; 
-    }
-
-    return fd;
-}
-
 bool AcceptClient(Server *server, fd_set *readable, char *servername)
 {
     int newclient;
@@ -131,7 +92,7 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
     bool client_added = false;
 
     newclient = accept(server->Fd(), (struct sockaddr *)&clientname, &size);
-    if (newclient == SOCKET_ERROR) {
+    if (newclient == __INVALID_SOCKET__) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, strerror(err));
     }
@@ -156,13 +117,13 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
 // ***                     Class Method Definitions
 // ****************************************************************************
 Server::Server(int port) :
-    m_serverfd(SOCKET_ERROR),
+    m_serverfd(__INVALID_SOCKET__),
     m_numclients(0),
     m_port(port),
     m_server_connected(false)
 {
     for (int i = 0; i < CAMERA_SERVER_MAX_CLIENTS; i++)
-        m_clients[i] = SOCKET_ERROR;
+        m_clients[i] = __INVALID_SOCKET__;
 
     m_serverfd = BindServer(m_port);
 }
@@ -235,14 +196,14 @@ void * CameraServer::FrameServerThread(void *arg)
     int framedatabufferlen = sizeof(frame.header) + C->CircBuff()->Width() * C->CircBuff()->Height();
     framedatabuffer = (char *)malloc(framedatabufferlen);
 
-    if(listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == SOCKET_ERROR) {
+    if(listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
         return NULL;
     }
 
-    if(listen(C->CommandServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == SOCKET_ERROR) {
+    if(listen(C->CommandServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
@@ -272,12 +233,12 @@ void * CameraServer::FrameServerThread(void *arg)
 	FD_SET(C->CommandServer()->Fd(), &readable);
 	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
             int client = C->FrameServer()->Clients()[j];
-	    if (client == SOCKET_ERROR) continue;
+	    if (client == __INVALID_SOCKET__) continue;
 	    FD_SET(client, &readable);
 	}
 	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
             int client = C->CommandServer()->Clients()[j];
-	    if (client == SOCKET_ERROR) continue;
+	    if (client == __INVALID_SOCKET__) continue;
 	    FD_SET(client, &readable);
 	}
 	dup_readable = readable;
@@ -288,7 +249,7 @@ void * CameraServer::FrameServerThread(void *arg)
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->FrameServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
+                if (client == __INVALID_SOCKET__) continue;
 		close(client);
 		fprintf(stderr, "Closed client...\n");
 	    }
@@ -312,8 +273,7 @@ void * CameraServer::FrameServerThread(void *arg)
                 for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                     int client = C->FrameServer()->Clients()[j];
     
-                    //if(client == SOCKET_ERROR) {fprintf(stderr, "CameraServer: Client socket error\n"); continue; }
-                    if(client == SOCKET_ERROR) {continue; }
+                    if(client == __INVALID_SOCKET__) {continue; }
     
                     FD_SET(client, &writeable);
                     frame_ready = true;
@@ -365,7 +325,7 @@ void * CameraServer::FrameServerThread(void *arg)
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->FrameServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
+                if (client == __INVALID_SOCKET__) continue;
 
                 if(FD_ISSET(i, &dup_readable)) {
 
@@ -378,7 +338,7 @@ void * CameraServer::FrameServerThread(void *arg)
                             close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->FrameServer()->Clients()[j] = SOCKET_ERROR;
+                            C->FrameServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->FrameServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
                         }
@@ -417,7 +377,7 @@ void * CameraServer::FrameServerThread(void *arg)
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->CommandServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
+                if (client == __INVALID_SOCKET__) continue;
 
                 if(FD_ISSET(i, &dup_readable)) {
 
@@ -431,7 +391,7 @@ void * CameraServer::FrameServerThread(void *arg)
                             close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->CommandServer()->Clients()[j] = SOCKET_ERROR;
+                            C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->CommandServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
                         }
@@ -505,7 +465,7 @@ void * CameraServer::FrameServerThread(void *arg)
                             close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->CommandServer()->Clients()[j] = SOCKET_ERROR;
+                            C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->CommandServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
                              
