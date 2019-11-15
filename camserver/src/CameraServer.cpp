@@ -21,7 +21,6 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <unistd.h> //read/write
-//#include <netinet/ip.h> //for INADDR_ANY
 #include <netinet/in.h>
 #include <arpa/inet.h> //for inet_addr
 #include <string.h>
@@ -112,7 +111,7 @@ int BindServer(int port)
 
     // *** Bind
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = htons(port);
 
     if((ret = bind(fd, (struct sockaddr *)&address, sizeof(address))) == SOCKET_ERROR) {
@@ -232,7 +231,8 @@ void * CameraServer::FrameServerThread(void *arg)
     struct CamFrame frame;
     // This buffer may need to be a class member if we want to change ROI on the fly.
     char *framedatabuffer; 
-    int framedatabufferlen = (sizeof(frame) - sizeof(frame.m_data)) + C->CircBuff()->Width() * C->CircBuff()->Height();
+    //int framedatabufferlen = (sizeof(frame) - sizeof(frame.m_data)) + C->CircBuff()->Width() * C->CircBuff()->Height();
+    int framedatabufferlen = sizeof(frame.header) + C->CircBuff()->Width() * C->CircBuff()->Height();
     framedatabuffer = (char *)malloc(framedatabufferlen);
 
     if(listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == SOCKET_ERROR) {
@@ -266,6 +266,23 @@ void * CameraServer::FrameServerThread(void *arg)
         struct timespec et;
         double ts_float;
 
+	FD_ZERO(&readable);
+	FD_ZERO(&writeable);
+	FD_SET(C->FrameServer()->Fd(), &readable);
+	FD_SET(C->CommandServer()->Fd(), &readable);
+	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+            int client = C->FrameServer()->Clients()[j];
+	    if (client == SOCKET_ERROR) continue;
+	    FD_SET(client, &readable);
+	}
+	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+            int client = C->CommandServer()->Clients()[j];
+	    if (client == SOCKET_ERROR) continue;
+	    FD_SET(client, &readable);
+	}
+	dup_readable = readable;
+	dup_writeable = writeable;
+
         if (!C->IsRunning()) {
             fprintf(stderr, "CameraServer no longer running...\n");
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
@@ -286,7 +303,8 @@ void * CameraServer::FrameServerThread(void *arg)
         // *** Send Frame to clients
         if (C->FrameServer()->NumClients() > 0 && ts_float > (1/C->FramePublishRate())) {
             if(C->CircBuff() != NULL && C->CircBuff()->PeekOnSignal(&frame)) {
-                int headerlen = sizeof(frame)-sizeof(frame.m_data);
+                //int headerlen = sizeof(frame)-sizeof(frame.m_data);
+                int headerlen = sizeof(frame.header);
                 memcpy(framedatabuffer, (char *)&frame, headerlen);
                 memcpy(framedatabuffer + headerlen, frame.m_data, C->CircBuff()->Width() * C->CircBuff()->Height());
                 clock_gettime(CLOCK_REALTIME, &last_ts);
