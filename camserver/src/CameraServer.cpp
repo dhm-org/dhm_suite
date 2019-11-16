@@ -83,15 +83,9 @@ double tsFloat(struct timespec time)
 bool AcceptClient(Server *server, fd_set *readable, char *servername)
 {
     int newclient;
-    struct sockaddr clientname;
-#ifdef _WIN32
-	int size = sizeof(clientname);
-#else
-	socklen_t size;
-#endif
     bool client_added = false;
 
-    newclient = accept(server->Fd(), (struct sockaddr *)&clientname, &size);
+    newclient = accept(server->Fd(), NULL, NULL);
     if (newclient == __INVALID_SOCKET__) {
         int err = MP_errno();
         fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, MP_strerror(err));
