@@ -45,12 +45,14 @@
  0.8.3 - Return error and abort execution if camera is already opened by another process.
 
  0.8.4 - Open camera only once.  This fix helps when running on UDOO system
+
+ 0.9.0 - Multiplatform where it runs on Windows or Linux with Allied Vision Camera
  ******************************************************************************
  */
 #ifndef __DHM_STREAMING_VERSION_H__
 #define __DHM_STREAMING_VERSION_H__
 
 //
-#define DHM_STREAMING_VERSION "0.8.4"
+#define DHM_STREAMING_VERSION "0.9.0"
 
 #endif

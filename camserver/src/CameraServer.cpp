@@ -497,11 +497,12 @@ void * CameraServer::FrameServerThread(void *arg)
                 if (i == C->FrameServer()->Fd()) {
                     snprintf(servername, sizeof(servername), "FRAME_SERVER");
                     AcceptClient(C->FrameServer(), &readable, servername);
-                    printf("$$$$$$$$$$$ NEW CONNECTION ON SERVER $$$$$$$$$$$$$$\n");
+                    printf("New FRAME_SERVER client connection.\n");
                 }
                 else if (i == C->CommandServer()->Fd()) {
                     snprintf(servername, sizeof(servername), "COMMAND_SERVER");
                     AcceptClient(C->CommandServer(), &readable, servername);
+                    printf("New COMMAND_SERVER client connection.\n");
                 }
                 //else if(i == C->TelemetryServer()->Fd()) {
                 //    AcceptClient(C->TelemetryServer(), &readable);
