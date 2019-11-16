@@ -1,0 +1,11 @@
+camserver flow
+
+main -> start_camera_server:main.cpp
+		 start_camera_server => cam_api->OpenAndConfigCamera
+											=> Vimba ...
+											=> new CircularBuffer
+							 => cam_api->StartAsyncContinuousImageAcquisition
+											   Vimba ...
+											=> new FrameObserver
+													
+											   Vimba: m_pCamera->StartContinuousImageAcquisition

@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <math.h> //ceil
 #include <string.h>
-#include <sys/sysinfo.h> //For sysinfo()
+
 #include "CamApi.h"
 #include "CameraServer.h"
 #include "FrameObserver.h"
@@ -267,7 +267,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
 
         //printf("Width=%lld, minWidth=%lld, maxWidth=%lld\n", width, minWidth, maxWidth);
         if(width_in > maxWidth) {
-            width_in = maxWidth;
+            width_in = (int)maxWidth;
         }
         if((err = pFeature->SetValue(width_in)) != VmbErrorSuccess) {
             printf("Error.  Unable to set width to %d, err=%d\n", width_in, err);
@@ -286,7 +286,7 @@ int CamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in, doub
 
         //printf("Height=%lld, minHeight=%lld, maxHeight=%lld\n", height, minHeight, maxHeight);
         if(height_in > maxHeight) {
-            height_in = maxHeight;
+            height_in = (int)maxHeight;
         }
         if((err = pFeature->SetValue(height_in)) != VmbErrorSuccess) {
             printf("Error.  Unable to set height to %d, err=%d\n", height_in, err);

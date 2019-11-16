@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<dpinst>
+  
+<!-- The following search and subDirectory elements direct
+     DPInst to search all subdirectories (under the DPInst working directory) to locate driver
+     packages. -->
+    <search>
+      <subDirectory>*</subDirectory>
+    </search>
+
+<!-- The following language element localizes its child elements
+     for the English (Standard) language. The child elements
+     customize the text that appears on the DPInst wizard pages. -->
+     <language code="0x0409">
+	 
+      <dpinstTitle>Bluetooth Device Installer</dpinstTitle>
+	  <!-- Title elements -->
+      <welcomeTitle>Welcome to the Intel(R) Wireless Bluetooth(R) Device Installer!</welcomeTitle>
+      <welcomeIntro>This wizard will help you install the driver software that makes your Bluetooth devices work.</welcomeIntro>
+      <installHeaderTitle>Installing the Software for your Bluetooth Device...</installHeaderTitle>
+	  
+	  <!-- Watermark bitmap that appears on the left side of welcome page and finish page -->
+	  <watermarkPath>data\intel_sidebar_lefttoright.bmp</watermarkPath>
+	  
+	  <!-- End User Licence Agreement elements -->
+	  <eulaHeaderTitle>End-User License Agreement </eulaHeaderTitle>
+	  <eulaYesButton>I &amp;accept the terms in the License Agreement</eulaYesButton>
+      <eulaNoButton>I do n&amp;ot accept the terms in the License Agreement</eulaNoButton>
+	  <eula type="txt" path="data\license.txt"/>
+	  
+      <finishTitle>Completing the Device Driver Installation Wizard</finishTitle>
+	  <finishText>Congratulations! You are finished installing your Bluetooth (R) device drivers.</finishText>
+    </language>
+
+	<enableNotListedLanguages/>
+    
+
+</dpinst>

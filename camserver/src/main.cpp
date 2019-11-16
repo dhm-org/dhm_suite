@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include "CamApi.h"
 
+#include <string>
 extern bool exitflag;
 
 #define MAX_RECORD_TIME_SECONDS 2147483647

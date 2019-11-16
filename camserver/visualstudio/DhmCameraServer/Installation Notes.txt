@@ -1,0 +1,25 @@
+1) Extra DLLs are necessary for Windows DhmCameraServer:
+	jpeg62.dll
+	zlib1.dll
+	libtiff3.dll
+	pthreadVSE2.dll
+	VimbaCpp.dll
+	VimbaC.dll
+They come from several sources, all of them from open sources for windows. At this
+time only the dlls (no source) is required to run DhmCameraServer.exe on Windows 10.
+
+2) All Dlls are stored in the directory where  DhmCameraServer.exe
+   is located.
+
+3) It is necessary to modify the system PATH environmental variable to
+   include the DLL/EXE directory.
+
+4) It is necessary to install pyserial to get the laserPulseController Utility working:
+   pyserial-3.4 is sufficient for Python 3.6.8. Installation was accomplished with the
+   pyserial-3.4 directory by invoking python setup.py install. Here the command 'python'
+   maps to python 3.6.8.
+
+5) It is necessary to install the Arduino IDE package. One can choose how much of the IDE
+   however, bit the minimum must include the USB drivers. After installing, test it by plugging
+   in a camera box, and looking for the Arduino Programming Port in  the Device Manager.
+   It should be listed in one of the programming ports.
