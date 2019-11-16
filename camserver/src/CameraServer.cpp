@@ -26,6 +26,7 @@
 #include "CameraServer.h"
 #include "CamCommands.h"
 #include "Net_MP.h"
+#include "MultiPlatform.h"
 
 // ****************************************************************************
 // ***                    Defines
@@ -214,7 +215,7 @@ void * CameraServer::FrameServerThread(void *arg)
     FD_SET(C->CommandServer()->Fd(), &readable);
 
     fprintf(stdout, "Running FRAME server, port=%d...\n", C->FrameServer()->Port());
-    clock_gettime(CLOCK_REALTIME, &last_ts);
+    MP_clock_gettime(CLOCK_REALTIME, &last_ts);
     C->SetRunning(true);
 
     while(1) {
@@ -254,7 +255,7 @@ void * CameraServer::FrameServerThread(void *arg)
             break;
 	}
 
-        clock_gettime(CLOCK_REALTIME, &ts);
+        MP_clock_gettime(CLOCK_REALTIME, &ts);
 
         et = tsSubtract(ts, last_ts);
         ts_float = tsFloat(et);
@@ -266,7 +267,7 @@ void * CameraServer::FrameServerThread(void *arg)
                 int headerlen = sizeof(frame.header);
                 memcpy(framedatabuffer, (char *)&frame, headerlen);
                 memcpy(framedatabuffer + headerlen, frame.m_data, C->CircBuff()->Width() * C->CircBuff()->Height());
-                clock_gettime(CLOCK_REALTIME, &last_ts);
+                MP_clock_gettime(CLOCK_REALTIME, &last_ts);
                 //fprintf(stderr, "ts_float = %f, frame_id=%llu \n", ts_float, frame.m_frame_id);
                 for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                     int client = C->FrameServer()->Clients()[j];
