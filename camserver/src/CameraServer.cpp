@@ -18,11 +18,6 @@
  ******************************************************************************
  */
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <unistd.h> //read/write
-#include <netinet/in.h>
-#include <arpa/inet.h> //for inet_addr
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
@@ -87,7 +82,7 @@ double tsFloat(struct timespec time)
 bool AcceptClient(Server *server, fd_set *readable, char *servername)
 {
     int newclient;
-    struct sockaddr_in clientname;
+    struct sockaddr clientname;
     socklen_t size;
     bool client_added = false;
 
@@ -101,7 +96,7 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
         // *** If exceed max clients, close connection, else add to clients list
         if (server->NumClients() > CAMERA_SERVER_MAX_CLIENTS) {
             fprintf(stderr, "CameraServer:  Error. Max clients [%d] reached.  Closing new connection.\n", CAMERA_SERVER_MAX_CLIENTS);
-            close(newclient);
+            MP_close(newclient);
         }
         else {
             FD_SET(newclient, readable);
@@ -253,7 +248,7 @@ void * CameraServer::FrameServerThread(void *arg)
                 int client = C->FrameServer()->Clients()[j];
 
                 if (client == __INVALID_SOCKET__) continue;
-		close(client);
+		MP_close(client);
 		fprintf(stderr, "Closed client...\n");
 	    }
             break;
@@ -338,7 +333,7 @@ void * CameraServer::FrameServerThread(void *arg)
 
                         if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
                             // *** Client connection closed
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
                             C->FrameServer()->Clients()[j] = __INVALID_SOCKET__;
@@ -391,7 +386,7 @@ void * CameraServer::FrameServerThread(void *arg)
 			memset(buffer,'\0', sizeof(buffer));
                         if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
                             // *** Client connection closed
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
                             C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
@@ -465,7 +460,7 @@ void * CameraServer::FrameServerThread(void *arg)
                                 int err = errno;
                                 fprintf(stderr, "CameraServer: Error on writting command response. errno=%d, strerror=[%s]\n", err, strerror(err));
                             }
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
                             C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
