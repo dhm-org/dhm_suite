@@ -42,8 +42,8 @@ int read_from_client(int client, char *buffer, int len)
 
     nbytes = MP_read(client, buffer, len);
     if(nbytes < 0) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Read from socket failed: %s\n", strerror(err));
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Read from socket failed: %s\n", MP_strerror(err));
         return -1;
     }
     else if (nbytes == 0) {
@@ -89,8 +89,8 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
 
     newclient = accept(server->Fd(), (struct sockaddr *)&clientname, &size);
     if (newclient == __INVALID_SOCKET__) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, strerror(err));
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, MP_strerror(err));
     }
     else {
         fprintf(stderr, "Client connection accepted...\n");
@@ -121,7 +121,7 @@ Server::Server(int port) :
     for (int i = 0; i < CAMERA_SERVER_MAX_CLIENTS; i++)
         m_clients[i] = __INVALID_SOCKET__;
 
-    m_serverfd = BindServer(m_port);
+    m_serverfd = MP_BindServer(m_port);
     if (m_serverfd == __INVALID_SOCKET__) {
         throw std::runtime_error("CameraServer:  Bind socket failed");
     }
@@ -196,15 +196,15 @@ void * CameraServer::FrameServerThread(void *arg)
     framedatabuffer = (char *)malloc(framedatabufferlen);
 
     if(listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", MP_strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
         return NULL;
     }
 
     if(listen(C->CommandServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", MP_strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
         return NULL;
     }
@@ -289,8 +289,8 @@ void * CameraServer::FrameServerThread(void *arg)
 
         ret = select(FD_SETSIZE, &dup_readable, &dup_writeable, NULL, &tv);
         if(ret < 0) {
-            int err = errno;
-            fprintf(stderr, "CameraServer:  Error. Select failed: %s\n", strerror(err));
+            int err = MP_errno();
+            fprintf(stderr, "CameraServer:  Error. Select failed: %s\n", MP_strerror(err));
             break; //Exit loop
         }
         else if (ret == 0) {
@@ -359,8 +359,8 @@ void * CameraServer::FrameServerThread(void *arg)
                             while (totalsent < framedatabufferlen) {
                                 sentbytes = MP_write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
                                 if(sentbytes < 0) {
-                                    int err = errno;
-                                    fprintf(stderr, "CameraServer: Error on writting frame. errno=%d, strerror = [%s]\n", err, strerror(err));
+                                    int err = MP_errno();
+                                    fprintf(stderr, "CameraServer: Error on writting frame. MP_errno()=%d, MP_strerror = [%s]\n", err, MP_strerror(err));
                                     break;
                                 }
                                 totalsent += sentbytes;
@@ -458,8 +458,8 @@ void * CameraServer::FrameServerThread(void *arg)
                             }
 
                             if(MP_write(client, retstatus, strlen(retstatus)) < 0) {
-                                int err = errno;
-                                fprintf(stderr, "CameraServer: Error on writting command response. errno=%d, strerror=[%s]\n", err, strerror(err));
+                                int err = MP_errno();
+                                fprintf(stderr, "CameraServer: Error on writting command response. MP_errno()=%d, MP_strerror=[%s]\n", err, MP_strerror(err));
                             }
                             MP_close(client);
                             FD_CLR(client, &readable);

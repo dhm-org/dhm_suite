@@ -78,7 +78,7 @@ char* MP_strerror(int err)
     return str;
 }
 
-int BindServer(int port)
+int MP_BindServer(int port)
 {
     int err;
     int ret;

@@ -20,7 +20,9 @@
 int  MP_read(int, char*, int);
 int  MP_write(int, char*, int);
 void MP_close(int);
-int BindServer(int port);
+int MP_errno();
+char* MP_strerror(int err);
+int MP_BindServer(int port);
 
 #pragma once
 
