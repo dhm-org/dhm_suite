@@ -84,7 +84,11 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
 {
     int newclient;
     struct sockaddr clientname;
-    socklen_t size;
+#ifdef _WIN32
+	int size = sizeof(clientname);
+#else
+	socklen_t size;
+#endif
     bool client_added = false;
 
     newclient = accept(server->Fd(), (struct sockaddr *)&clientname, &size);
@@ -136,6 +140,19 @@ CameraServer::CameraServer(int frame_port, int command_port, int telem_port, flo
          m_circbuff(NULL),
          m_camapi(NULL)
 {
+#ifdef _WIN32
+	int Ret;
+	WSADATA wsaData;
+
+	if ((Ret = WSAStartup(0x0202, &wsaData)) != 0)
+	{
+		printf("WSAStartup() failed with error %d\n", Ret);
+		WSACleanup();
+	}
+	else {
+		printf("WSAStartup is fine!\n");
+	}
+#endif
     m_frame_server = new Server(frame_port);
     m_cmd_server = new Server(command_port);
 }
