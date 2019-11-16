@@ -17,6 +17,7 @@
 
 #define __SOCKET_ERROR__       -1
 
+int MP_initsocketuse();
 int  MP_read(int, char*, int);
 int  MP_write(int, char*, int);
 void MP_close(int);

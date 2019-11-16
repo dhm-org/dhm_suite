@@ -134,19 +134,9 @@ CameraServer::CameraServer(int frame_port, int command_port, int telem_port, flo
          m_circbuff(NULL),
          m_camapi(NULL)
 {
-#ifdef _WIN32
-	int Ret;
-	WSADATA wsaData;
-
-	if ((Ret = WSAStartup(0x0202, &wsaData)) != 0)
-	{
-		printf("WSAStartup() failed with error %d\n", Ret);
-		WSACleanup();
-	}
-	else {
-		printf("WSAStartup is fine!\n");
-	}
-#endif
+    if (MP_initsocketuse() < 0) {
+        throw std::runtime_error("CameraServer:  Unable to initialized socket library (Windows only)");
+    }
     m_frame_server = new Server(frame_port);
     m_cmd_server = new Server(command_port);
 }

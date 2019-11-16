@@ -27,6 +27,25 @@
 
 #endif
 
+int MP_initsocketuse()
+{
+#ifdef _WIN32
+	int Ret;
+	WSADATA wsaData;
+
+	if ((Ret = WSAStartup(0x0202, &wsaData)) != 0)
+	{
+		printf("WSAStartup() failed with error %d\n", Ret);
+		WSACleanup();
+		return -1;
+	}
+	else {
+		printf("WSAStartup is fine!\n");
+	}
+#endif
+	return 0;
+
+}
 int MP_read(int client, char *buffer, int len)
 {
 #ifdef _WIN32
