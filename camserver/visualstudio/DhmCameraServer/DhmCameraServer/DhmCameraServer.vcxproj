@@ -89,13 +89,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32;WIN32;WIN32_LEAN_AND_MEAN;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_CONSOLE;__PTW32_USE_DLLIMPORT_DECORATION;_CRT_SECURE_NO_WARNINGS;PTW32_INCLUDE_WINDOWS_H;HAVE_STRUCT_TIMESPEC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\DHM\git_repos\dhm_suite\camserver\include;C:\Program Files\Allied Vision\Vimba_3.0;C:\DHM\git_repos\dhm_suite\camserver\visualstudio\pthreads-w32-2-9-1-release\Pre-built.2\include;C:\DHM\git_repos\dhm_suite\camserver\visualstudio\libTIFF\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;C:\Program Files\Allied Vision\Vimba_3.0;$(ProjectDir)..\..\pthreads-w32-2-9-1-release\Pre-built.2\include;$(ProjectDir)..\..\libTIFF\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <PreventDllBinding>false</PreventDllBinding>
-      <AdditionalLibraryDirectories>C:\Program Files\Allied Vision\Vimba_3.0\VimbaCPP\Lib\Win32;C:\DHM\git_repos\dhm_suite\camserver\visualstudio\pthreads-w32-2-9-1-release\Pre-built.2\lib\x86;C:\DHM\git_repos\dhm_suite\camserver\visualstudio\libTIFF\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Program Files\Allied Vision\Vimba_3.0\VimbaCPP\Lib\Win32;$(ProjectDir)\..\..\pthreads-w32-2-9-1-release\Pre-built.2\lib\x86;$(ProjectDir)\..\..\libTIFF\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>VimbaCPP.lib;libtiff.lib;pthreadVSE2.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
