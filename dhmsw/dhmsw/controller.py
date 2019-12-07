@@ -34,19 +34,51 @@ from .guiserver import Guiserver
 from .dhmcommands import CommandDictionary
 from .heartbeat import Heartbeat
 
-class Controller(multiprocessing.Process):
-    def __init__(self, _qs, pub, _events, configfile=None, verbose=False):
+from .component_abc import ComponentABC
 
-        multiprocessing.Process.__init__(self)
+class Controller(ComponentABC):
+#    def __init__(self, _qs, pub, _events, configfile=None, verbose=False):
+#
+#        multiprocessing.Process.__init__(self)
+#
+#        self._verbose = verbose
+#        self._module_init_count = 0
+#        self._qs = _qs
+#        self._events = _events
+#        self._pub = pub
+#        ### Heartbeat
+#        self._HB = None
+#
+#        self._cmdDict = CommandDictionary()
+#
+#        ### Command server handler
+#        self._cmd_server = None 
+#
+#        ### Telemetry Objects
+#        self._reconst_telem = None
+#        self._session_telem = None
+#        self._heartbeat_telem = None
+#        self._holo_telem = None
+#        self._framesource_telem = None
+#        self._datalogger_telem = None
+#        self._guiserver_telem = None
+#        self._fouriermask_telem = None
+#
+#        ### 
+#        meta = metadata_classes.Metadata_Dictionary(configfile)
+#        self._meta             = meta.metadata['CONTROLLER']
+#        self._reconst_meta     = meta.metadata['RECONSTRUCTION']
+#        self._holo_meta        = meta.metadata['HOLOGRAM']
+#        self._framesource_meta = meta.metadata['FRAMESOURCE']
+#        self._datalogger_meta  = meta.metadata['DATALOGGER']
+#        self._guiserver_meta   = meta.metadata['GUISERVER']
+#        self._session_meta     = meta.metadata['SESSION']
+#        self._fouriermask_meta = meta.metadata['FOURIERMASK']
+#        pass
 
-        self._verbose = verbose
+    def initialize_component(self):
+
         self._module_init_count = 0
-        self._qs = _qs
-        self._events = _events
-        self._pub = pub
-        ### Heartbeat
-        self._HB = None
-
         self._cmdDict = CommandDictionary()
 
         ### Command server handler
@@ -62,16 +94,15 @@ class Controller(multiprocessing.Process):
         self._guiserver_telem = None
         self._fouriermask_telem = None
 
-        ### 
-        meta = metadata_classes.Metadata_Dictionary(configfile)
-        self._meta             = meta.metadata['CONTROLLER']
-        self._reconst_meta     = meta.metadata['RECONSTRUCTION']
-        self._holo_meta        = meta.metadata['HOLOGRAM']
-        self._framesource_meta = meta.metadata['FRAMESOURCE']
-        self._datalogger_meta  = meta.metadata['DATALOGGER']
-        self._guiserver_meta   = meta.metadata['GUISERVER']
-        self._session_meta     = meta.metadata['SESSION']
-        self._fouriermask_meta = meta.metadata['FOURIERMASK']
+        self._reconst_meta     = self._allmeta.metadata['RECONSTRUCTION']
+        self._holo_meta        = self._allmeta.metadata['HOLOGRAM']
+        self._framesource_meta = self._allmeta.metadata['FRAMESOURCE']
+        self._datalogger_meta  = self._allmeta.metadata['DATALOGGER']
+        self._guiserver_meta   = self._allmeta.metadata['GUISERVER']
+        self._session_meta     = self._allmeta.metadata['SESSION']
+        self._fouriermask_meta = self._allmeta.metadata['FOURIERMASK']
+
+    def publish_status(self):
         pass
 
     def holometa_to_telem(self, meta):
@@ -175,13 +206,13 @@ class Controller(multiprocessing.Process):
         a.append(telem_bin_str)
         a.complete_packet()
         b = interface.GuiPacket('telemetry', a.to_bytes())
-        self._qs['guiserver_inq'].put_nowait(b)
+        self._inq['guiserver_inq'].put_nowait(b)
         #print("Controller sending telemetry: ", time.time())
 
     def publish_session_status(self, status_msg=None):
         if status_msg:
             self._session_meta.status_msg = status_msg
-        #self._qs['controller_inq'].put_nowait(interface.MetadataPacket(self._session_meta))
+        #self._inq['controller_inq'].put_nowait(interface.MetadataPacket(self._session_meta))
         self._pub.publish('session_status', interface.MetadataPacket(self._session_meta))
 
     def command_dispatcher(self, data):
@@ -191,19 +222,19 @@ class Controller(multiprocessing.Process):
         #print(time.time())
         for k, v in cmd.items():
             if k == 'reconst' or k == 'holo' or k == 'fouriermask':
-                self._qs['reconstructor_inq'].put_nowait(data)
+                self._inq['reconstructor_inq'].put_nowait(data)
             elif k == 'framesource':
-                self._qs['framesource_inq'].put_nowait(data)
+                self._inq['framesource_inq'].put_nowait(data)
             elif k == 'guiserver':
-                self._qs['guiserver_inq'].put_nowait(data)
+                self._inq['guiserver_inq'].put_nowait(data)
             elif k == 'datalogger':
-                self._qs['datalogger_inq'].put_nowait(data)
+                self._inq['datalogger_inq'].put_nowait(data)
             elif k == 'session':
                 tempsession = copy.copy(self._session_meta)
                 tempsession.holo =  copy.copy(self._holo_meta)
                 validcmd = True
                 if not v: ### Empty parameter list, send reconst status
-                    #self._qs['controller_inq'].put_nowait(interface.MetadataPacket(tempsession))
+                    #self._inq['controller_inq'].put_nowait(interface.MetadataPacket(tempsession))
                     self.publish_session_status(status_msg="SUCCESS")
                     break
                 for param, value in v.items():
@@ -234,8 +265,8 @@ class Controller(multiprocessing.Process):
                     self._session_meta = copy.copy(tempsession)
                     self._holo_meta = copy.copy(tempsession.holo)
                     # Send holo data to 
-                    self._qs['reconstructor_inq'].put_nowait(self._holo_meta)
-                    #self._qs['controller_inq'].put_nowait(interface.MetadataPacket(self._session_meta))
+                    self._inq['reconstructor_inq'].put_nowait(self._holo_meta)
+                    #self._inq['controller_inq'].put_nowait(interface.MetadataPacket(self._session_meta))
                     self.publish_session_status(status_msg="SUCCESS")
     
     #                    elif k == 'camera':
@@ -258,7 +289,7 @@ class Controller(multiprocessing.Process):
     #                            elif param == 'height':
     #                                tempcamera.height = param;
             elif k == 'shutdown':
-                for kk, vv in self._qs.items():
+                for kk, vv in self._inq.items():
                     vv.put_nowait(None)
             else:
                 pass
@@ -328,7 +359,7 @@ class Controller(multiprocessing.Process):
         if self._module_init_count >= 5:
             self._events['controller']['start'].set()
             if self._cmd_server is None:
-                self._cmd_server = DHM_Command_Server(q=self._qs['controller_inq'], validate_func=self._cmdDict.validate_command, hostname=self._meta.cmd_hostname, port=self._meta.cmd_port)
+                self._cmd_server = DHM_Command_Server(q=self._inq['controller_inq'], validate_func=self._cmdDict.validate_command, hostname=self._meta.cmd_hostname, port=self._meta.cmd_port)
             self._cmd_server.start()
             print('Controller: Starting command server...')
 
@@ -340,7 +371,7 @@ class Controller(multiprocessing.Process):
 
             processing_reconst = False
             while True:
-                data = self._qs['controller_inq'].get()
+                data = self._inq['controller_inq'].get()
                 if data is None:
                     print('Exiting Controller')
                     break
@@ -394,90 +425,3 @@ class Controller(multiprocessing.Process):
         finally:
             pass
    
-if __name__ == '__main__':
-    print('Main executed')
-    import multiprocessing as mp
-    import numpy as np
-    import dhmpubsub as pubsub
-    from dhmcommands import CommandDictionary
-    img = interface.Image((1,2,3), np.zeros((2048,2048), dtype=np.float32))
-
-  ### Create Message Queues
-    ctx = mp.get_context('spawn')
-    _qs = {}
-    _qs['controller_inq']    = ctx.Queue()
-    _qs['framesource_inq']   = ctx.Queue()
-    _qs['reconstructor_inq'] = ctx.Queue()
-    _qs['guiserver_inq']     = ctx.Queue()
-    _qs['datalogger_inq']    = ctx.Queue()
-    _qs['watchdog_inq']      = ctx.Queue()
-
-    ### Make the publish/subscribe connections
-    pub = pubsub.PubSub()
- 
-    #published by all modules to indicate that it is done initializing
-    pub.subscribe('init_done', _qs['controller_inq'])
-
-    # Subscribe to RAW FRAMES
-    #pub.subscribe('rawframe', _qs['guiserver_inq'])
-    pub.subscribe('rawframe', _qs['reconstructor_inq'])
-    # Subscribe to RECONSTRUCTION PRODUCTS
-    pub.subscribe('reconst_product', _qs['guiserver_inq'])
-
-    pub.subscribe('reconst_done', _qs['framesource_inq'])
-    pub.subscribe('reconst_done', _qs['controller_inq'])
-
-    #-- Subscribe to STATUS messages
-    #  Reconst Status
-    pub.subscribe('reconst_status', _qs['controller_inq'])
-    pub.subscribe('reconst_status', _qs['framesource_inq'])
-    pub.subscribe('reconst_status', _qs['guiserver_inq'])
-    #    Holo Status
-    pub.subscribe('holo_status', _qs['controller_inq'])
-    pub.subscribe('fouriermask_status', _qs['controller_inq'])
-    pub.subscribe('session_status', _qs['controller_inq'])
-    pub.subscribe('framesource_status', _qs['controller_inq'])
-    pub.subscribe('datalogger_status', _qs['controller_inq'])
-    pub.subscribe('guiserver_status', _qs['controller_inq'])
-    pub.subscribe('watchdog_status', _qs['guiserver_inq'])
-    # Subscribe to TELEMETRY messages
-    #pub.subscribe('reconst_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('holo_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('fouriermask_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('session_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('framesource_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('datalogger_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('guiserver_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('watchdog_telemetry', _qs['guiserver_inq'])
-    # Subscribe to COMMAND messages
-    pub.subscribe('dhm_cmd', _qs['controller_inq'])
-    # Subscribe to HEARTBEAT messages
-    pub.subscribe('heartbeat', _qs['watchdog_inq'])
-
-    ### Create events
-    _events = {}
-    _events['reconst'] = {}
-    _events['reconst']['done'] = ctx.Event()
-    _events['controller'] = {}
-    _events['controller']['start'] = ctx.Event()
-
-    a = Controller(_qs, pub, _events)
-    a.start()
-    pub.publish('init_done', interface.InitDonePkt('Reconstructor', 0))
-    pub.publish('init_done', interface.InitDonePkt('Framesource', 0))
-    pub.publish('init_done', interface.InitDonePkt('Guiserver', 0))
-    pub.publish('init_done', interface.InitDonePkt('Datalogger', 0))
-    pub.publish('init_done', interface.InitDonePkt('Watchdog', 0))
-    count = 0
-    _cmdDict = CommandDictionary()
-    (cmd, statusstr) = _cmdDict.validate_command('framesource mode=file,exec=run')
-    time.sleep(10)
-    #_qs['framesource_inq'].put_nowait(interface.Command(cmdobj=cmd))
-    while count < 10:
-        time.sleep(2)
-        print('Count=%d'%(count))
-        count += 1
-
-    #pub.publish('rawframe',None)
-    _qs['framesource_inq'].put_nowait(None)
-    a.join()

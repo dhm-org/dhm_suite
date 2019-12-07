@@ -22,6 +22,8 @@ from . import interface
 from . import telemetry_iface_ag
 from . import metadata_classes
 
+from .component_abc import ComponentABC
+
 class WDHeartbeat(threading.Thread):
     def __init__(self, wdq, ident, data, rate=1.0, cv_timeout=0.01):
 
@@ -127,8 +129,8 @@ class Watchdog(multiprocessing.Process):
 
         self._HB = None
 
+    
     def run(self):
-
 
         try:
             inq = self._inq

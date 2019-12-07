@@ -5,24 +5,28 @@ from . import interface
 from . import metadata_classes 
 from . import heartbeat
 
+from .component_abc import ComponentABC
 
-class Datalogger(multiprocessing.Process):
-    def __init__(self, inq, pub, _events, configfile=None, verbose=False):
+class Datalogger(ComponentABC):
+#    def __init__(self, inq, pub, _events, configfile=None, verbose=False):
+#
+#        multiprocessing.Process.__init__(self)
+#
+#        self._verbose = verbose
+#        self._inq = inq
+#        self._pub = pub
+#        self._events = _events
+#
+#        meta = metadata_classes.Metadata_Dictionary(configfile)
+#        self._meta = meta.metadata['DATALOGGER']
+#
+#        ### Heartbeat must be created from run
+#        self._HB = None
+#
+#        #self._hb_thread.daemon = True
 
-        multiprocessing.Process.__init__(self)
-
-        self._verbose = verbose
-        self._inq = inq
-        self._pub = pub
-        self._events = _events
-
-        meta = metadata_classes.Metadata_Dictionary(configfile)
-        self._meta = meta.metadata['DATALOGGER']
-
-        ### Heartbeat must be created from run
-        self._HB = None
-
-        #self._hb_thread.daemon = True
+    def initialize_component(self):
+        pass
 
     def run(self):
         try:

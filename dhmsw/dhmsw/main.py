@@ -118,10 +118,10 @@ def main(args):
     ### Create components
     _components = {}
     _components['reconstructor'] = Reconstructor(_qs['reconstructor_inq'],pub, _events, configfile=configFile, verbose=False)
-    _components['framesource']   = Framesource  (_qs['framesource_inq'], pub, _events, configfile=configFile, verbose=True)
-    _components['guiserver']     = Guiserver    (_qs['guiserver_inq'], pub, _events, configfile=configFile, verbose=True)
-    _components['datalogger']    = Datalogger   (_qs['datalogger_inq'], pub, _events, configfile=configFile, verbose=True)
-    _components['controller']    = Controller   (_qs, pub, _events, configfile=configFile, verbose=True)
+    _components['framesource']   = Framesource  ("framesource", _qs['framesource_inq'], pub, _events, configfile=configFile, verbose=True)
+    _components['guiserver']     = Guiserver    ("guiserver", _qs['guiserver_inq'], pub, _events, configfile=configFile, verbose=True)
+    _components['datalogger']    = Datalogger   ("datalogger", _qs['datalogger_inq'], pub, _events, configfile=configFile, verbose=True)
+    _components['controller']    = Controller   ("controller", _qs, pub, _events, configfile=configFile, verbose=True)
     _components['watchdog']      = Watchdog     (_qs['watchdog_inq'], _qs['guiserver_inq'], pub, _events, configfile=configFile, verbose=True)
 
     ### Start all processes

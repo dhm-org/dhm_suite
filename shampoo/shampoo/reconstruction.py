@@ -13,7 +13,7 @@ are applied [2]_.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from collections import Sized, deque, defaultdict
+#from collections import Sized, deque, defaultdict
 
 import warnings
 
