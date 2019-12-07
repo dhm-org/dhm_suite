@@ -21,7 +21,6 @@ import numpy as np
 import copy
 import select
 import multiprocessing
-mp = multiprocessing.get_context('spawn')
 import threading
 import time
 import queue
@@ -33,6 +32,7 @@ from .heartbeat import Heartbeat
 from shampoo.reconstruction import (Hologram)
 from shampoo.mask import (Circle, Mask)
 
+mp = multiprocessing.get_context('spawn')
 class Reconstructor(mp.Process):
     """ Reconstructor class.  Child of multiprocessing.Process"""
 
@@ -554,86 +554,3 @@ class Reconstructor(mp.Process):
         finally:
             pass
 
-if __name__ == '__main__':
-    ### NOTE:  This main is used for testing of the reconstruction class only.
-    print('Main executed')
-    import numpy as np
-    import dhmpubsub as pubsub
-    from dhmcommands import CommandDictionary
-    img = interface.Image((1,2,3), np.zeros((2048,2048), dtype=np.float32))
-
-  ### Create Message Queues
-    ctx = mp.get_context('spawn')
-    _qs = {}
-    _qs['controller_inq']    = ctx.Queue()
-    _qs['framesource_inq']   = ctx.Queue()
-    _qs['reconstructor_inq'] = ctx.Queue()
-    _qs['guiserver_inq']     = ctx.Queue()
-    _qs['datalogger_inq']    = ctx.Queue()
-    _qs['watchdog_inq']      = ctx.Queue()
-
-    ### Make the publish/subscribe connections
-    pub = pubsub.PubSub()
- 
-    #published by all modules to indicate that it is done initializing
-    pub.subscribe('init_done', _qs['controller_inq'])
-
-    # Subscribe to RAW FRAMES
-    #pub.subscribe('rawframe', _qs['guiserver_inq'])
-    pub.subscribe('rawframe', _qs['reconstructor_inq'])
-    # Subscribe to RECONSTRUCTION PRODUCTS
-    pub.subscribe('reconst_product', _qs['guiserver_inq'])
-
-    pub.subscribe('reconst_done', _qs['framesource_inq'])
-    pub.subscribe('reconst_done', _qs['controller_inq'])
-
-    #-- Subscribe to STATUS messages
-    #  Reconst Status
-    pub.subscribe('reconst_status', _qs['controller_inq'])
-    pub.subscribe('reconst_status', _qs['framesource_inq'])
-    pub.subscribe('reconst_status', _qs['guiserver_inq'])
-    #    Holo Status
-    pub.subscribe('holo_status', _qs['controller_inq'])
-    pub.subscribe('fouriermask_status', _qs['controller_inq'])
-    pub.subscribe('session_status', _qs['controller_inq'])
-    pub.subscribe('framesource_status', _qs['controller_inq'])
-    pub.subscribe('datalogger_status', _qs['controller_inq'])
-    pub.subscribe('guiserver_status', _qs['controller_inq'])
-    pub.subscribe('watchdog_status', _qs['guiserver_inq'])
-    # Subscribe to TELEMETRY messages
-    #pub.subscribe('reconst_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('holo_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('fouriermask_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('session_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('framesource_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('datalogger_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('guiserver_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('watchdog_telemetry', _qs['guiserver_inq'])
-    # Subscribe to COMMAND messages
-    pub.subscribe('dhm_cmd', _qs['controller_inq'])
-    # Subscribe to HEARTBEAT messages
-    pub.subscribe('heartbeat', _qs['watchdog_inq'])
-
-    ### Create events
-    _events = {}
-    _events['reconst'] = {}
-    _events['reconst']['done'] = ctx.Event()
-    _events['controller'] = {}
-    _events['controller']['start'] = ctx.Event()
-
-    a = Reconstructor(_qs['reconstructor_inq'], pub, _events)
-    a.start()
-    time.sleep(10)
-    _events['controller']['start'].set() ## Mimic the Controller
-    count = 0
-    _cmdDict = CommandDictionary()
-    (cmd, statusstr) = _cmdDict.validate_command('reconst processing_mode=amp')
-    _qs['reconstructor_inq'].put_nowait(interface.Command(cmdobj=cmd))
-    while count < 10:
-        print("sending publish rawframe. count=%d"%(count))
-        pub.publish('rawframe',img)
-        time.sleep(2)
-        count += 1
-
-    pub.publish('rawframe',None)
-    a.join()

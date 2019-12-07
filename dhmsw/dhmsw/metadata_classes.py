@@ -1,9 +1,13 @@
 import time
 import configparser
 from shampoo.mask import (Circle, Mask)
+from abc import ABC, abstractmethod
 
-class Metadata_Object(object):
-    pass
+class MetadataABC(ABC):
+    @abstractmethod
+    def load_config(self, filepath):
+        while False:
+            yield None
 
 class Metadata_Dictionary(object):
 
@@ -24,7 +28,7 @@ class Metadata_Dictionary(object):
         for k in self.metadata.keys():
             self.metadata[k].load_config(configfile)
 
-class Controller_Metadata(Metadata_Object):
+class Controller_Metadata(MetadataABC):
     def __init__(self, configfile=None, cmd_hostname='localhost', cmd_port=10000):
 
         self.cmd_hostname= cmd_hostname
@@ -49,8 +53,9 @@ class Controller_Metadata(Metadata_Object):
 
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].'%(filepath, repr(e)))
+            raise(e)
 
-class Heartbeat_Metadata(Metadata_Object):
+class Heartbeat_Metadata(MetadataABC):
     def __init__(self):
         self.ident = ''
         self.timestamp = time.time()
@@ -59,7 +64,7 @@ class Heartbeat_Metadata(Metadata_Object):
     def load_config(self, filepath):
         pass
         
-class Guiserver_Metadata(Metadata_Object):
+class Guiserver_Metadata(MetadataABC):
     def __init__(self, configfile=None):
 
         self.connection_status= [False, False, False, False, False, False]
@@ -104,7 +109,7 @@ class Guiserver_Metadata(Metadata_Object):
 
         
 
-class Datalogger_Metadata(Metadata_Object):
+class Datalogger_Metadata(MetadataABC):
     def __init__(self, configfile=None):
         self.enabled = True
         self.status_msg = ''
@@ -127,7 +132,7 @@ class Datalogger_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].'%(filepath, repr(e), key))
 
-class Camera_Metadata(Metadata_Object):
+class Camera_Metadata(MetadataABC):
     def __init__(self, N=2048, rate=15.0, shutter=15000, gain=0, roi_pos=(0,0), roi_size=(2048,2048)):
         self.N = N
         self.rate = rate
@@ -166,7 +171,7 @@ class Camera_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].'%(filepath, repr(e), key))
 
-class Camera_Server_Metadata(Metadata_Object):
+class Camera_Server_Metadata(MetadataABC):
     def __init__(self, configfile=None):
         self.host = '127.0.0.1'
         BASE_PORT = 2000
@@ -196,7 +201,7 @@ class Camera_Server_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-class Framesource_Metadata(Metadata_Object):
+class Framesource_Metadata(MetadataABC):
     FRAMESOURCE_FILE  = 0  # Don't compute the reconstruction
     FRAMESOURCE_MICROSCOPE  = 1  # Don't compute the reconstruction
 
@@ -235,7 +240,7 @@ class Watchdog_Metadata(object):
     def load_config(self, filepath):
         pass
 
-class Hologram_Metadata(Metadata_Object):
+class Hologram_Metadata(MetadataABC):
     def __init__(self):
         self.wavelength = [635e-9] # NOTE must be a list
         self.dx = 3.45e-6 # Pixel width in x-direction
@@ -272,7 +277,7 @@ class Hologram_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-class Reconstruction_Metadata(Metadata_Object):
+class Reconstruction_Metadata(MetadataABC):
     RECONST_NONE  = 0  # Don't compute the reconstruction
     RECONST_AMP   = 1  # Compute amplitude only
     RECONST_PHASE = 2  # Compute phase only
@@ -367,7 +372,7 @@ class Reconstruction_Metadata(Metadata_Object):
             print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
 
-    class ReferenceHologram_Metadata(Metadata_Object):
+    class ReferenceHologram_Metadata(MetadataABC):
         def __init__(self, path='', enabled=False, averaging_sec=0.0, averaging_enabled=False, save=False):
             self.path = path
             self.enabled = enabled
@@ -401,7 +406,7 @@ class Reconstruction_Metadata(Metadata_Object):
                 print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
 
-    class CenterImage_Metadata(Metadata_Object):
+    class CenterImage_Metadata(MetadataABC):
         def __init__(self, center=False, center_and_tilt=False, max_value=False, wide_spectrum=False, configfile=None):
             self.center = center
             self.center_and_tilt = center_and_tilt
@@ -434,7 +439,7 @@ class Reconstruction_Metadata(Metadata_Object):
             except configparser.Error as e:
                 print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-    class PhaseUnwrapping_Metadata(Metadata_Object):
+    class PhaseUnwrapping_Metadata(MetadataABC):
         PHASE_UNWRAPPING_NONE = 0
         PHASE_UNWRAPPING_ALG1 = 1
         PHASE_UNWRAPPING_ALG2 = 2
@@ -467,7 +472,7 @@ class Reconstruction_Metadata(Metadata_Object):
             except configparser.Error as e:
                 print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-    class Fitting_Metadata(Metadata_Object):
+    class Fitting_Metadata(MetadataABC):
         FITTING_MODE_NONE = 0
         FITTING_MODE_1D_SEGMENT = 1
         FITTING_MODE_2D_SEGMENT = 2
@@ -511,17 +516,21 @@ class Reconstruction_Metadata(Metadata_Object):
             except configparser.Error as e:
                 print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-    class Roi_Metadata(Metadata_Object):
+    class Roi_Metadata(MetadataABC):
         def __init__(self, offset=0, size=2048):
             self.offset = offset
             self.size = size
+        def load_config(self, filepath):
+            pass
 
-class Reconstruction_Done_Metadata(Metadata_Object):
+class Reconstruction_Done_Metadata(MetadataABC):
     def __init__(self, done=True):
         self.done = done
+    def load_config(self, filepath):
+        pass
       
 
-class Fouriermask_Metadata(Metadata_Object):
+class Fouriermask_Metadata(MetadataABC):
     def __init__(self):
         self.center_list = []
         self.mask = None
@@ -556,7 +565,7 @@ class Fouriermask_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-class Session_Metadata(Metadata_Object):
+class Session_Metadata(MetadataABC):
     def __init__(self):
         self.name = ""
         self.description = ""
@@ -581,7 +590,7 @@ class Session_Metadata(Metadata_Object):
         except configparser.Error as e:
             print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
 
-    class Lens_Metadata(Metadata_Object):
+    class Lens_Metadata(MetadataABC):
 
         def __init__(self):
             self.focal_length = 1e-3 #mm

@@ -1,35 +1,42 @@
 import socket
 import numpy as np
 import select
-import multiprocessing
 import time
 import queue
 import copy
+
 from . import interface
 from . import telemetry_iface_ag
 from . import metadata_classes
 from .server_client import Server
 from .heartbeat import Heartbeat
 
-class Guiserver(multiprocessing.Process):
-    def __init__(self, inq, pub, _events, configfile=None, verbose=False):
+from .component_abc import ComponentABC
+
+class Guiserver(ComponentABC):
+#    def __init__(self, inq, pub, _events, configfile=None, verbose=False):
+#
+#
+#        multiprocessing.Process.__init__(self)
+#        self.daemon = True
+#
+#        self._verbose = verbose
+#
+#        meta = metadata_classes.Metadata_Dictionary(configfile)
+#        self._meta = meta.metadata['GUISERVER']
+#        self._reconst_meta = meta.metadata['RECONSTRUCTION']
+#
+#        #### Create the consumer thread for this module
+#        self._inq = inq
+#        self._pub = pub
+#        self._events = _events
+#
+#        self._HB = None
 
 
-        multiprocessing.Process.__init__(self)
-        self.daemon = True
+    def initialize_component(self):
 
-        self._verbose = verbose
-
-        meta = metadata_classes.Metadata_Dictionary(configfile)
-        self._meta = meta.metadata['GUISERVER']
-        self._reconst_meta = meta.metadata['RECONSTRUCTION']
-
-        #### Create the consumer thread for this module
-        self._inq = inq
-        self._pub = pub
-        self._events = _events
-
-        self._HB = None
+        self._reconst_meta = self._allmeta.metadata['RECONSTRUCTION']
 
         ### Server information
         self._servers = {}
@@ -283,86 +290,3 @@ class Guiserver(multiprocessing.Process):
         finally:
             pass
            
-if __name__ == '__main__':
-    print('Main executed')
-    import multiprocessing as mp
-    import numpy as np
-    import dhmpubsub as pubsub
-    from dhmcommands import CommandDictionary
-    img = interface.Image((1,2,3), np.zeros((2048,2048), dtype=np.float32))
-
-  ### Create Message Queues
-    ctx = mp.get_context('spawn')
-    _qs = {}
-    _qs['controller_inq']    = ctx.Queue()
-    _qs['framesource_inq']   = ctx.Queue()
-    _qs['reconstructor_inq'] = ctx.Queue()
-    _qs['guiserver_inq']     = ctx.Queue()
-    _qs['datalogger_inq']    = ctx.Queue()
-    _qs['watchdog_inq']      = ctx.Queue()
-
-    ### Make the publish/subscribe connections
-    pub = pubsub.PubSub()
- 
-    #published by all modules to indicate that it is done initializing
-    pub.subscribe('init_done', _qs['controller_inq'])
-
-    # Subscribe to RAW FRAMES
-    #pub.subscribe('rawframe', _qs['guiserver_inq'])
-    pub.subscribe('rawframe', _qs['reconstructor_inq'])
-    # Subscribe to RECONSTRUCTION PRODUCTS
-    pub.subscribe('reconst_product', _qs['guiserver_inq'])
-
-    pub.subscribe('reconst_done', _qs['framesource_inq'])
-    pub.subscribe('reconst_done', _qs['controller_inq'])
-
-    #-- Subscribe to STATUS messages
-    #  Reconst Status
-    pub.subscribe('reconst_status', _qs['controller_inq'])
-    pub.subscribe('reconst_status', _qs['framesource_inq'])
-    pub.subscribe('reconst_status', _qs['guiserver_inq'])
-    #    Holo Status
-    pub.subscribe('holo_status', _qs['controller_inq'])
-    pub.subscribe('fouriermask_status', _qs['controller_inq'])
-    pub.subscribe('session_status', _qs['controller_inq'])
-    pub.subscribe('framesource_status', _qs['controller_inq'])
-    pub.subscribe('datalogger_status', _qs['controller_inq'])
-    pub.subscribe('guiserver_status', _qs['controller_inq'])
-    pub.subscribe('watchdog_status', _qs['guiserver_inq'])
-    # Subscribe to TELEMETRY messages
-    #pub.subscribe('reconst_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('holo_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('fouriermask_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('session_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('framesource_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('datalogger_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('guiserver_telemetry', _qs['guiserver_inq'])
-    #pub.subscribe('watchdog_telemetry', _qs['guiserver_inq'])
-    # Subscribe to COMMAND messages
-    pub.subscribe('dhm_cmd', _qs['controller_inq'])
-    # Subscribe to HEARTBEAT messages
-    pub.subscribe('heartbeat', _qs['watchdog_inq'])
-
-    ### Create events
-    _events = {}
-    _events['reconst'] = {}
-    _events['reconst']['done'] = ctx.Event()
-    _events['controller'] = {}
-    _events['controller']['start'] = ctx.Event()
-
-    a = Guiserver(_qs['guiserver_inq'], pub, _events)
-    a.start()
-    _events['controller']['start'].set() ## Mimic the Controller
-    count = 0
-    _cmdDict = CommandDictionary()
-    (cmd, statusstr) = _cmdDict.validate_command('guiserver enable_amplitude=true')
-    time.sleep(10)
-    _qs['guiserver_inq'].put_nowait(interface.Command(cmdobj=cmd))
-    while count < 10:
-        time.sleep(2)
-        print('Count=%d'%(count))
-        count += 1
-
-    #pub.publish('rawframe',None)
-    _qs['guiserver_inq'].put_nowait(None)
-    a.join()
