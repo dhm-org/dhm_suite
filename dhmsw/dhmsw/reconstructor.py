@@ -82,6 +82,7 @@ class Reconstructor(mp.Process):
         self._holo_meta    = meta.metadata['HOLOGRAM']
         self._fouriermask_meta = meta.metadata['FOURIERMASK']
         self._camera_meta = meta.metadata['CAMERA']
+        self._session_meta = meta.metadata['SESSION']
 
         self._mask = None
         self.holo = None
