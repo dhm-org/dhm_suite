@@ -237,7 +237,9 @@ class Guiserver(ComponentABC):
                     continue
                 datatype = type(data)
                 if self._verbose: 
-                    if self._inq.qsize() > 0: print('QSize = %d'%(self._inq.qsize()), datatype)
+                    ### Commented out because incompatible in Windows/Mac
+                    #if self._inq.qsize() > 0: print('QSize = %d'%(self._inq.qsize()), datatype)
+                    pass
                 if data is None:
                     print('Exiting Guiserver')
                     break

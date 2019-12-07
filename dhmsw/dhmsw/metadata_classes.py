@@ -596,6 +596,7 @@ class Session_Metadata(MetadataABC):
             self.focal_length = 1e-3 #mm
             self.numerical_aperture = 0.1
             self.system_magnification = 1.0
+            self.reconst_space = False #False==>Object space; True==>Detector space
 
         def load_config(self, filepath):
             key = 'LENS'
@@ -610,10 +611,12 @@ class Session_Metadata(MetadataABC):
                 focal_length = config.getfloat(key, 'focal_length', fallback=1e-3)
                 numerical_aperture = config.getfloat(key, 'numerical_aperture', fallback=0.1)
                 system_magnification = config.getfloat(key, 'system_magnification', fallback=1.0)
+                reconst_space = config.getfloat(key, 'reconst_space', fallback=False)
 
                 self.focal_length = focal_length
                 self.numerical_aperture = numerical_aperture
                 self.system_magnification = system_magnification
+                self.reconst_space = reconst_space
 
             except configparser.Error as e:
                 print('Unable to read config file [%s] due to error [%s].  Key=[%s].'%(filepath, repr(e), key))
