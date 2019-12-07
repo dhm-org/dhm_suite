@@ -44,7 +44,7 @@ from display_dhmxc import (guiclient)
 from telemetry import (Tlm)
 import dhmx_filedialog
 
-DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.6   08-14-2019"
+DHMXC_VERSION_STRING = "DHMx Camera Settings v0.10.7   10-24-2019"
 CAMERA_CONVERSION_RATIO = 0.50
 HOST = socket.gethostbyname('localhost')
 FRAME_SERVER_PORT = 2000
@@ -59,6 +59,10 @@ def SetCommandServerPort(port_num):
 def SetFrameServerPort(port_num):
    global FRAME_SERVER_PORT
    FRAME_SERVER_PORT = int(port_num)
+
+def SetHostname(hostname):
+   global HOST
+   HOST = hostname
 
 def SetTelemetryServerPort(port_num):
    global TELEMETRY_SERVER_PORT
@@ -312,6 +316,8 @@ if __name__ == "__main__":
                     help="This argument will override the default port for the Command Server to a port of your choosing.")
     parser.add_option("-t","--tlmserver", dest="telemetryServerPort",
                     help="This argument will override the default port for the Telemetry Server to a port of your choosing.")
+    parser.add_option("-j","--host", dest="hostnameOrIP",
+                    help="This argument will override the default host for the host of your choosing.")
 
     # parse in the arguments
     (opts, args) = parser.parse_args()
@@ -332,6 +338,9 @@ if __name__ == "__main__":
 
     if(opts.telemetryServerPort):
        SetTelemetryServerPort(opts.telemetryServerPort)
+
+    if(opts.hostnameOrIP):
+       SetHostname(opts.hostnameOrIP)
 
     w = MainWin()
 
