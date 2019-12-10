@@ -1,7 +1,7 @@
 This is the Windows version of the DHM Camera Server,
 currently coded to support Allied Vision Cameras.
 
-Everything (except Vimba) is contained within setup.exe
+Everything (except Vimba) is contained within Setup.exe
 This version has been tested with Vimba 3.0 and Vimba 3.1.
 
 It is still necessary for the user to install and configure
@@ -18,5 +18,3 @@ with no arguments. This can be edited as the user sees fit,
 bearing in mind that any additional arguments must comply
 with what is supported. If in doubt, from a terminal window
 enter 'DhmCameraServer.exe -h'
-
-
