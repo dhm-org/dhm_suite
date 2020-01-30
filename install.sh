@@ -165,6 +165,8 @@ then
  apt-get install -y exfat-fuse exfat-utils
  apt-get install -y python3-pip
 
+ pip3 install --upgrade pip
+
  groupadd dhm
  usermod -aG dhm $USER
  #create_install_location $DHM_INSTALL_ROOT
