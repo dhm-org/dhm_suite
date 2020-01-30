@@ -198,11 +198,7 @@ fi
 if [ $shampoo -eq 1 ]
 then
 ### Install shampoo
-pip3 install astropy
 pip3 install astropy-helpers
-pip3 install scikit-image
-pip3 install pyfftw
-pip3 install sklearn
 cd $DHM_SUITE_DIR/shampoo
 python3 setup.py install
 
