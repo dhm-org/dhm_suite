@@ -1,17 +1,29 @@
 #!/bin/bash
 ###############################################################################
-#    file: run_camserver
+#    file: camserver_daemon
 #
 #    Copyright (c) 2020 Jet Propulsion Laboratory
 #    All rights reserved
 #
-#    brief:  Start the Camserver and execute in the background
+#    brief:  Start the Camserver and execute in the background 
+#
+#    Description:  This script will run only one instance of camserver
+#                  It will determine if its already running an notify  with printout.
+#                  Else it will run the camserver.
+#                  If want to start camserver on startup, place in appropriate location
+#                  like /etc/init.d/
+#
+#                  NOTE:  If more than one camera connected, the camserver by design
+#                         will prompt user for selection which user may not see because
+#                         this scripts pipes all print statements to /dev/null.
+#                         To by pass, modify this script and pass the serial number of the camera
+#                         with option  '-s <serial number>'
 #
 #    author:  S. F. Fregoso
 #
 ###############################################################################
 
-logDir=~/Desktop/data
+logDir=~/Desktop/
 scriptname=camserver
 scriptpath=/opt/DHM/bin/$scriptname
 
