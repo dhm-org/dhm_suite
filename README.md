@@ -1,7 +1,14 @@
 # Digital Holographic Microscope Software Suite
+The DHM Suite is composed of the following software applications:
+
+[camserver](camserver/) - Camera interface server software
+[dhmsw](dhmsw/) - Off-axis hologram reconstruction software
+[dhm_gui](dhm_gui/) - GUIs for the the camserver and dhmsw
+
+![DHMx Software Suite Applications](doc/dhm_suite_uses.jpeg)
 
 ##  Operating System Requirement
-*  Ubuntu 16.04 or greater 64-bit
+*  Ubuntu 16.04 or greater; 64-bit
    -  The software was designed for Linux system particularity Ubuntu.
    -  Tested also on Redhat 7 Linux
 
