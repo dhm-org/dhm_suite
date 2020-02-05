@@ -1,9 +1,9 @@
 # Digital Holographic Microscope Software Suite
 The DHM Suite is composed of the following software applications:
 
-[camserver](camserver/) - Camera interface server software
-[dhmsw](dhmsw/) - Off-axis hologram reconstruction software
-[dhm_gui](dhm_gui/) - GUIs for the the camserver and dhmsw
+* [camserver](camserver/) - Camera interface server software
+* [dhmsw](dhmsw/) - Off-axis hologram reconstruction software
+* [dhm_gui](dhm_gui/) - GUIs for the the camserver and dhmsw
 
 ![DHMx Software Suite Applications](doc/dhm_suite_uses.jpeg)
 
