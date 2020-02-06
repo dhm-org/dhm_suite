@@ -38,3 +38,19 @@ This install script has options in case you want to do a step at a time.  The fo
 * Installation location
   - Install script will copy contents of this repo into /opt/DHM/
 
+## Uses
+The DHM Suite applications can be used in different ways, but here are the most common uses:
+
+![Dhmx Uses A and B](doc/dhmx_uses_diagram_1.jpeg)
+
+* Use 1:  The top images shows a uses case where all you want to do is view and control the camera, and record images to disk.
+This can be accomplish with just the 'camserver' and the 'dhm_gui/dhmxc.py' GUI.
+* Use 2:  The bottom image shows a use case where you want to view and reconstruct images already stored in the file system.
+This can be accomplished with the 'dhmsw' and the 'dhm_gui/dhmx.py' GUI
+
+
+![Dhmx Uses C](doc/dhmx_uses_diagram_2.jpeg)
+
+* Use 3:  If user want to reconstruct images from a live feed from the camera, then the 'camserver', 'dhmsw', and 'dhm_gui/dhmx.py' applications are required.
+
+
