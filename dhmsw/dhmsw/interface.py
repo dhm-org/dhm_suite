@@ -29,6 +29,8 @@ class InitDonePkt(object):
     def __init__(self, name, errorcode):
         self._name = name
         self._errorcode = errorcode
+    def get_errorcode(self):
+        return self._errorcode
 
 class MessagePkt(object):
     def __init__(self, msg_id, src_id):

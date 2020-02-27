@@ -1,13 +1,14 @@
+"""
 ###############################################################################
-#  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED. 
-#  United States Government Sponsorship acknowledged. Any commercial use must be 
-#  negotiated with the Office of Technology Transfer at the 
+#  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED.
+#  United States Government Sponsorship acknowledged. Any commercial use must be
+#  negotiated with the Office of Technology Transfer at the
 #  California Institute of Technology.
 #
-#  This software may be subject to U.S. export control laws. By accepting this software, 
-#  the user agrees to comply with all applicable U.S. export laws and regulations. 
-#  User has the responsibility to obtain export licenses, or other export authority 
-#  as may be required before exporting such information to foreign countries or providing 
+#  This software may be subject to U.S. export control laws. By accepting this software,
+#  the user agrees to comply with all applicable U.S. export laws and regulations.
+#  User has the responsibility to obtain export licenses, or other export authority
+#  as may be required before exporting such information to foreign countries or providing
 #  access to foreign persons.
 #
 #  file:	framesource.py
@@ -18,12 +19,12 @@
 #               A seperate thread is used to get images from the camera server
 #               or from disk.
 ###############################################################################
+"""
 import sys
 import socket
 import copy
 import select
 import glob
-import multiprocessing
 import threading
 import time
 import queue
@@ -31,66 +32,114 @@ from skimage.io import imread
 import numpy as np
 
 from . import sequence
-from . import interface
-from . import metadata_classes
-from .heartbeat import Heartbeat
-
+from . import interface as Iface
+from . import metadata_classes as MetaC
+from .heartbeat import Heartbeat as HBeat
 from .component_abc import ComponentABC
 
-#class Framesource(multiprocessing.Process):
+def verboseprint(*args, **kwargs):
+    """
+        Print statement if verbose is enabled
+    """
+    print(*args, **kwargs)
+
+def _get_img_obj(img):
+    """
+    Return a 2D array which is the image.
+    Sometimes readin from a file produces 3D array
+    """
+    imgobj = None
+
+    if img.shape == 3:
+        imgobj = Iface.Image((), img[:, :, 0])
+    else:
+        imgobj = Iface.Image((), img)
+
+    return imgobj
+
+def client_connect(host, port):
+    """
+    Wrapper function to connect to client
+    """
+
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((host, port))
+        return client
+    except socket.error as err:
+        print("Unable to connect to the client: [%s]"%(repr(err)))
+        raise err
+
+def process_cmd(opcode, arg, tempmeta):
+    """
+    Process commands
+    """
+    validcommand = True
+    wanttorun = False
+
+    if opcode == 'mode':
+        if arg == 'file':
+            tempmeta.mode = arg
+        elif arg == 'camera':
+            tempmeta.mode = arg
+        elif arg == 'sequence':
+            tempmeta.mode = arg
+        else:
+            print('Unknown mode [%s]'%(arg))
+            validcommand = False
+    elif opcode == 'exec':
+        if arg == 'run':
+            wanttorun = True
+        elif arg == 'idle':
+            wanttorun = False
+        else:
+            validcommand = False
+            print('Unknown exec mode [%s]'%(arg))
+            wanttorun = None
+    elif opcode == 'filepath':
+        tempmeta.file['datadir'] = arg
+    else:
+        print('Framesource:  Unknown parameter [%s].'%(opcode))
+        validcommand = False
+
+    return (validcommand, wanttorun)
+
 class Framesource(ComponentABC):
-#    def __init__(self, inq, pub, _events, configfile=None, verbose=False):
-#        """
-#        Constructor of the Framesource class
-#
-#        Initializes state to IDLE and copies inputs into class member variables
-#
-#        Parameters
-#        -------------
-#        inq : multiprocessing.queues.Queue
-#            Queue for input messages into the process.
-#        pub : dhmpubsub.PubSub
-#            Handle to the publish/subscribe object
-#        _events :
-#            Event to wait for signal indicating reconstruct of an image has completed
-#        verbose : boolean
-#            If TRUE print detail information to terminal, FALSE otherwise.
-#
-#        Returns
-#        --------------
-#        None
-#
-#        """
-#
-#        multiprocessing.Process.__init__(self)
-#
-#        self._verbose = verbose
-#        #### Create the consumer thread for this module
-#        self._inq = inq
-#        self._events = _events 
-#        self._pub = pub
-#
-#        meta = metadata_classes.Metadata_Dictionary(configfile)
-#        self._meta = meta.metadata['FRAMESOURCE']
-#        self._reconst_meta = meta.metadata['RECONSTRUCTION']
-#        self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
-#
-#        ## Heartbeat
-#        self._HB = None
-#
-#        ### Threads
-#        self._filegenerator = {}
-#
-#        self._camclienthandler = {}
+    """
+        Module to get frames from cameras or from file
+    """
+    def __init__(self, identifier, inq, pub, _events, configfile=None, verbose=False):
+        """
+        Overload __init__
+        """
+        # pylint: disable=too-many-arguments
+        ComponentABC.__init__(self,
+                              identifier,
+                              inq,
+                              pub,
+                              _events,
+                              configfile=configfile,
+                              verbose=verbose)
+
+        self._reconst_meta = None
+        ### Declare camera server frame packet object
+        self._ms_pkt = Iface.CamServerFramePkt()
 
     def initialize_component(self):
 
         self._reconst_meta = self._allmeta.metadata['RECONSTRUCTION']
-        self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
 
         self._filegenerator = {}
 
-        self._camclienthandler = {}
+        self._camclihandler = {}
+
+
+    def is_filegenerator_alive(self):
+        """
+        Indicates if file generator thread is running
+        """
+        return self._filegenerator['thread'].is_alive()
 
     def start_filegenerator(self, filepath):
         """
@@ -105,12 +154,12 @@ class Framesource(ComponentABC):
         Returns
         --------------
         bool
-            TRUE if file generator thread has been spawned.  FALSE if otherwise due to 
+            TRUE if file generator thread has been spawned.  FALSE if otherwise due to
             thread is already running or error encountered
 
         """
 
-        if self._filegenerator['thread'].is_alive():
+        if self.is_filegenerator_alive():
             print('Filegenerator thread is already running')
             return False
 
@@ -119,28 +168,54 @@ class Framesource(ComponentABC):
 
         ### Get list of files
         flist = []
-        if type(filepath) is list:
-            for f in filepath:
-                lst = glob.glob(f)
+        #if type(filepath) is list:
+        if isinstance(filepath, list):
+            for fname in filepath:
+                lst = glob.glob(fname)
                 for _ in lst:
                     flist.append(_)
         else:
             flist = glob.glob(filepath)
 
         ### Spawn thread if filepath produced a list of files.
+        ret = False
         if flist:
-            self._filegenerator['thread']= threading.Thread(target=self._file_thread, args=(flist, self._filegenerator['queue'], self._events['reconst']['done']))
+            self._filegenerator['thread'] = threading.Thread(
+                target=self._file_thread,
+                args=(flist,
+                      self._filegenerator['queue'],
+                      self._events['reconst']['done'],
+                      )
+                )
             self._filegenerator['thread'].daemon = True
             self._filegenerator['thread'].start()
-            self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
-            return True
+            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
+            ret = True
         else:
             print('No files returned from given filepath=[%s]'%(filepath))
-        return False
+
+        return ret
+
+
+    def _stop_filegenerator(self):
+        if self._filegenerator['thread'].is_alive():
+            self._filegenerator['queue'].put_nowait(None)
+            self._filegenerator['thread'].join()
+            print('Stopped filegenerator thread')
+
+    def _stop_cameraclient(self):
+        if self._camclihandler['thread'].is_alive():
+            ## Need to stop thread first
+            self._camclihandler['queue'].put_nowait(None)
+            self._camclihandler['thread'].join()
+            print('Stopped clienthandler thread')
 
     def stop_imagegenerator(self):
         """
-        Stop currently executing thread that is publishing images and sets state to IDLE
+        Stop currently executing threads
+        (either image generator from files, or
+        camera images) that is publishing images and
+        sets state to IDLE
 
         Parameters
         --------------
@@ -151,44 +226,40 @@ class Framesource(ComponentABC):
         None
 
         """
-        if self._filegenerator['thread'].is_alive():
-            self._filegenerator['queue'].put_nowait(None)
-            self._filegenerator['thread'].join()
-            print('Stopped filegenerator thread')
 
-        if self._camclienthandler['thread'].is_alive():
-            ## Need to stop thread first
-            self._camclienthandler['queue'].put_nowait(None)
-            self._camclienthandler['thread'].join()
-            print('Stopped clienthandler thread')
+        self._stop_filegenerator()
+        self._stop_cameraclient()
+        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
 
-        self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
 
     def _file_thread(self, flist, inq, reconst_done_event):
         """
         Thread that reads images from a file and publishes it.
 
-        This thread is spawned by function 'start_filegenerator'.  If the reconstruction mode is RECONST_NONE then
-        this thread will publish images at a rate of 6Hz in the order they are in 'flist'.
-        If the reconstruction mode is anything other than RECONST_NONE, then it will publish the image and 
-        wait for signal to be raised by the Reconstructor module to indicate that it is done reconstructing.
-        Once the signal is received the next image is published.
+        This thread is spawned by function 'start_filegenerator'.  If the
+        reconstruction mode is RECONST_NONE then this thread will publish
+        images at a rate of 6Hz in the order they are in 'flist'.  If the
+        reconstruction mode is anything other than RECONST_NONE, then it will
+        publish the image and wait for signal to be raised by the Reconstructor
+        module to indicate that it is done reconstructing.  Once the signal is
+        received the next image is published.
 
-        This thread will terminate if all files in 'flist' have been published or if a 'None' messages is sent in 'inq'
+        This thread will terminate if all files in 'flist' have been published
+        or if a 'None' messages is sent in 'inq'
 
         Parameters
         ---------------
         flist : list
             List of file paths to image files.
         inq : queue.Queue
-            Input message queue.  Primarily used to get a 'None' message to terminate the thread.
+            Input message queue.  Primarily used to get a 'None' message to
+            terminate the thread.
         reconst_done_event :
             TBD
 
         Returns
         ---------------
         None
-        
         """
 
         verbose = True
@@ -197,14 +268,16 @@ class Framesource(ComponentABC):
         ### Send first file
         img = np.asarray(imread(flist[0]))
 
-        if img.shape == 3:
-            a = interface.Image((), img[:,:,0])
-        else:
-            a = interface.Image((), img)
+        imgobj = _get_img_obj(img)
+
         self._meta.file['currentfile'] = flist[0]
 
-        self.publish_image(a)
-        if verbose: print('%f: Sent count=%d, total=%d, fname=%s'%(time.time(), count, numfiles, flist[count]))
+        self.publish_image(imgobj)
+        verboseprint('%f: Sent count=%d, total=%d, fname=%s'%(time.time(),
+                                                              count,
+                                                              numfiles,
+                                                              flist[count])
+                    )
         while True:
             try:
                 ret = inq.get_nowait() #Mainly used to get a 'None' to end the execution
@@ -213,46 +286,57 @@ class Framesource(ComponentABC):
             except queue.Empty:
                 pass
 
-            if self._reconst_meta.processing_mode == metadata_classes.Reconstruction_Metadata.RECONST_NONE:
+            if self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+                count += 1
+                if count >= numfiles:
+                    break
+                self._meta.file['currentfile'] = flist[count]
+                img = np.asarray(imread(flist[count]))
+
+                imgobj = _get_img_obj(img)
+
+                #reconst_done_event.clear()
+                self.publish_image(imgobj)
+                time.sleep(.166) #6Hz
+                if verbose:
+                    print('%f: Sent count=%d, total=%d, fname=%s'%(time.time(),
+                                                                   count,
+                                                                   numfiles,
+                                                                   flist[count])
+                         )
+                print('Done event timed out')
+            else:
+                reconst_done_event.wait(3)
+                if verbose:
+                    print('%f: Done event received, count=%d, total=%d, '
+                          'fname=%s'%(time.time(),
+                                      count,
+                                      numfiles,
+                                      flist[count]))
                 count += 1
                 if count >= numfiles:
                     break
                 self._meta.file['currentfile'] = flist[count]
                 img = np.asarray(imread(flist[count]))
                 if img.shape == 3:
-                    a = interface.Image((), img[:,:,0])
+                    imgobj = Iface.Image((), img[:, :, 0])
                 else:
-                    a = interface.Image((), img)
+                    imgobj = Iface.Image((), img)
 
-                #reconst_done_event.clear()
-                self.publish_image(a)
-                time.sleep(.166) #6Hz
-                if verbose: print('%f: Sent count=%d, total=%d, fname=%s'%(time.time(), count, numfiles, flist[count]))
-                print('Done event timed out')
-            else:
-                if True:
-                    reconst_done_event.wait(3)
-                    if verbose: print('%f: Done event received, count=%d, total=%d, fname=%s'%(time.time(), count, numfiles, flist[count]))
-                    count += 1
-                    if count >= numfiles:
-                        break
-                    self._meta.file['currentfile'] = flist[count]
-                    img = np.asarray(imread(flist[count]))
-                    if img.shape == 3:
-                        a = interface.Image((), img[:,:,0])
-                    else:
-                        a = interface.Image((), img)
-    
-                    reconst_done_event.clear()
-                    self.publish_image(a)
-                    if verbose: print('%f: Sent count=%d, total=%d, fname=%s'%(time.time(), count, numfiles, flist[count]))
+                reconst_done_event.clear()
+                self.publish_image(imgobj)
+                if verbose:
+                    print('%f: Sent count=%d, total=%d, '
+                          'fname=%s'%(time.time(),
+                                      count,
+                                      numfiles,
+                                      flist[count]))
 
         print('File Generation thread ended')
         inq.queue.clear()
-        self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
         self.publish_status()
 
-                
     def start_camera_client(self):
         """
         Start the client to the camera server.
@@ -267,29 +351,35 @@ class Framesource(ComponentABC):
 
         """
 
-        if self._camclienthandler['thread'].is_alive():
+        if self._camclihandler['thread'].is_alive():
             print('Client thread already running')
-            return True 
+            return True
 
         ### Check if clienhandler thread is running
         #if self._filegenerator['thread'].is_alive():
         #    ## Need to stop thread first
         #    self._filegenerator['queue'].put_nowait(None)
         #    self._filegenerator['thread'].join()
-        #    self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        #    self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
         self.stop_imagegenerator()
 
         try:
-            clientsock = self._camclient_connect(self._meta.camserver.host, self._meta.camserver.ports['frame'])
-            self._camclienthandler['thread'] = threading.Thread(target=self._camclient_thread, args=(clientsock, self._camclienthandler['queue'], self._inq, self._events['reconst']['done'])) 
-            self._camclienthandler['thread'].daemon = True
-            self._camclienthandler['thread'].start()
+            clientsock = client_connect(self._meta.camserver.host,
+                                        self._meta.camserver.ports['frame'])
+            self._camclihandler['thread'] = \
+                threading.Thread(target=self._camcli_thread,
+                                 args=(clientsock,
+                                       self._camclihandler['queue'],
+                                       self._inq)
+                                )
+            self._camclihandler['thread'].daemon = True
+            self._camclihandler['thread'].start()
 
-            self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
+            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
             return True
-        except socket.error as e:
-            print('ERROR: Unable to connect to server. [%s]'%(repr(e)))
-            self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        except socket.error as err:
+            print('ERROR: Unable to connect to server. [%s]'%(repr(err)))
+            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
             return False
 
     def publish_status(self, status_msg=None):
@@ -304,12 +394,12 @@ class Framesource(ComponentABC):
         Returns
         --------------
         None
- 
+
         """
 
         if status_msg:
             self._meta.status_msg = status_msg
-        self._pub.publish('framesource_status',interface.MetadataPacket(self._meta))
+        self._pub.publish('framesource_status', Iface.MetadataPacket(self._meta))
 
     def publish_image(self, img):
         """
@@ -317,7 +407,7 @@ class Framesource(ComponentABC):
 
         Parameters
         --------------
-        img : interface.Image
+        img : Iface.Image
             Image that will be published to all subscribers of this data.
 
         Returns
@@ -326,7 +416,7 @@ class Framesource(ComponentABC):
 
         """
 
-        self._pub.publish('rawframe',img)
+        self._pub.publish('rawframe', img)
 
     def process_metadata(self, data):
         """
@@ -336,7 +426,7 @@ class Framesource(ComponentABC):
 
         Parameters
         --------------
-        data : interface.MetadataPacket
+        data : Iface.MetadataPacket
 
         Returns
         --------------
@@ -344,196 +434,214 @@ class Framesource(ComponentABC):
 
         """
 
-        if type(data) is interface.MetadataPacket:
+        if isinstance(data, Iface.MetadataPacket):
             meta = data.meta
         else:
             meta = data
 
         meta_type = type(meta)
 
-        if meta_type is metadata_classes.Reconstruction_Metadata:
+        if meta_type is MetaC.Reconstruction_Metadata:
             print('Framesource: Received "Reconstruction_Metadata"')
-            self._reconst_meta = meta;
-        elif meta_type is metadata_classes.Reconstruction_Done_Metadata:
+            self._reconst_meta = meta
+        elif meta_type is MetaC.Reconstruction_Done_Metadata:
             pass
-        
-        pass
+
+    def _start_sequence(self):
+        try:
+            flist = sequence.Sequence().get_sequence_filepaths(self._meta.file['datadir'])
+            self.start_filegenerator(flist)
+        except (ValueError, IOError) as err:
+            self._meta.status_msg = 'ERROR with sequence: %s'%(repr(err))
+            print(self._meta.status_msg)
+
+    def _wanttorun(self, wanttorun):
+        if wanttorun is not None:
+            if not wanttorun:
+                self.stop_imagegenerator()
+            else:
+                print('Mode = [%s]'%(self._meta.mode))
+                if self._meta.mode == 'camera':
+                    self.start_camera_client()
+                elif self._meta.mode == 'file':
+                    self.start_filegenerator(self._meta.file['datadir'])
+                elif self._meta.mode == 'sequence':
+                    self._start_sequence()
+                else:
+                    self._meta.status_msg = 'INVALID mode [%s] for framesource'%(self._meta.mode)
+                    print(self._meta.status_msg)
+
+    def _initialize_framereceivethreads(self):
+        """
+        Initialize the threads that will generate frames
+        """
+        self._filegenerator['thread'] = threading.Thread(target=None)
+        self._filegenerator['queue'] = queue.Queue()
+        self._camclihandler['thread'] = threading.Thread(target=None)
+        self._camclihandler['queue'] = queue.Queue()
+
+    def process_component_message(self, data):
+        """
+        Process the message from the component port
+        """
+        ### Process command
+        if isinstance(data, Iface.Command):
+
+            cmd = data.get_cmd()
+            tempmeta = copy.copy(self._meta)
+            validcommand = True
+            wanttorun = None
+            print('Framesource got command')
+            print(cmd)
+
+            for modid, var in cmd.items():
+                if modid == 'framesource':
+                    if not var: ### Empty parameter list, send reconst status
+                        break
+                    for opcode, arg in var.items():
+                        validcommand, wanttorun = process_cmd(opcode, arg, tempmeta)
+                        if not validcommand:
+                            break
+                else:
+                    validcommand = False
+                    print('Module ID [%s] is not valid for Framesource'%(modid))
+                    break
+
+                #if not validcommand:
+                #    break
+
+            if validcommand:
+                self._meta = copy.copy(tempmeta)
+                self._meta.status_msg = 'SUCCESS'
+                self._wanttorun(wanttorun)
+                self.publish_status()
+
+        elif isinstance(data, Iface.MetadataPacket):
+            self.process_metadata(data)
+
+        ### Process image (from camera streamer)
+        elif isinstance(data, type(b'')):
+            self._ms_pkt.set_data(data)
+            framedata = Iface.Image(self._ms_pkt.header(), self._ms_pkt.get_image())
+            self.publish_image(framedata)
+            print("%f: Got Frame!"%(time.time()))
+        elif isinstance(data, Iface.Image):
+            self.publish_image(data)
+            print("Framesource: %f: Got Image Frame!"%(time.time()))
+        else:
+            print('Unkown type', type(data))
+
+
+    def create_heartbeat(self):
+        """
+        Create the heartbeat object
+        """
+        self._hbeat = HBeat(self._pub, self._id.lower())
+
+    def start_heartbeat(self):
+        """
+        Start the heartbeat
+        """
+        self._hbeat.start()
+
+    def terminate_heartbeat(self):
+        """
+        End the execution of this components heartbeat
+        """
+        self._hbeat.terminate()
+
+    def notify_controller_and_wait(self):
+        """
+        Notify the controller component that this component is ready
+        and wait for controller component OK to start running
+        """
+        self._pub.publish('init_done', Iface.InitDonePkt('Framesource', 0))
+        print('[%s] Consumer thread started'%(self._id))
+        self._events['controller']['start'].wait()
 
     def run(self):
+        """
+        Component execution loop
+        """
 
         try:
-            self._filegenerator['thread'] = threading.Thread()
-            self._filegenerator['queue'] = queue.Queue()
-            self._camclienthandler['thread'] = threading.Thread()
-            self._camclienthandler['queue'] = queue.Queue()
 
-            ### Start Hearbeat
-            self._HB = Heartbeat(self._pub, 'framesource')
-    
-            ### Declare camera server frame packet object
-            msPkt = interface.CamServerFramePkt()
-    
-            ### Publish 'init_done' message indicating that Framesource has started to run.
-            self._pub.publish('init_done', interface.InitDonePkt('Framesource', 0))
+            self._initialize_framereceivethreads()
 
-            ### Wait for the Controller module to signal start
-            self._events['controller']['start'].wait()
+            self.create_heartbeat()
 
-            ### Start the hearbeat for the Framesource
-            self._HB.start()
+            self.notify_controller_and_wait()
 
-            print('Framesource Consumer thread started')
+            self.start_heartbeat()
+            print('[%s] Consumer thread started'%(self._id))
+
             while True:
-                data = self._inq.get()
-                if data is None:
-                    print('Exiting Framesource')
-                    break
-    
-                ### Process command
-                if type(data) is interface.Command:
-                    cmd = data.get_cmd()
-                    tempmeta = copy.copy(self._meta)
-                    validcommand = True
-                    changemode = False
-                    wanttorun = None
-                    print('Framesource got command')
-                    print(cmd)
-                    for k, v in cmd.items():
-                        if k == 'framesource':
-                            if not v: ### Empty parameter list, send reconst status
-                                break
-                            for kk, vv in v.items():
-                                if kk == 'mode':
-                                    changemode = True
-                                    if vv == 'file':
-                                        tempmeta.mode = vv
-                                        pass
-                                    elif vv == 'camera':
-                                        tempmeta.mode = vv
-                                        pass
-                                    elif vv == 'sequence':
-                                        tempmeta.mode = vv
-                                        pass
-                                    else:
-                                        print('Unknown mode [%s]'%(vv))
-                                        validcommand = False
-                                        changemode = False
-                                elif kk == 'exec':
-                                    if vv == 'run':
-                                        wanttorun = True;
-                                    elif vv == 'idle':
-                                        wanttorun = False;
-                                    else:
-                                        validcommand = False
-                                        print('Unknown exec mode [%s]'%(vv))
-                                        wanttorun = None
-                                elif kk == 'filepath':
-                                    tempmeta.file['datadir'] = vv
-                                else:
-                                    print('Framesource:  Unknown parameter [%s].'%(kk))
-                                    validcommand = False
-    
-                                if validcommand == False: break
-                        else:
-                            validcommand = False
-                            print('Command [%s] is not valid'%(k))
-                            break
-    
-                        if validcommand == False: break
-    
-                    if validcommand:
-                        self._meta = copy.copy(tempmeta)
-                        self._meta.status_msg = 'SUCCESS'
-                        if wanttorun is not None:
-                            if wanttorun == False:
-                                self.stop_imagegenerator()
-                            else:
-                                print('Mode = [%s]'%(self._meta.mode))
-                                if self._meta.mode == 'camera':
-                                    self.start_camera_client()
-                                elif self._meta.mode == 'file':
-                                    self.start_filegenerator(self._meta.file['datadir'])
-                                elif self._meta.mode == 'sequence':
-                                    try:
-                                        flist = sequence.Sequence().get_sequence_filepaths(self._meta.file['datadir'])
-                                        self.start_filegenerator(flist)
-                                    except (ValueError, IOError) as e:
-                                        self._meta.status_msg = 'ERROR with sequence: %s'%(repr(e))
-                                        print(self._meta.status_msg)
-                                else:
-                                    self._meta.status_msg = 'INVALID mode [%s] for framesource'%(self._meta.mode)
-                                    print(self._meta.status_msg)
-                        self.publish_status()
-                elif isinstance(data, interface.MetadataPacket):
-                    self.process_metadata(data)
-    
-                ### Process image (from camera streamer)
-                elif type(data) is type(b''):
-                    msPkt.set_data(data)
-                    framedata = interface.Image(msPkt.header(), msPkt.get_image())
-                    self.publish_image(framedata)
-                    print("%f: Got Frame!"%(time.time()))
-                elif type(data) is interface.Image:
-                    self.publish_image(data)
-                    print("Framesource: %f: Got Image Frame!"%(time.time()))
-                else:
-                    print('Unkown type', type(data))
-            ## End of While
-            self._HB.terminate()
-            if self._HB.isAlive():
-                self._HB.join(timeout=5)
-            self.stop_imagegenerator()
-            print('Framesource: End')
-        except Exception as e:
-            print('Framesource Exception caught: %s'%(repr(e)))
-            exc_type, exc_obj, tb = sys.exc_info()
-            f = tb.tb_frame
-            lineno = tb.tb_lineno 
-            print('Framesource EXCEPTION IN (LINE {}): {}'.format(lineno, exc_obj))
 
-            self._HB.set_update(e)
-            if self._HB.isAlive():
-                self._HB.join(timeout=5)
-            raise e
+                data = self._inq.get()
+
+                if data is None:
+                    print('Exiting [%s]'%(self._id))
+                    break
+
+                ### Process Messages
+                self.process_component_message(data)
+
+            ## End of While
+            self.end_component()
+
+        except Exception as err:
+            self.handle_component_exception(err)
+
         finally:
             self.stop_imagegenerator()
-            pass
 
-    def _camclient_connect(self, host, port):
+    def handle_component_exception(self, err):
+        """
+        Send Heartbeat error and raise the error
+        """
+        print('[%s] Exception caught: %s'%(self._id, repr(err)))
+        exc_type, exc_obj, t_b = sys.exc_info()
+        lineno = t_b.tb_lineno
+        print('{} EXCEPTION IN (LINE {}): {}'.format(self._id, lineno, exc_obj))
 
-        try:
-            client  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client.connect((host, port))            
-            return client
-        except socket.error as e:
-            print("Unable to connect to the client: [%s]"%(repr(e)))
-            raise e
-            #return None
+        self._hbeat.set_update(err)
+        if self._hbeat.isAlive():
+            self._hbeat.join(timeout=5)
+        raise err
 
-    def _camclient_thread(self, clientsock, inq, outq, reconst_done_event):
+    def end_component(self):
+        """
+        End execution of component
+        """
+        self.terminate_heartbeat()
+        if self._hbeat.isAlive():
+            self._hbeat.join(timeout=5)
+        self.stop_imagegenerator()
+        print('[%s]: End'%(self._id))
 
+    def _camcli_thread(self, clientsock, inq, outq):
+        """
+        Camera client thread.  Gets frames from the camera server
+        """
         readfds = [clientsock]
-        exitthread = False 
+        exitthread = False
         verbose = False
 
-        totlen = 0
         count = 0
-        length = None
-        buf = b''
 
         data = b''
-        msg=b''
+        msg = b''
         lasttime = time.time()
         meta = None
         totalbytes = 0
 
-        msPkt = interface.CamServerFramePkt()
+        ms_pkt = Iface.CamServerFramePkt()
 
         print('Started client thread')
         while True:
             if exitthread:
-                print("Framesource: Exiting _camclient thread")
-                break;
+                print("Framesource: Exiting _camcli thread")
+                break
 
             infds, outfds, errfds = select.select(readfds, [], [], 1)
 
@@ -556,13 +664,13 @@ class Framesource(ComponentABC):
                 # Graceful exit of thread
                 qdata = inq.get_nowait()
                 if qdata is None: ### Exit the thread
-                   clientsock.close()
-                   return
+                    clientsock.close()
+                    return
             except queue.Empty:
                 pass
 
-            for s in infds:
-                if s is clientsock:
+            for in_sock in infds:
+                if in_sock is clientsock:
                     ### Get as much data as we can
                     packet = clientsock.recv(65535)
 
@@ -576,15 +684,40 @@ class Framesource(ComponentABC):
                     datalen = len(data)
 
                     ### If he haven't processed the header/meta, then lets.
-                    if meta is None and datalen > msPkt.header_packet_size():
-                        w, h, size, packetsize, ts, frameid, logging, gain, gain_min, gain_max, exposure, exposure_min, exposure_max, rate, rate_measured = msPkt.unpack_header(data)
-                        meta = (w, h, size, packetsize, ts, frameid, logging, gain, gain_min, gain_max, exposure, exposure_min, exposure_max, rate, rate_measured)
-                        totalbytes =  packetsize + msPkt.header_packet_size()
-                        #if verbose:
-                        if True:
-                            #print('w=%d, h=%d, compval=%d, val=%d, size=%d, actualsize=%d, ts=%d, gain=%d, ccdtemp=%d', w, h, compval, val, size, actualsize, ts, gain, ccdtemp)
-                            #print('w=%d, h=%d, size=%d, packetsize=%d, ts=%d, frameid=%d', w, h, size, packetsize, ts, frameid)
-                            pass
+                    if meta is None and datalen > ms_pkt.header_packet_size():
+                        width, \
+                        height, \
+                        size, \
+                        packetsize, \
+                        tstamp, \
+                        frameid, \
+                        logging, \
+                        gain, \
+                        gain_min, \
+                        gain_max, \
+                        exposure, \
+                        exposure_min, \
+                        exposure_max, \
+                        rate, \
+                        rate_measured = ms_pkt.unpack_header(data)
+                        meta = ( \
+                                width,\
+                                height, \
+                                size, \
+                                packetsize, \
+                                tstamp, \
+                                frameid, \
+                                logging, \
+                                gain, \
+                                gain_min, \
+                                gain_max, \
+                                exposure, \
+                                exposure_min, \
+                                exposure_max, \
+                                rate, \
+                                rate_measured, \
+                               )
+                        totalbytes = packetsize + ms_pkt.header_packet_size()
 
                         if datalen >= totalbytes:  ### We have a complete packet stored.
                             msg = data[:totalbytes]
@@ -594,10 +727,11 @@ class Framesource(ComponentABC):
                             if verbose:
                                 print('%.2f Hz'%(1/(time.time()-lasttime)))
                             lasttime = time.time()
-                            count+=1
+                            count += 1
                             outq.put_nowait(msg)
                             if verbose:
-                                print('%f: Full message received after getting meta: datalen=%d, datalen after=%d'%(time.time(), datalen, len(data)))
+                                print('%f: Full message received after getting'
+                                      'meta: datalen=%d, datalen after=%d'%(time.time(), datalen, len(data)))
                     else:
                         if datalen < totalbytes:
                             continue
@@ -605,7 +739,11 @@ class Framesource(ComponentABC):
                         ### We have a complete message
                         msg = data[:totalbytes]
                         data = data[totalbytes:]
-                        if verbose: print('%f: Full message received: datalen=%d, datalen after=%d'%(time.time(),datalen, len(data)))
+                        if verbose:
+                            print('%f: Full message received: datalen=%d, '
+                                  'datalen after=%d'%(time.time(),
+                                                      datalen,
+                                                      len(data)))
                         meta = None
                         totalbytes = 0
                         ### Send frame here
@@ -613,8 +751,8 @@ class Framesource(ComponentABC):
                         if verbose:
                             print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
-                        count+=1
+                        count += 1
         print('Framesource:  End of Camera Client Thread')
         inq.queue.clear()
-        self._meta.state = metadata_classes.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
         self.publish_status()

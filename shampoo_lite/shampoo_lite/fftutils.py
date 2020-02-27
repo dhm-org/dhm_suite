@@ -1,13 +1,11 @@
 
-__all__ = ['fft2', 'fftshift']
+__all__ = ['fft2', 'ifft2', 'fft3', 'ifft3', 'fftshift', 'FFT_3']
 
 try:
-    import multiprocessing
+    import multiprocessing # NOTE Purposely to trigger exception
     from pyfftw_utils import (FFT_3, fftshift)
-    from datatypes import (FLOATDTYPE, COMPLEXDTYPE)
+    from datatypes import (FLOATDTYPE, COMPLEXDTYPE, FRAMEDIMENSIONS, NUMFFTTHREADS)
 
-    FRAMEDIMENSIONS = (2048, 2048, 1)
-    NUMFFTTHREADS = multiprocessing.cpu_count()/2
     myFFT3 = None
     fft3   = None
     ifft3  = None
@@ -22,9 +20,13 @@ try:
 
     print('Import FFT utilities from "pyfftw_utils"')
 except Exception as e:
-    raise e
+    #raise e
 
     import numpy as np
     fft2 = np.fft.fft2
+    ifft2 = np.fft.ifft2
+    fft3 = np.fft.fftn
+    ifft3 = np.fft.ifftn
     fftshift = np.fft.fftshift
+    FFT_3 = None
     print('Import FFT utilities from "numpy"')

@@ -1,8 +1,17 @@
+"""
+Abstract class for the dhmsw components
+
+All components should be subclasses of this abstract class
+"""
 from abc import ABC, abstractmethod
 import multiprocessing
 from . import metadata_classes
 
 class ComponentABC(ABC, multiprocessing.Process):
+    """
+    Component abstract class.  All modules that inherit from this class
+    will run as a process.
+    """
 
     def __init__(self, identifier, inq, pub, _events, configfile=None, verbose=False):
         """
@@ -29,10 +38,9 @@ class ComponentABC(ABC, multiprocessing.Process):
 
         self._allmeta = metadata_classes.Metadata_Dictionary(configfile)
         self._meta = self._allmeta.metadata[self._id]
-        self._HB = None
+        self._hbeat = None
 
         self.initialize_component()
-        pass
 
     @abstractmethod
     def initialize_component(self):
@@ -41,13 +49,18 @@ class ComponentABC(ABC, multiprocessing.Process):
             yield None
 
     @abstractmethod
-    def publish_status(self):
+    def publish_status(self, status_msg=None):
+        """
+        Function used to publish status of the component
+        It is abstract so that components are forced to implement
+        """
         while False:
             yield None
 
     @abstractmethod
     def run(self):
+        """
+        Component run function
+        """
         while False:
             yield None
-
-    pass

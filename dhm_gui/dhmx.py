@@ -42,7 +42,11 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtQuick import *
 from PyQt5.QtQml import *
-import PyQt5.QtMultimedia
+
+# Commented out cuz doesn't work with Mac
+# Need to have multimedia library to work.  Also
+# Related with qt/Dhmx.py where Multimedia is used
+#import PyQt5.QtMultimedia 
 
 #DHM Specific (Please be sure to have all DHM related files added into the DHMx directory
 from dhm_cmd_client_server import (DHM_Command_Client)

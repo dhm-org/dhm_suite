@@ -1930,12 +1930,16 @@ ApplicationWindow {
         z:65535 /* Always make it the top-most */
     }
 
+    /* 
+        // SFF:  Commented out because doesn't work on Mac due to
+        // not finding multimedia library
     DhmxPlayback{
         objectName: "subwin_playback"
         id: subwin_playback
         visible: false
         z:1
     }
+    */
 
     DhmxConf{
         objectName: "subwin_conf"

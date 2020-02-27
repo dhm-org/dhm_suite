@@ -164,7 +164,10 @@ class guiclient(QThread):
                  self.outdata = np.frombuffer(self.msg[self.offset:self.offset+(functools.reduce(lambda x,y: x*y, self.dimensions)*np.dtype(self.dtype).itemsize)], dtype=self.dtype).reshape(self.dimensions)
 
                  # make the array writable
-                 self.outdata.setflags(write=1)
+                 try:
+                     self.outdata.setflags(write=1)
+                 except:
+                     pass
 
                  #rescaled for performance increase of upwards of 40+%
                  self.outdata = self.outdata[::self.performance_val, ::self.performance_val]

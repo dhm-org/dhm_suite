@@ -74,8 +74,7 @@ class WDHeartbeat(threading.Thread):
         
     def run(self):
 
-        print('IDent = %s'%(self._id))
-        print('"%s" Heartbeat started'%(self._id))
+        print('[%s] Heartbeat started'%(self._id.upper()))
         hb_telem = telemetry_iface_ag.Heartbeat_Telemetry()
 
         while True:
@@ -127,7 +126,7 @@ class Watchdog(multiprocessing.Process):
         self._status['reconstructor'] = None
         self._status['framesource'] = None
 
-        self._HB = None
+        self._hbeat = None
 
     
     def run(self):
@@ -136,12 +135,12 @@ class Watchdog(multiprocessing.Process):
             inq = self._inq
             outq = self._outq
     
-            self._HB = WDHeartbeat(outq, 'watchog', self._status, cv_timeout=.5)
+            self._hbeat = WDHeartbeat(outq, 'watchog', self._status, cv_timeout=.5)
 
             self._pub.publish('init_done', interface.InitDonePkt('Watchdog', 0))
             self._events['controller']['start'].wait()
 
-            self._HB.start()
+            self._hbeat.start()
             print('Watchdog consumer thread started')
             while True:
                 data = inq.get()
@@ -157,8 +156,8 @@ class Watchdog(multiprocessing.Process):
                     if data.exception:
                         print('Watchdog: "%s" beat ts=%d, exception=%s'%(data.ident,int(data.timestamp),'YES' if data.exception else 'NO'))
                     self._status[data.ident] = data;
-                    self._HB.set_update(self._status)
-            self._HB.terminate()
+                    self._hbeat.set_update(self._status)
+            self._hbeat.terminate()
         except Exception as e:
             raise e
             pass

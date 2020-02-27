@@ -1,7 +1,24 @@
 import numpy as np
+from datatypes import (FLOATDTYPE, COMPLEXDTYPE)
 
-FLOATDTYPE = np.float32
-COMPLEXDTYPE = np.complex64
+class PropagationKernel(object):
+    def __init__(self, N, wavelength, propagation_distance):
+        wavenum = 2 * np.pi/wavelength
+
+        # Frequency Coordinates
+        dk = 2*np.pi/(N*dx)
+        kx = np.arange(-Nx/2,Nx/2) * dk
+        ky = np.arange(-Ny/2,Ny/2) * dk
+        Kx, Ky = np.meshgrid(kx, ky)
+
+        np.sqrt(wavenum**2 - (Kx**2 + Ky**2) * circ_prop(Kx,Ky,k0))
+    def 
+
+    
+
+
+
+
 
 def circ_prop(kx, ky, k):
     r = np.sqrt(kx**2+ky**2)/k
