@@ -11,7 +11,7 @@
 #  access to foreign persons.
 #
 #  @par Description:  Makes the camera server application and any other app.
-#                     Requires vimbal driver to be installed in /opt/Vimba_2_1
+#                     Requires vimbal driver to be installed in /opt/Vimba_3_0
 # ******************************************************************************
 # 
 PROJECT_NAME            = camserver
@@ -19,7 +19,7 @@ PROJECT_NAME            = camserver
 PROJECT_DIR             = ./
 INCLUDE_DIR            = $(PROJECT_DIR)/include
 EXAMPLE_DIR		= $(VIMBASDK_DIR)/VimbaCPP/Examples/
-VIMBASDK_DIR		= /opt/Vimba_2_1
+VIMBASDK_DIR		= /opt/Vimba_3_0
 MAKE_INCLUDE_DIR        = $(EXAMPLE_DIR)/Build/Make
 
 include $(MAKE_INCLUDE_DIR)/Common.mk

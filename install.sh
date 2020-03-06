@@ -78,7 +78,8 @@ dhm_gui=0
 
 DHM_INSTALL_ROOT=/opt/DHM
 DHM_SUITE_DIR=$PWD
-VIMBA_DRIVER_DIR=/opt/Vimba_2_1/
+VIMBA_DRIVER_DIR=/opt/Vimba_3_0/
+VIMBA_SDK_TARBALL=Vimba_v3.0_Linux.tgz
 
 # Make -all default
 if [ -z "$1" ]
@@ -194,7 +195,7 @@ then
   ### Install Vimba driver
   ## Check if /opt/Vimba
   if [ ! -d "$VIMBA_DRIVER_DIR" ]; then
-       tar -xvzf $DHM_SUITE_DIR/drivers/Vimba_v2.1.3_Linux.tgz -C /opt/
+       tar -xvzf $DHM_SUITE_DIR/drivers/$VIMBA_SDK_TARBALL -C /opt/
        ## Install tranport layers
        echo "Installing Vimbal GigE and USB transport layers..."
        $VIMBA_DRIVER_DIR/VimbaGigETL/Install.sh
