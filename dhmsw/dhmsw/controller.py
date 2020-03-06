@@ -29,7 +29,7 @@ import numpy as np
 from . import interface as Iface
 from . import telemetry_iface_ag
 from . import metadata_classes
-from .dhm_cmd_client_server import (DHM_Command_Server)
+from .dhm_cmd_client_server import (DhmCmdServer)
 from .dhmcommands import CommandDictionary
 from .heartbeat import Heartbeat as HBeat
 
@@ -334,47 +334,47 @@ class Controller(ComponentABC):
         else:
             meta = data
 
-        if isinstance(meta, metadata_classes.Reconstruction_Metadata):
+        if isinstance(meta, metadata_classes.ReconstructionMetadata):
             self._reconst_meta = data.meta
             self.send_telemetry(self.reconstmeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_RECONSTRUCTION,
                                )
-        elif isinstance(meta, metadata_classes.Fouriermask_Metadata):
-            #print('Received Fouriermask_Metadata')
+        elif isinstance(meta, metadata_classes.FouriermaskMetadata):
+            #print('Received FouriermaskMetadata')
             self._fouriermask_meta = data.meta
             self.send_telemetry(self.fouriermaskmeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_FOURIERMASK)
-        elif isinstance(meta, metadata_classes.Session_Metadata):
-            #print('Received Session_Metadata')
+        elif isinstance(meta, metadata_classes.SessionMetadata):
+            #print('Received SessionMetadata')
             self._session_meta = data.meta
             self.send_telemetry(self.sessionmeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_SESSION,
                                )
-        elif isinstance(meta, metadata_classes.Hologram_Metadata):
-            #print('Received Hologram_Metadata')
+        elif isinstance(meta, metadata_classes.HologramMetadata):
+            #print('Received HologramMetadata')
             self._holo_meta = data.meta
             self.send_telemetry(self.holometa_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_HOLOGRAM,
                                )
-        elif isinstance(meta, metadata_classes.Framesource_Metadata):
-            #print('Received Framesource_Metadata')
+        elif isinstance(meta, metadata_classes.FramesourceMetadata):
+            #print('Received FramesourceMetadata')
             self._framesource_meta = data.meta
             self.send_telemetry(self.framesourcemeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_FRAMESOURCE,
                                )
-        elif isinstance(meta, metadata_classes.Datalogger_Metadata):
-            #print('Received Datalogger_Metadata')
+        elif isinstance(meta, metadata_classes.DataloggerMetadata):
+            #print('Received DataloggerMetadata')
             self._datalogger_meta = data.meta
             self.send_telemetry(self.dataloggermeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_DATALOGGER,
                                )
-        elif isinstance(meta, metadata_classes.Guiserver_Metadata):
-            #print('Received Guiserver_Metadata')
+        elif isinstance(meta, metadata_classes.GuiserverMetadata):
+            #print('Received GuiserverMetadata')
             self._guiserver_meta = data.meta
             self.send_telemetry(self.guiservermeta_to_telem(data.meta),
                                 Iface.SRCID_TELEMETRY_GUISERVER,
                                )
-        elif isinstance(meta, metadata_classes.Reconstruction_Done_Metadata):
+        elif isinstance(meta, metadata_classes.ReconstructionDoneMetadata):
             self._events['reconst']['done'].set()
         else:
             print('Unknown metadata type')
@@ -428,7 +428,7 @@ class Controller(ComponentABC):
                 control_q = self._inq['controller_inq']
                 validate_func = self._cmd_dict.validate_command
                 hostname = self._meta.cmd_hostname
-                self._cmd_server = DHM_Command_Server(q=control_q,
+                self._cmd_server = DhmCmdServer(q=control_q,
                                                       validate_func=validate_func,
                                                       hostname=hostname,
                                                       port=self._meta.cmd_port,

@@ -84,7 +84,7 @@ class Reconstructor(MP.Process):
         self._hbeat = None
 
         ### Read in value from the DEFAULT File
-        meta = MetaC.Metadata_Dictionary(configfile)
+        meta = MetaC.MetadataDictionary(configfile)
         self._reconst_meta = meta.metadata['RECONSTRUCTION']
         self._holo_meta = meta.metadata['HOLOGRAM']
         self._fouriermask_meta = meta.metadata['FOURIERMASK']
@@ -134,13 +134,13 @@ class Reconstructor(MP.Process):
         """
         validcmd = True
         if arg.lower() == 'none':
-            arg = MetaC.Reconstruction_Metadata.Fitting_Metadata.FITTING_MODE_NONE
+            arg = MetaC.ReconstructionMetadata.FittingMetadata.FITTING_MODE_NONE
             reconst_meta.fitting.mode = arg
         elif arg.lower() == '1d_segment':
-            arg = MetaC.Reconstruction_Metadata.Fitting_Metadata.FITTING_MODE_1D_SEGMENT
+            arg = MetaC.ReconstructionMetadata.FittingMetadata.FITTING_MODE_1D_SEGMENT
             reconst_meta.fitting.mode = arg
         elif arg.lower() == '2d_segment':
-            arg = MetaC.Reconstruction_Metadata.Fitting_Metadata.FITTING_MODE_2D_SEGMENT
+            arg = MetaC.ReconstructionMetadata.FittingMetadata.FITTING_MODE_2D_SEGMENT
             reconst_meta.fitting.mode = arg
         else:
             validcmd = False
@@ -154,10 +154,10 @@ class Reconstructor(MP.Process):
         """
         validcmd = True
         if arg.lower() == 'none':
-            arg = MetaC.Reconstruction_Metadata.Fitting_Metadata.FITTING_METHOD_NONE
+            arg = MetaC.ReconstructionMetadata.FittingMetadata.FITTING_METHOD_NONE
             reconst_meta.fitting.method = arg
         elif arg.lower() == 'polynomial':
-            arg = MetaC.Reconstruction_Metadata.Fitting_Metadata.FITTING_METHOD_POLYNOMIAL
+            arg = MetaC.ReconstructionMetadata.FittingMetadata.FITTING_METHOD_POLYNOMIAL
             reconst_meta.fitting.method = arg
         else:
             validcmd = False
@@ -172,19 +172,19 @@ class Reconstructor(MP.Process):
         validcmd = True
 
         if arg == 'off':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_NONE
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_NONE
         elif arg == 'amp':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_AMP
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_AMP
         elif arg == 'intensity':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_INTENSITY
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_INTENSITY
         elif arg == 'phase':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_PHASE
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_PHASE
         elif arg == 'amp_and_phase':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_AMP_AND_PHASE
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_AMP_AND_PHASE
         elif arg == 'int_and_phase':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_INT_AND_PHASE
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_INT_AND_PHASE
         elif arg == 'all':
-            reconst_meta.processing_mode = MetaC.Reconstruction_Metadata.RECONST_ALL
+            reconst_meta.processing_mode = MetaC.ReconstructionMetadata.RECONST_ALL
         else:
             validcmd = False
             #processing_mode = reconst_meta.processing_mode
@@ -200,7 +200,7 @@ class Reconstructor(MP.Process):
         """
         validcmd = True
         if value.lower() == 'none':
-            value = MetaC.Reconstruction_Metadata.PhaseUnwrapping_Metadata.PHASE_UNWRAPPING_NONE
+            value = MetaC.ReconstructionMetadata.PhaseUnwrappingMetadata.PHASE_UNWRAPPING_NONE
             reconst_meta.phase_unwrapping.algorithm = value
         else:
             validcmd = False
@@ -653,17 +653,20 @@ class Reconstructor(MP.Process):
         Validate and ensure that aboth wavelength and chormatic shift
         are the same
         """
-        if len(self._holo_meta.wavelength) != len(self._reconst_meta.chromatic_shift):
+        wavelength = self._holo_meta.wavelength
 
-            if len(self._reconst_meta.chromatic_shift) > len(self._holo_meta.wavelength):
+        if len(wavelength) != len(self._reconst_meta.chromatic_shift):
 
-                idx = slice(0, len(self._holo_meta.wavelength))
+            if len(self._reconst_meta.chromatic_shift) > len(wavelength):
+
+                idx = slice(0, len(wavelength))
                 self._reconst_meta.chromatic_shift = self._reconst_meta.chromatic_shift[idx]
 
             elif len(self._reconst_meta.chromatic_shift) < len(self._holo_meta.wavelength):
 
-                tmpchromaticshift = [0] * len(self._holo_meta.wavelength)
-                self._reconst_meta.chromatic_shift = [tmpchromaticshift[i] for i in range(len(self._holo_meta.wavelength))]
+                tmpchromaticshift = [0] * len(wavelength)
+                self._reconst_meta.chromatic_shift = [tmpchromaticshift[i]\
+                                                      for i in range(len(wavelength))]
 
     def _reconstruct(self):
         """
@@ -718,7 +721,7 @@ class Reconstructor(MP.Process):
         try:
             processing_mode = self._reconst_meta.processing_mode
 
-            if processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+            if processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
                 return
 
             start_time = time.time()
@@ -752,16 +755,16 @@ class Reconstructor(MP.Process):
             www = self._reconstruct()
 
             ### Compute product based on processing_mode
-            if self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_AMP:
+            if self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_AMP:
                 www.amplitude
-            elif self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_INTENSITY:
+            elif self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_INTENSITY:
                 www.intensity
-            elif self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_PHASE:
+            elif self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_PHASE:
                 www.phase
-            elif self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_AMP_AND_PHASE:
+            elif self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_AMP_AND_PHASE:
                 www.amplitude
                 www.phase
-            elif self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_INT_AND_PHASE:
+            elif self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_INT_AND_PHASE:
                 www.intensity
                 www.phase
             else:
@@ -783,7 +786,7 @@ class Reconstructor(MP.Process):
                                                         self._holo_meta,
                                                        )
             self._pub.publish('reconst_product', reconstproduct)
-            self._pub.publish('reconst_done', Iface.MetadataPacket(MetaC.Reconstruction_Done_Metadata(done=True)))
+            self._pub.publish('reconst_done', Iface.MetadataPacket(MetaC.ReconstructionDoneMetadata(done=True)))
 
         except Exception as err:
             status_msg = "ERROR.  "
@@ -836,7 +839,7 @@ class Reconstructor(MP.Process):
         """
         print("Reconstructor received image")
         processing_mode = self._reconst_meta.processing_mode
-        if processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+        if processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
             #continue
             pass
         elif not self._reconst_meta.running:
@@ -860,7 +863,7 @@ class Reconstructor(MP.Process):
 
             self._process_images(data)
 
-        elif isinstance(data, MetaC.Hologram_Metadata):
+        elif isinstance(data, MetaC.HologramMetadata):
 
             self._holo_meta = data
             self.publish_holo_status()

@@ -36,7 +36,7 @@ class ComponentABC(ABC, multiprocessing.Process):
         self._events = _events
         self._pub = pub
 
-        self._allmeta = metadata_classes.Metadata_Dictionary(configfile)
+        self._allmeta = metadata_classes.MetadataDictionary(configfile)
         self._meta = self._allmeta.metadata[self._id]
         self._hbeat = None
 

@@ -26,6 +26,7 @@ try:
     version = cmdstruct[0].attrib['Version']
 
     if WRITE_AUTOGEN_FILE:
+        filecontents += '"""\n'
         filecontents += '###############################################################################\n'
         filecontents += '#    command_dictionary_ag.py\n'
         filecontents += '#\n'
@@ -35,6 +36,7 @@ try:
         filecontents += '#    Command dictionary filename:  %s\n'%(xmlcmddict)
         filecontents += '#    Command dictionary version:   %s\n'%(version)
         filecontents += '###############################################################################\n'
+        filecontents += '"""\n'
         filecontents += '\n'
         filecontents += 'CmdDict = {}\n'
 
@@ -141,7 +143,7 @@ try:
                        else:
                            filecontents += 'CmdDict["%s"]["%s"]["%s"] = ['%(cmdid,paramid,'enumlist')
                            for e in CmdDict[cmdid][paramid]['enumlist']:
-                               filecontents += '"%s",'%(e)
+                               filecontents += '"%s", '%(e)
                            filecontents += ']\n'
                        
                    ### Units

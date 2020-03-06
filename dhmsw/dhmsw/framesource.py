@@ -128,7 +128,7 @@ class Framesource(ComponentABC):
     def initialize_component(self):
 
         self._reconst_meta = self._allmeta.metadata['RECONSTRUCTION']
-        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
 
         self._filegenerator = {}
 
@@ -189,7 +189,7 @@ class Framesource(ComponentABC):
                 )
             self._filegenerator['thread'].daemon = True
             self._filegenerator['thread'].start()
-            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
+            self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_RUNNING
             ret = True
         else:
             print('No files returned from given filepath=[%s]'%(filepath))
@@ -229,7 +229,7 @@ class Framesource(ComponentABC):
 
         self._stop_filegenerator()
         self._stop_cameraclient()
-        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
 
 
     def _file_thread(self, flist, inq, reconst_done_event):
@@ -286,7 +286,7 @@ class Framesource(ComponentABC):
             except queue.Empty:
                 pass
 
-            if self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+            if self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
                 count += 1
                 if count >= numfiles:
                     break
@@ -334,7 +334,7 @@ class Framesource(ComponentABC):
 
         print('File Generation thread ended')
         inq.queue.clear()
-        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
         self.publish_status()
 
     def start_camera_client(self):
@@ -360,7 +360,7 @@ class Framesource(ComponentABC):
         #    ## Need to stop thread first
         #    self._filegenerator['queue'].put_nowait(None)
         #    self._filegenerator['thread'].join()
-        #    self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        #    self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
         self.stop_imagegenerator()
 
         try:
@@ -375,11 +375,11 @@ class Framesource(ComponentABC):
             self._camclihandler['thread'].daemon = True
             self._camclihandler['thread'].start()
 
-            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_RUNNING
+            self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_RUNNING
             return True
         except socket.error as err:
             print('ERROR: Unable to connect to server. [%s]'%(repr(err)))
-            self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+            self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
             return False
 
     def publish_status(self, status_msg=None):
@@ -441,10 +441,10 @@ class Framesource(ComponentABC):
 
         meta_type = type(meta)
 
-        if meta_type is MetaC.Reconstruction_Metadata:
-            print('Framesource: Received "Reconstruction_Metadata"')
+        if meta_type is MetaC.ReconstructionMetadata:
+            print('Framesource: Received "ReconstructionMetadata"')
             self._reconst_meta = meta
-        elif meta_type is MetaC.Reconstruction_Done_Metadata:
+        elif meta_type is MetaC.ReconstructionDoneMetadata:
             pass
 
     def _start_sequence(self):
@@ -754,5 +754,5 @@ class Framesource(ComponentABC):
                         count += 1
         print('Framesource:  End of Camera Client Thread')
         inq.queue.clear()
-        self._meta.state = MetaC.Framesource_Metadata.FRAMESOURCE_STATE_IDLE
+        self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
         self.publish_status()

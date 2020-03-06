@@ -21,7 +21,7 @@
 """
 import threading
 import time
-from .metadata_classes import Heartbeat_Metadata
+from .metadata_classes import HeartbeatMetadata
 
 class Heartbeat(threading.Thread):
     """
@@ -82,7 +82,7 @@ class Heartbeat(threading.Thread):
         """
         Execution loop of the heartbeat thread
         """
-        hb_meta = Heartbeat_Metadata()
+        hb_meta = HeartbeatMetadata()
         hb_meta.ident = self._id
 
         print('[%s] Heartbeat started'%(self._id))
