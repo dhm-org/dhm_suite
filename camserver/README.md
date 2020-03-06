@@ -12,10 +12,15 @@ The camserver software has the following features for a single camera per execut
 *  Send telemetry via telemetry socket (Not yet implemented)
 *  Specify execution time via command line option
 
+NOTE:  Multiple instances of the camserver can run simultaneously given that it controls seperate cameras.  Ensure the port numbers for streaming frames and commands are unique for each instance in order properly interface with clients.  See camserver usage (--help).
+
+## Architecture
+![camserver architecture diagram](doc/camserver_architecture.jpeg)
+
 ## Prerequisite:  
 * 64-bit Linux Operating System.
 * Tested on Ubuntu 16.04, 18.04, and Redhat 7.
-* 16GB RAM or greater
+* 8GB RAM or greater
 * For GigaE Cameras
   - Network card configured per [Allied Vision](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/various/installation-manual/GigE_Installation_Manual.pdf) recomendations.
   - USB3 to Ethernet or USB-C to Ethernet adapters tested.
@@ -80,12 +85,12 @@ NOTE:  Let's assume I am connecting two cameras with the following IP address: 1
     * sudo vi /etc/network/interfaces
 5.  Enter the following lines were you replace "<network_card_name>" with the name from Step 3.
     Note that I'm using the IP address for our example.
-    * auto <network_card_name>
-    * iface <nework_card_name> inet static
+    * auto <network_interface_name>
+    * iface <nework_interface_name> inet static
     * address x.x.x.1  # Replace the x with the associated numbers
     * netmask 255.255.255.0
     * mtu 9000
-    * pre-up /sbin/ethtool -s <network_card_name> speed 1000 duplex full autoneg off
+    * pre-up /sbin/ethtool -s <network_interface_name> speed 1000 duplex full autoneg off
 6.  Repeat Step 5 and add another set of the instructions using the other network card and the other IP address.
 7.  Save the file and close
 8.  Reboot the system
@@ -97,6 +102,11 @@ NOTE:  Let's assume I am connecting two cameras with the following IP address: 1
         - The camera is not powered on.
         - The driver install of the Vimba drivers did not run 'VimbaGigETL/Install.sh'.  Do so manually and reboot.
 
+## Systems successfully ran camserver
+* [UDOO x86 II Ultra](https://shop.udoo.org/udoo-x86-ii-ultra.html) running Ubuntu 18.04.3 LTS (Bionic Beaver) with 8GB of RAM
+* [UDOO Bolt](https://www.udoo.org/udoo-bolt/) running Ubuntu 18.04.3 LTS with 32GB of RAM
+* Dell Laptop running Ubuntu 16.04 with 64GB of RAM
+* Server running Linux RedHat 7
 
 ## Cameras tested with camserver
 * Mako U-503B (USB3 camera)
@@ -105,13 +115,13 @@ NOTE:  Let's assume I am connecting two cameras with the following IP address: 1
 
 ## Reading from Two Cameras
 To read from two cameras, two instances of 'camserver' must be executed making sure the following:
-*  Distinct cameras are selected for each instance
+*  Distinct cameras are selected for each instance.  User is prompted if more than one camera detected.
 *  If expect to connect clients, ensure distinct port number are passed on the command line on execution.
 *  Recommended that if using two GigE cameras, each one be connected to a single
  
 ## Frame Server/Client
-Frames are sent to client at 6Hz or less if frame rate is less than 6H.  Clients must connect to the frame port
-(default port 2000, see usage for setting frame port).
+Frames are sent to clients at 6Hz or less if frame rate is less than 6Hz.  Clients must connect to the frame port
+(default port 2000, see '--help' for setting frame port).
 
 ## Commanding
 Commanding occurs via the command port (default command port is 2001, see usage for setting port).
@@ -128,10 +138,17 @@ The python3 script 'dhmxc.py' in the 'dhm_gui' directory of this repository is t
 For each instances of the camserver, ensure that the frame port, command port, and telemetry port
 specified in the camserver are also the same psecified when running the 'dhmxc.py' script.
 
+The 'dhmsw' application in this repository also interfaces also interfaces with the camserver.
+
 ## Known Bugs
 * With USB cameras, sometimes the frame capture doesn't start.  Stop the camserver using
   Ctrl-C then restart again and camserver will begin to capture frames.
 * With USB cameras sometimes some initialization commands tend to error out but they in fact get executed.
   See the 'metadata.xml' created when recording frames.
 
+## Future Upgrades on the works
+The following is a list of work being done to improve the camserver functionality and compatibility:
+
+*  Multi-platform version to run on Linux/Windows/Mac
+*  Support different vendor cameras.
 

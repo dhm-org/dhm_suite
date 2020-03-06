@@ -1,12 +1,26 @@
 # dhmsw
-The 'dhmsw' is a python module developed for python3
+The 'dhmsw' is a python3 server/client application.
 
 ## Description
-The 'dhmsw' python application 
+The 'dhmsw' python server/client application developed to perform reconstruction of off-axis
+hologram images obtained either from file or streamed by the [camserver](../camserver). 
+As a server, the 'dhmsw' sends to clients fourier transform, amplitude, phase, and intensity
+images computed from the raw holograms. 
+
+## Architecture
+The architecture of the 'dhmsw' can be described by the following diagram:
+
+![dhmsw architecture](docs/dhmsw_architecture.jpeg)
+
 
 ## Prerequisites
-* Python 3.5 or higher
+* Python 3.6 or higher
 * [Shampoo](../shampoo) module must be installed
+
+## Graphical User Interface
+The GUI for the 'dhmsw' is [dhmx.py](../dhm_gui/dhmx.py) in this repository (not to be confused with 'dhmxc.py').
+The GUI is a client to the 'dhmsw'.
+
 
 ## Installation
 To install 'dhmsw' run: `python3 setup.py install`

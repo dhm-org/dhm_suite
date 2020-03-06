@@ -1,0 +1,48 @@
+#!/bin/bash
+###############################################################################
+#  Quick startup script used to start the camserver.
+#
+#  To open the DHMXC GUI, set 'gui=1'
+#
+###############################################################################
+
+### Open GUI?
+gui=1 # 1 ==> Open the DHMXC GUI to display frames; 0 ==> Don't open DHMXC
+
+## Server Ports
+FRAME_PORT=2000 # TCP Port where frames are streamed from the camserver to the client
+COMMAND_PORT=2001 # TCP Port where commands are received by the camserver
+
+### Data output directory
+DATA_DIR=~/Desktop
+
+### Trigger Source
+#TRIGGER="-x Line2" #External trigger
+TRIGGER=  # Leave blank for freerun
+
+## Verbose to show frame timestamps as they come in
+VERBOSE="-v"
+
+### Enable camserver logging on startup
+ENA_LOGGING="-d"  #-d is used to start camera server with logging disabled
+#ENA_LOGGING="-e"  #-e is used to start camera server with logging enable
+
+echo "Frame Port=$FRAME_PORT"
+echo "Command Port=$COMMAND_PORT"
+echo "Telemetry Port=$TELEMETRY_PORT"
+echo "Data Directory=$DATA_DIR"
+echo "Trigger=$TRIGGER"
+echo "Enable/disable Logging=$ENA_LOGGING"
+
+CAMSERVER_COMMAND="/opt/DHM/bin/camserver $VERBOSE $ENA_LOGGING -fp $FRAME_PORT -cp $COMMAND_PORT $TRIGGER -l $DATA_DIR"
+
+echo "$CAMSERVER_COMMAND"
+
+xterm -e "$CAMSERVER_COMMAND" &
+
+if [ $gui -eq 1 ]
+then
+    cd /opt/DHM/dhm_gui
+    xterm -e python3 ./dhmxc.py -f $FRAME_PORT -c $COMMAND_PORT &
+fi
+

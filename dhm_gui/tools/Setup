@@ -88,25 +88,6 @@ if [ "$DISTRO" == "CentOS Linux" ] || [ "$DISTRO" == "Red Hat Enterprise Linux W
 		sudo yum install qt-gstreamer-devel
 
 
-		clear
-		echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
-		echo " * The PyQt5 environment has been installed.  Please scroll up to      *"
-		echo " * ensure that all the libraries have successfully installed.          *"
-		echo " *                                                                     *"
-		echo " * The installer is now moving onto the dhmsw and shampoo library and  *"
-		echo " * and pre-requisite installation...                                   *"
-		echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
-		sleep 8
-		echo "Installing shampoo & dhmsw libraries..."
-		sudo pip3.6 install astropy
-		sudo pip3.6 install scipy
-		sudo pip3.6 install scikit-image
-		sudo pip3.6 install sklearn
-		sudo pip3.6 install pyfftw
-		sudo pip3.6 install pytest
-		sudo pip3.6 install pytest-astropy
-
-
 elif [ "$DISTRO" == "Ubuntu" ]; then
 		echo "Continuing setup in Ubuntu mode..."
 		echo "Setting up the environment..."
@@ -139,24 +120,6 @@ elif [ "$DISTRO" == "Ubuntu" ]; then
 		echo "Installing PIL / Pillow libraries..."
 		pip3 install pillow
 
-		clear
-		echo " * * * * * * * * * * * * * Environment Installer * * * * * * * * * * * *"
-		echo " * The PyQt5 environment has been installed.  Please scroll up to      *"
-		echo " * ensure that all the libraries have successfully installed.          *"
-		echo " *                                                                     *"
-		echo " * The installer is now moving onto the dhmsw and shampoo library and  *"
-		echo " * and pre-requisite installation...                                   *"
-		echo " * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
-		sleep 7
-		echo "Installing shampoo & dhmsw libraries..."
-		pip3 install astropy
-		pip3 install scipy
-		pip3 install scikit-image
-		pip3 install sklearn
-		pip3 install pyfftw
-		pip3 install pytest
-		pip3 install pytest-astropy
-        pip3 install astropy-helpers
 
 		if [ "$VERSION" == "18.04" ]; then
 			echo "Installing changes for 18.04..."

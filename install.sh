@@ -17,7 +17,7 @@ usage()
     echo "-env        Environment setup"
     echo "-drivers    Install external drivers required."
     echo "-shampoo    Install Shampoo python module"
-    echo "-camserver  Install camera server application software"
+    echo "-camserver  Install camera server application software. Add '-drivers' if you don't have the drivers."
     echo "-dhmsw      Install DHM softwares python module"
     echo "-dhm_gui     Install DHM GUI and necessary packages"
     echo ""
@@ -68,6 +68,7 @@ create_install_location()
    
 }
 
+verbose=0
 env_setup=0
 drivers=0
 shampoo=0
@@ -78,6 +79,17 @@ dhm_gui=0
 DHM_INSTALL_ROOT=/opt/DHM
 DHM_SUITE_DIR=$PWD
 VIMBA_DRIVER_DIR=/opt/Vimba_2_1/
+
+# Make -all default
+if [ -z "$1" ]
+then
+        env_setup=1
+        drivers=1
+        shampoo=1
+        camserver=1
+        dhmsw=1
+        dhm_gui=1
+fi
 
 ### Parse command line options
 while [ -n "$(echo $1 | grep '-')" ];
@@ -122,6 +134,8 @@ do
     shift
 done
 
+printf "Options Selected: \n\tevn_setup=%s\n\tdrivers=%s\n\tshampoo=%s\n\tcamserver=%s\n\tdhmsw=%s\n\tdhm_gui=%s\n" $env_setup $drivers $shampoo $camserver $dhmsw $dhm_gui
+
 if [ "$EUID" -ne 0 ]
 then
     echo "Please run this environment setup using sudo or as root"
@@ -165,6 +179,8 @@ then
  apt-get install -y exfat-fuse exfat-utils
  apt-get install -y python3-pip
 
+ pip3 install --upgrade pip
+
  groupadd dhm
  usermod -aG dhm $USER
  #create_install_location $DHM_INSTALL_ROOT
@@ -196,11 +212,7 @@ fi
 if [ $shampoo -eq 1 ]
 then
 ### Install shampoo
-pip3 install astropy
 pip3 install astropy-helpers
-pip3 install scikit-image
-pip3 install pyfftw
-pip3 install sklearn
 cd $DHM_SUITE_DIR/shampoo
 python3 setup.py install
 

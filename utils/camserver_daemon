@@ -1,0 +1,85 @@
+#!/bin/bash
+###############################################################################
+#    file: camserver_daemon
+#
+#    Copyright (c) 2020 Jet Propulsion Laboratory
+#    All rights reserved
+#
+#    brief:  Start the Camserver and execute in the background 
+#
+#    Description:  This script will run only one instance of camserver
+#                  It will determine if its already running an notify  with printout.
+#                  Else it will run the camserver.
+#                  If want to start camserver on startup, place in appropriate location
+#                  like /etc/init.d/
+#
+#                  NOTE:  If more than one camera connected, the camserver by design
+#                         will prompt user for selection which user may not see because
+#                         this scripts pipes all print statements to /dev/null.
+#                         To by pass, modify this script and pass the serial number of the camera
+#                         with option  '-s <serial number>'
+#
+#    author:  S. F. Fregoso
+#
+###############################################################################
+
+logDir=~/Desktop/
+scriptname=camserver
+scriptpath=/opt/DHM/bin/$scriptname
+
+case "$1" in
+  start)
+
+    ### Check if camserver is running.  Start if it is not
+    pkill -0 -f $scriptpath
+    if [ $? != 0 ]
+    then
+
+        echo "Starting $scriptpath"
+	$scriptpath -d -v -l $logDir &>> /dev/null &
+
+	if [ $? != 0 ]; then
+	    echo "Camserver script aborted with error.  Did not start.  Contact developer [sfregoso@jpl.nasa.gov] to debug"
+	    exit 1
+	fi
+	for wait in {3..1}
+	do
+	echo -n "$wait"; echo -n " sec"; if [ "$wait" -lt 10 ]; then echo -n " "; fi
+	sleep 1; echo -n -e $'\b\b\b'
+	if [ "$wait" -ge 10 ]; then echo -n -e $'\b\b\b'; fi
+	if [ "$wait" -lt 10 ]; then echo -n -e $'\b\b\b'; fi
+        done
+	echo "done"
+    else
+        echo $scriptpath is already running
+    fi
+
+  ;;
+  stop)
+    pkill -0 -f $scriptpath
+    if [ $? == 0 ]
+    then
+        echo
+	echo "Stopping $scriptpath script"
+	process_id=`pgrep -f $scriptpath`
+	kill -s SIGINT $process_id
+	sleep 1
+	pkill -0 -f $scriptname
+	if [ $? == 0 ]
+	then
+	  kill -s SIGABRT $process_id
+	fi
+     else
+        echo
+        echo "$scriptname is not running"
+     fi
+
+  ;;
+  *)
+    echo "Usage: /etc/init.d/run_camserver {start | stop |}" >&2
+    exit 1
+  ;;
+esac
+
+exit 0
+
