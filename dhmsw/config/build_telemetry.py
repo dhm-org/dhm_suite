@@ -25,6 +25,7 @@ try:
     version = _struct[0].attrib['Version']
 
     ### Write file header with some imports and empty class
+    filecontents += '"""\n'
     filecontents += '###############################################################################\n'
     filecontents += '#    %s\n'%(outfilename)
     filecontents += '#\n'
@@ -34,11 +35,15 @@ try:
     filecontents += '#    Telemetry dictionary filename:  %s\n'%(xmldict)
     filecontents += '#    Telemetry dictionary version:   %s\n'%(version)
     filecontents += '###############################################################################\n'
+    filecontents += '"""\n'
     filecontents += '\n'
     filecontents += 'import struct\n'
     filecontents += 'import numpy as np\n'
     filecontents += '\n'
-    filecontents += 'class Telemetry_Object(object):\n'
+    filecontents += 'class Telemetry_Object():\n'
+    filecontents += '    """\n'
+    filecontents += '    Telemetry object class\n'
+    filecontents += '    """\n'
     filecontents += '    pass\n'
     filecontents += '\n'
 
@@ -59,10 +64,19 @@ try:
 
             ### Start the telemetry item class
             filecontents += 'class %s_Telemetry(Telemetry_Object):\n'%(_id)
+            filecontents += '    """\n'
+            filecontents += '    Component telemetry class\n'
+            filecontents += '    """\n'
 
             ### Build the inner data class
-            filecontents += '    class Data(object):\n'
+            filecontents += '    class Data():\n'
+            filecontents += '        """\n'
+            filecontents += '        Telemetry data class\n'
+            filecontents += '        """\n'
             filecontents += '        def __init__(self):\n'
+            filecontents += '            """\n'
+            filecontents += '            Constructor\n'
+            filecontents += '            """\n'
             for p in paramlist:
                 pid = p.attrib['Id']
                 _type = p.attrib['Type'].lower()
@@ -74,7 +88,7 @@ try:
                     if _maxcount > 1:
                         valstr += '['
                         for i in range(_maxcount):
-                            valstr += 'float(0),'
+                            valstr += 'float(0), '
                         valstr += ']'
                     else:
                         valstr += 'float(0)'
@@ -82,7 +96,7 @@ try:
                     if _maxcount > 1:
                         valstr += '['
                         for i in range(_maxcount):
-                            valstr += 'int(0),'
+                            valstr += 'int(0), '
                         valstr += ']'
                     else:
                         valstr += 'int(0)'
@@ -90,7 +104,7 @@ try:
                     if _maxcount > 1:
                         valstr += '['
                         for i in range(_maxcount):
-                            valstr += 'False,'
+                            valstr += 'False, '
                         valstr += ']'
                     else:
                         valstr += 'False'
@@ -98,7 +112,7 @@ try:
                     if _maxcount > 1:
                         valstr += '['
                         for i in range(_maxcount):
-                            valstr += '0,'
+                            valstr += '0, '
                         valstr += ']'
                     else:
                         valstr += '0'
@@ -112,6 +126,9 @@ try:
             filecontents += '\n'        
             padding = 8*' '
             filecontents += '        def __repr__(self):\n'
+            filecontents += '            """\n'
+            filecontents += '            Represent function\n'
+            filecontents += '            """\n'
             count = 0
             for p in paramlist:
                 pid = p.attrib['Id']
@@ -151,6 +168,9 @@ try:
          
             ### Fill in the contents of the __init__ function
             filecontents += padding4 + 'def __init__(self):\n'
+            filecontents += padding8 + '"""\n'
+            filecontents += padding8 + 'Constructor\n'
+            filecontents += padding8 + '"""\n'
             filecontents += padding8 + 'self.telemstruct = struct.Struct("%s")\n'%(structstr)
             filecontents += padding8 + 'self.buff = bytearray(struct.calcsize(self.telemstruct.format))\n'
             filecontents += padding8 + 'self.data = self.Data()\n'
@@ -158,6 +178,9 @@ try:
 
             ### Fill in the pack() function contents
             filecontents += padding4 + 'def pack(self):\n'
+            filecontents += padding8 + '"""\n'
+            filecontents += padding8 + 'Get buffer bytes and place into telemetry structure\n'
+            filecontents += padding8 + '"""\n'
             filecontents += padding8 + 'self.telemstruct.pack_into(self.buff, 0, \n'
 
             for p in paramlist:
@@ -194,7 +217,11 @@ try:
                 _bytes = int(p.attrib['Bytes'])
                 _maxcount = int(p.attrib['MaxCount'])
                 filecontents += '%s, '%(pid)
-            filecontents += '):\n\n'
+            filecontents += '):\n'
+
+            filecontents += padding8 + '"""\n'
+            filecontents += padding8 + 'Set the values\n'
+            filecontents += padding8 + '"""\n\n'
 
             # Build set_values() function contents
             padding = 8*' '
@@ -237,6 +264,9 @@ try:
             filecontents += '\n'        
             padding = 8*' '
             filecontents += '    def unpack_from(self, buff, offset=0):\n'
+            filecontents += '        """\n'
+            filecontents += '        Unpack data in buffer\n'
+            filecontents += '        """\n'
             filecontents += '        ret = self.telemstruct.unpack_from(buff, offset)\n'
             count = 0
             for p in paramlist:

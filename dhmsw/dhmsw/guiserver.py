@@ -152,31 +152,31 @@ class Guiserver(ComponentABC):
 
         fourier = prepare_fourier_img_packet(data)
 
-        if processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+        if processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
             #print('Recons processing mode = NONE')
             pass
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_AMP:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_AMP:
 
             #print('Recons processing mode = AMP')
             amp_image = create_amp_img_pkt(data,
                                            Iface.IMAGE_TYPE,
                                            Iface.SRCID_IMAGE_AMPLITUDE)
 
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_INTENSITY:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_INTENSITY:
 
             #print('Recons processing mode = INTENSITY')
             intensity_image = create_int_img_pkt(data,
                                                  Iface.IMAGE_TYPE,
                                                  Iface.SRCID_IMAGE_INTENSITY)
 
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_PHASE:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_PHASE:
 
             #print('Recons processing mode = PHASE')
             phase_image = create_phase_img_pkt(data,
                                                Iface.IMAGE_TYPE,
                                                Iface.SRCID_IMAGE_PHASE)
 
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_AMP_AND_PHASE:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_AMP_AND_PHASE:
 
             #print('Recons processing mode = RECONST_AMP_AND_PHASE')
             amp_image = create_amp_img_pkt(data,
@@ -186,7 +186,7 @@ class Guiserver(ComponentABC):
                                                Iface.IMAGE_TYPE,
                                                Iface.SRCID_IMAGE_PHASE)
 
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_INT_AND_PHASE:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_INT_AND_PHASE:
 
             #print('Recons processing mode = RECONST_INT_AND_PHASE')
             intensity_image = create_int_img_pkt(data,
@@ -196,7 +196,7 @@ class Guiserver(ComponentABC):
                                                Iface.IMAGE_TYPE,
                                                Iface.SRCID_IMAGE_PHASE)
 
-        elif processing_mode == MetaC.Reconstruction_Metadata.RECONST_ALL:
+        elif processing_mode == MetaC.ReconstructionMetadata.RECONST_ALL:
 
             #print('Recons processing mode = ALL')
             amp_image = create_amp_img_pkt(data,
@@ -307,7 +307,7 @@ class Guiserver(ComponentABC):
         meta_type = type(meta)
 
         print("Guiserver: Received meta of type: ", meta_type)
-        if meta_type is MetaC.Reconstruction_Metadata:
+        if meta_type is MetaC.ReconstructionMetadata:
             self._reconst_meta = meta
 
     def create_image_servers(self):
@@ -372,7 +372,7 @@ class Guiserver(ComponentABC):
 #
 #                ### Process image (from camera streamer)
         elif isinstance(data, Iface.Image):
-            if self._reconst_meta.processing_mode == MetaC.Reconstruction_Metadata.RECONST_NONE:
+            if self._reconst_meta.processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
                 self.process_image(data)
             #else ## image data should be coming in from the Reconstruction Product type
 
