@@ -15,8 +15,9 @@
 # or other export authority as may be required before exporting such 
 # information to foreign countries or providing access to foreign persons.
 
-
-DHMX_VERSION_STRING = "DHMx v0.10.4  10-24-2019"
+# version v0.10.4    -   Last version that F. Lima delivered
+# version v0.10.5    -   Disabled QtMultimedia so that DHMX can run on Mac and Windows
+DHMX_VERSION_STRING = "DHMx v0.10.5  03-06-2020"
 
 
 import os, sys, re, time, random
