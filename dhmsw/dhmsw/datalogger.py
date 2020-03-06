@@ -16,8 +16,6 @@ class Datalogger(ComponentABC):
     """
     Data logger class component
     """
-    def initialize_component(self):
-        pass
 
     def run(self):
         try:

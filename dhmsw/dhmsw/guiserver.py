@@ -106,13 +106,6 @@ class Guiserver(ComponentABC):
                               _events,
                               configfile=configfile,
                               verbose=verbose)
-        self._reconst_meta = None
-
-    def initialize_component(self):
-        """
-        Component specific intializer function
-        """
-
         self._reconst_meta = self._allmeta.metadata['RECONSTRUCTION']
 
         ### Svr information
@@ -123,7 +116,6 @@ class Guiserver(ComponentABC):
         self._servers['fourier'] = None
         self._servers['rawframes'] = None
         self._servers['telemetry'] = None
-
 
     def publish_status(self, status_msg=None):
         """

@@ -7,10 +7,9 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 import time
-import datetime
 from multiprocessing import Process, Queue
+sys.path.append('../dhmsw/')
 import interface
-import telemetry_iface_ag
 import struct
 PLOT = True
 
@@ -46,68 +45,81 @@ class guiclient(object):
 
     def DisplayThread(self):
 
+
+        z = np.zeros((2448,2050),dtype=np.uint8)
+
+        mydata2 = np.ones(2448*2050, dtype=np.uint8) * 255
+
+        f = None
+        axes = None
         if PLOT:
             f, axes = plt.subplots(sharex=True)
             for i in range(1):
                 #axes[i].imshow(z, extent=[0,2448,0,2050], aspect="auto", cmap='gray')
                 axes.clear()
                 #axes.imshow(z, extent=[0,2448,0,2050], aspect="auto", cmap='gray')
-
-        reconst_telemetry = telemetry_iface_ag.Reconstruction_Telemetry()
-        heartbeat_telemetry = telemetry_iface_ag.Heartbeat_Telemetry()
-        framesource_telemetry = telemetry_iface_ag.Framesource_Telemetry()
-        datalogger_telemetry = telemetry_iface_ag.Datalogger_Telemetry()
-        guiserver_telemetry = telemetry_iface_ag.Guiserver_Telemetry()
-        session_telemetry = telemetry_iface_ag.Session_Telemetry()
-        hologram_telemetry = telemetry_iface_ag.Hologram_Telemetry()
-        fouriermask_telemetry = telemetry_iface_ag.Fouriermask_Telemetry()
-
         while True:
             msg = self.displayQ.get()
             if msg is None:
                 break
 
-            #print("**************** Display Thread")   
+            print("**************** Display Thread")   
             msgid, srcid, totalbytes= headerStruct.unpack(msg[0:struct.calcsize(headerStruct.format)])
             meta = (msgid, srcid, totalbytes)
             offset = struct.calcsize(headerStruct.format) 
-            #print('offset=%d'%(offset))
-            data = None
-            if srcid == interface.SRCID_TELEMETRY_RECONSTRUCTION:
-                print('Received RECONSTRUCTION Telemetry')    
-                data = reconst_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_HEARTBEAT:
-                data = heartbeat_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_FRAMESOURCE:
-                data = framesource_telemetry.unpack_from(msg, offset=offset)
-                print('Framesource state: ', data.state)
-            elif srcid == interface.SRCID_TELEMETRY_SESSION:
-                data = session_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_DATALOGGER:
-                data = datalogger_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_HOLOGRAM:
-                data = hologram_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_GUISERVER:
-                data = guiserver_telemetry.unpack_from(msg, offset=offset)
-            elif srcid == interface.SRCID_TELEMETRY_FOURIERMASK:
-                data = fouriermask_telemetry.unpack_from(msg, offset=offset)
+
+            num_images = 1
+            if srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
+                num_images = 2
+    
+            count = 0
+            while count < num_images:
+                print('offset=%d'%(offset))
+            
+                ndim_struct = struct.Struct('H')
+                ndimsize = struct.calcsize(ndim_struct.format)
+                ndim = ndim_struct.unpack(msg[offset:offset + ndimsize])[0]
+    
+                dimStruct = struct.Struct('H'*int(ndim))
+                dimsize = struct.calcsize(dimStruct.format)
+                dimensions = dimStruct.unpack(msg[offset + ndimsize:offset + ndimsize + dimsize])
+    
+                offset = offset + ndimsize + dimsize
+    
+                if srcid == interface.SRCID_IMAGE_FOURIER:
+                    dtype = np.complex64 
+                    w, h = dimensions
+                elif srcid == interface.SRCID_IMAGE_RAW:
+                    dtype = np.uint8
+                    w, h = dimensions
+                #elif srcid == interface.SRCID_IMAGE_AMPLITUDE or srcid == interface.SRCID_IMAGE_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
+                else:
+                    dtype = np.int8
+                    w, h, z, l = dimensions
+    
+                outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
+    
+                offset += (functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)
                 if PLOT:
-                    mask = np.frombuffer(data.mask, dtype=np.uint8).reshape((2048,2048))
-                    #mask = np.asarray(data.mask,dtype=np.int8).reshape((2048,2048))
-                    axes.clear()
-                    #axes.imshow(mask[:,:], extent=[2048,0,0,2048], aspect="auto")
-                    axes.imshow(mask[:,:], aspect="auto")
+                    if srcid == interface.SRCID_IMAGE_RAW:
+                        axes.clear()
+                        axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
+                    elif srcid == interface.SRCID_IMAGE_FOURIER:
+                        axes.clear()
+                        axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
+                    else:
+                        axes.clear()
+                        axes.imshow(outdata[:,:,0,0], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:,0,0])))
+                    
                     plt.suptitle(repr(time.time()))
-                    #axes.set_ylim(axes.get_ylim()[::-1])
                     plt.draw()
                     plt.pause(0.001)
-                    
-            else:
-                print('Unknown Telemetry')    
-            if data and srcid != interface.SRCID_TELEMETRY_HEARTBEAT:
-                print(time.time(), datetime.datetime.now())
-                print(data)
-                pass
+
+                count += 1
+                
 
         print('End of DisplayThread')
 
@@ -143,7 +155,7 @@ class guiclient(object):
             for s in infds:
                 if s is self.sock:
                     ### Get as much data as we can
-                    packet = self.sock.recv(255)
+                    packet = self.sock.recv(150995023)
 
                     if not packet:
                         self.exit = True
@@ -152,30 +164,28 @@ class guiclient(object):
                     data += packet
                     datalen = len(data)
 
-                    #print('len packet= %d'%(len(packet)))
+                    print('len packet= %d'%(len(packet)))
                     ### If he haven't processed the header/meta, then lets.
                     #if meta is None and datalen > struct.calcsize(headerStruct.format)+25:
-                    if meta is None and datalen >= struct.calcsize(headerStruct.format):
+                    if meta is None and datalen > struct.calcsize(headerStruct.format):
                        #packet = self.sock.recv(12)
                         #print("Recieve: %s"%(':'.join("{:02x}".format(ord(c)) for c in packet[0:50])))
                         msg_id, srcid, totalbytes = headerStruct.unpack(data[0:struct.calcsize(headerStruct.format)])
                         totalbytes += struct.calcsize(headerStruct.format)
                         meta = (msg_id, srcid)
-                        #print('msg_id=%d, srcid=%d, totalbytes=%d'%(msg_id, srcid, totalbytes))
+                        print('msg_id=%d, srcid=%d, totalbytes=%d'%(msg_id, srcid, totalbytes))
 
                         if datalen >= totalbytes:  ### We have a complete packet stored.
                             msg = data[:totalbytes]
                             data = data[totalbytes:]
                             meta = None
                             totalbytes = 0
-                            #print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
-                            #print('%.2f Hz'%(1/(time.time()-lasttime)))
+                            print('%.2f Hz'%(1/(time.time()-lasttime)))
                             lasttime = time.time()
                             #plt.show(block=False)
                             count+=1
-                            if self.displayQ.qsize() == 0:
-                                self.displayQ.put_nowait(msg)
-                            #print('Full message received after getting meta: datalen=%d, datalen after=%d'%(datalen, len(data)))
+                            self.displayQ.put_nowait(msg)
+                            print('Full message received after getting meta: datalen=%d, datalen after=%d'%(datalen, len(data)))
                     else:
 
                         if datalen < totalbytes:
@@ -184,13 +194,11 @@ class guiclient(object):
                         ### We have a complete message
                         msg = data[:totalbytes]
                         data = data[totalbytes:]
-                        #print('Full message received: datalen=%d, datalen after=%d'%(datalen, len(data)))
+                        print('Full message received: datalen=%d, datalen after=%d'%(datalen, len(data)))
                         meta = None
                         totalbytes = 0
-                        if self.displayQ.qsize() == 0:
-                            self.displayQ.put_nowait(msg)
-                        #print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
-                        #print('%.2f Hz'%(1/(time.time()-lasttime)))
+                        self.displayQ.put_nowait(msg)
+                        print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
                         count+=1
             if self.exit: break
@@ -200,7 +208,7 @@ class guiclient(object):
 
 if __name__ == "__main__":
     a = guiclient()
-    host= socket.gethostbyname('localhost')
-    port = 9996
+    host= socket.gethostname()
+    port = 9997
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 

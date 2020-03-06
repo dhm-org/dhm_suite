@@ -74,11 +74,6 @@ class Controller(ComponentABC):
         self._session_meta = self._allmeta.metadata['SESSION']
         self._fouriermask_meta = self._allmeta.metadata['FOURIERMASK']
 
-    def initialize_component(self):
-        """
-        Initialize component specific variables
-        """
-
     def publish_status(self, status_msg=None):
         """
         Publish component status

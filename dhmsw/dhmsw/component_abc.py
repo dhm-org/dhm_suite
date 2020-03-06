@@ -40,14 +40,6 @@ class ComponentABC(ABC, multiprocessing.Process):
         self._meta = self._allmeta.metadata[self._id]
         self._hbeat = None
 
-        self.initialize_component()
-
-    @abstractmethod
-    def initialize_component(self):
-        """ Function to initialized component specific stuff.  This is called by the __init__ """
-        while False:
-            yield None
-
     @abstractmethod
     def publish_status(self, status_msg=None):
         """

@@ -121,18 +121,14 @@ class Framesource(ComponentABC):
                               configfile=configfile,
                               verbose=verbose)
 
-        self._reconst_meta = None
-        ### Declare camera server frame packet object
-        self._ms_pkt = Iface.CamServerFramePkt()
-
-    def initialize_component(self):
-
         self._reconst_meta = self._allmeta.metadata['RECONSTRUCTION']
         self._meta.state = MetaC.FramesourceMetadata.FRAMESOURCE_STATE_IDLE
 
         self._filegenerator = {}
 
         self._camclihandler = {}
+        ### Declare camera server frame packet object
+        self._ms_pkt = Iface.CamServerFramePkt()
 
 
     def is_filegenerator_alive(self):

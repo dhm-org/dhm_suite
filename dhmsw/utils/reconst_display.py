@@ -8,6 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Process, Queue
+sys.path.append('../dhmsw/')
 import interface
 import struct
 PLOT = True
@@ -93,13 +94,14 @@ class guiclient(object):
                     w, h = dimensions
                 #elif srcid == interface.SRCID_IMAGE_AMPLITUDE or srcid == interface.SRCID_IMAGE_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
                 else:
-                    dtype = np.int8
+                    dtype = np.uint8
                     w, h, z, l = dimensions
     
-                outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
+                print(offset, offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize), w, h, z, l)
+
+                outdata = np.frombuffer(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
     
                 offset += (functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)
-                print("&&&&& Max=%f, Min=%f, QueueSize=%d"%(np.max(outdata[:,:]), np.min(outdata[:,:]), self.displayQ.qsize()))
                 if PLOT:
                     if srcid == interface.SRCID_IMAGE_RAW:
                         axes.clear()
@@ -111,7 +113,7 @@ class guiclient(object):
                         axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
                     else:
                         axes.clear()
-                        axes.imshow(outdata[:,:,0,0], extent=[0,h,0,w], aspect="auto")
+                        axes.imshow(outdata[:,:,0,1], extent=[0,h,0,w], aspect="auto")
                         axes.set_title('Max=%.3f'%(np.max(outdata[:,:,0,0])))
                     
                     plt.suptitle(repr(time.time()))
@@ -180,13 +182,11 @@ class guiclient(object):
                             data = data[totalbytes:]
                             meta = None
                             totalbytes = 0
-                            print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
                             print('%.2f Hz'%(1/(time.time()-lasttime)))
                             lasttime = time.time()
                             #plt.show(block=False)
                             count+=1
-                            if self.displayQ.qsize() == 0:
-                                self.displayQ.put_nowait(msg)
+                            self.displayQ.put_nowait(msg)
                             print('Full message received after getting meta: datalen=%d, datalen after=%d'%(datalen, len(data)))
                     else:
 
@@ -199,9 +199,7 @@ class guiclient(object):
                         print('Full message received: datalen=%d, datalen after=%d'%(datalen, len(data)))
                         meta = None
                         totalbytes = 0
-                        if self.displayQ.qsize() == 0:
-                            self.displayQ.put_nowait(msg)
-                        print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
+                        self.displayQ.put_nowait(msg)
                         print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
                         count+=1
@@ -212,7 +210,7 @@ class guiclient(object):
 
 if __name__ == "__main__":
     a = guiclient()
-    host= socket.gethostname()
-    port = 9997
+    host= 'localhost' #socket.gethostname()
+    port = 9994
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 

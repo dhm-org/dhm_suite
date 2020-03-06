@@ -8,6 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Process, Queue
+sys.path.append('../dhmsw/')
 import interface
 import struct
 PLOT = True
@@ -66,54 +67,58 @@ class guiclient(object):
             msgid, srcid, totalbytes= headerStruct.unpack(msg[0:struct.calcsize(headerStruct.format)])
             meta = (msgid, srcid, totalbytes)
             offset = struct.calcsize(headerStruct.format) 
-            print('offset=%d'%(offset))
+
+            num_images = 1
+            if srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
+                num_images = 2
+    
+            count = 0
+            while count < num_images:
+                print('offset=%d'%(offset))
             
-            ndim_struct = struct.Struct('H')
-            ndimsize = struct.calcsize(ndim_struct.format)
-            ndim = ndim_struct.unpack(msg[offset:offset + ndimsize])[0]
-
-            dimStruct = struct.Struct('H'*int(ndim))
-            dimsize = struct.calcsize(dimStruct.format)
-            dimensions = dimStruct.unpack(msg[offset + ndimsize:offset + ndimsize + dimsize])
-
-            offset = offset + ndimsize + dimsize
-
-            if srcid == interface.SRCID_IMAGE_FOURIER:
-                print('FOURIER Image received')
-                dtype = np.uint8
-                w, h = dimensions
-            elif srcid == interface.SRCID_IMAGE_RAW:
-                dtype = np.uint8
-                w, h = dimensions
-            #elif srcid == interface.SRCID_IMAGE_AMPLITUDE or srcid == interface.SRCID_IMAGE_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
-            else:
-                dtype = np.uint8
-                w, h, z, l = dimensions
-
-            outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
-
-            print("&&&&& Max=%f, Min=%f, QueueSize=%d"%(np.max(outdata[:,:]), np.min(outdata[:,:]), self.displayQ.qsize()))
-            if PLOT:
-                if srcid == interface.SRCID_IMAGE_RAW:
-                    #axes[i].imshow(mydata[:,:], extent=[0,w,0,h], aspect="auto", cmap='gray')
-                    axes.clear()
-                    axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
-                    axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
-                elif srcid == interface.SRCID_IMAGE_FOURIER:
-                    axes.clear()
-                    #axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
-                    axes.imshow(outdata[:,:])
-                    axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
+                ndim_struct = struct.Struct('H')
+                ndimsize = struct.calcsize(ndim_struct.format)
+                ndim = ndim_struct.unpack(msg[offset:offset + ndimsize])[0]
+    
+                dimStruct = struct.Struct('H'*int(ndim))
+                dimsize = struct.calcsize(dimStruct.format)
+                dimensions = dimStruct.unpack(msg[offset + ndimsize:offset + ndimsize + dimsize])
+    
+                offset = offset + ndimsize + dimsize
+    
+                if srcid == interface.SRCID_IMAGE_FOURIER:
+                    dtype = np.complex64 
+                    w, h = dimensions
+                elif srcid == interface.SRCID_IMAGE_RAW:
+                    dtype = np.uint8
+                    w, h = dimensions
+                #elif srcid == interface.SRCID_IMAGE_AMPLITUDE or srcid == interface.SRCID_IMAGE_PHASE or srcid == interface.SRCID_IMAGE_AMPLITUDE_AND_PHASE:
                 else:
-                    axes.clear()
-                    axes.imshow(outdata[:,:,0,0], extent=[0,h,0,w], aspect="auto")
-                    axes.set_title('Max=%.3f'%(np.max(outdata[:,:,0,0])))
-                
+                    dtype = np.uint8
+                    w, h, z, l = dimensions
+    
+                outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
+    
+                offset += (functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)
+                if PLOT:
+                    if srcid == interface.SRCID_IMAGE_RAW:
+                        axes.clear()
+                        axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
+                    elif srcid == interface.SRCID_IMAGE_FOURIER:
+                        axes.clear()
+                        axes.imshow(outdata[:,:], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:])))
+                    else:
+                        axes.clear()
+                        axes.imshow(outdata[:,:,0,0], extent=[0,h,0,w], aspect="auto")
+                        axes.set_title('Max=%.3f'%(np.max(outdata[:,:,0,0])))
+                    
+                    plt.suptitle(repr(time.time()))
+                    plt.draw()
+                    plt.pause(0.001)
 
-                plt.suptitle(repr(time.time()))
-                plt.draw()
-                #plt.show(block=False)
-                plt.pause(0.001)
+                count += 1
                 
 
         print('End of DisplayThread')
@@ -175,13 +180,11 @@ class guiclient(object):
                             data = data[totalbytes:]
                             meta = None
                             totalbytes = 0
-                            print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
                             print('%.2f Hz'%(1/(time.time()-lasttime)))
                             lasttime = time.time()
                             #plt.show(block=False)
                             count+=1
-                            if self.displayQ.qsize() == 0:
-                                self.displayQ.put_nowait(msg)
+                            self.displayQ.put_nowait(msg)
                             print('Full message received after getting meta: datalen=%d, datalen after=%d'%(datalen, len(data)))
                     else:
 
@@ -194,9 +197,7 @@ class guiclient(object):
                         print('Full message received: datalen=%d, datalen after=%d'%(datalen, len(data)))
                         meta = None
                         totalbytes = 0
-                        if self.displayQ.qsize() == 0:
-                            self.displayQ.put_nowait(msg)
-                        print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
+                        self.displayQ.put_nowait(msg)
                         print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
                         count+=1
@@ -208,6 +209,6 @@ class guiclient(object):
 if __name__ == "__main__":
     a = guiclient()
     host= socket.gethostname()
-    port = 9993
+    port = 9998
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 
