@@ -8,6 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Process, Queue
+sys.path.append('../dhmsw/')
 import interface
 import struct
 PLOT = True
@@ -99,7 +100,6 @@ class guiclient(object):
                 outdata = np.fromstring(msg[offset:offset+(functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)], dtype=dtype).reshape(dimensions)
     
                 offset += (functools.reduce(lambda x,y: x*y, dimensions)*np.dtype(dtype).itemsize)
-                print("&&&&& Max=%f, Min=%f, QueueSize=%d"%(np.max(outdata[:,:]), np.min(outdata[:,:]), self.displayQ.qsize()))
                 if PLOT:
                     if srcid == interface.SRCID_IMAGE_RAW:
                         axes.clear()
@@ -180,13 +180,11 @@ class guiclient(object):
                             data = data[totalbytes:]
                             meta = None
                             totalbytes = 0
-                            print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
                             print('%.2f Hz'%(1/(time.time()-lasttime)))
                             lasttime = time.time()
                             #plt.show(block=False)
                             count+=1
-                            if self.displayQ.qsize() == 0:
-                                self.displayQ.put_nowait(msg)
+                            self.displayQ.put_nowait(msg)
                             print('Full message received after getting meta: datalen=%d, datalen after=%d'%(datalen, len(data)))
                     else:
 
@@ -199,9 +197,7 @@ class guiclient(object):
                         print('Full message received: datalen=%d, datalen after=%d'%(datalen, len(data)))
                         meta = None
                         totalbytes = 0
-                        if self.displayQ.qsize() == 0:
-                            self.displayQ.put_nowait(msg)
-                        print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
+                        self.displayQ.put_nowait(msg)
                         print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
                         count+=1

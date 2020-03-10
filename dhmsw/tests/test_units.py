@@ -1,8 +1,12 @@
 import os
 import pytest
+import configparser
 import sys
-#sys.path.insert(0, "../dhmsw/")
-#import metadata_classes
+sys.path.append('../dhmsw/')
+import metadata_classes as MetaC
+
+GOOD_CONFIG_FNAME = './goodconfig.ini'
+BAD_CONFIG_FNAME = './badconfig.ini'
 
 class TestUnitMetadataTestClass(object):
 
@@ -18,33 +22,40 @@ class TestUnitMetadataTestClass(object):
 
 
     def setup_method(cls, method):
+        """ Run before each test method is executed """
         if method == cls.test_readMetaDictionaryGoodFile:
-            CreateGoodConfigFile(goodFileName())
+            CreateGoodConfigFile(GOOD_CONFIG_FNAME)
             pass
         elif method == cls.test_readMetaDictionaryBadFile:
-            CreateBadConfigFile(badFileName())
+            CreateBadConfigFile(BAD_CONFIG_FNAME)
             pass
         else:
             pass
 
     def teardown_method(cls, method):
+        """ Run after each test method is executed """
         if method == cls.test_readMetaDictionaryGoodFile:
-           os.remove(goodFileName())
+           os.remove(GOOD_CONFIG_FNAME)
         elif method == cls.test_readMetaDictionaryBadFile:
-           os.remove(badFileName())
+           os.remove(BAD_CONFIG_FNAME)
         else:
             pass
 
     def test_readMetaDictionaryGoodFile(cls, goodFileName):
         """Create a good file and ensure its read correctly"""
-        #metadata_classes.Metadata_Dictionary(cls._configfile)
+        allmeta = MetaC.MetadataDictionary(goodFileName)
         pass
        
-
     def test_readMetaDictionaryBadFile(cls, badFileName):
         """Create a good file and ensure its read correctly"""
-        assert True
-    #    metadata_classes.Metadata_Dictionary(configfile)
+        allmeta = MetaC.MetadataDictionary(badFileName)
+        pass
+
+    def test_readNonExistantMetaDictionaryFile(cls, notExistName):
+        """ Try and read a file that doesn't exist """
+        with pytest.raises(ValueError):
+            allmeta = MetaC.MetadataDictionary(notExistName)
+        
     
 
 @pytest.fixture
@@ -55,6 +66,9 @@ def goodFileName():
 def badFileName():
     return './badconfig.ini'
 
+@pytest.fixture
+def notExistName():
+    return './blahblahblah.ini'
 
 def CreateGoodConfigFile(filename):
 

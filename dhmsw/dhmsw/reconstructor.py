@@ -548,7 +548,9 @@ class Reconstructor(MP.Process):
             self._reconst_meta.running = False
 
     def _create_hologram_obj(self, img):
-
+        """
+        Create hologram object or update it if it already exists
+        """
         ### Create Hologram object or update it.  Updating saves CPU cycles.
         if self.holo is None:
             self.holo = Hologram(img,

@@ -100,9 +100,11 @@ class ControllerMetadata(MetadataABC):
             return
 
         try:
-
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             cmd_hostname = config.get(self._id, 'cmd_hostname', fallback='localhost')
             cmd_port = config.getint(self._id, 'cmd_port', fallback=10000)
@@ -113,7 +115,8 @@ class ControllerMetadata(MetadataABC):
         except configparser.Error as err:
             print('File read error:  [%s] due to error [%s]. Key=[%s].'\
                   %(filepath, repr(err), self._id))
-            raise err
+            raise err('Config file read error:  [%s] due to error [%s]. Key=[%s].'\
+                  %(filepath, repr(err), self._id))
 
     def get_hostname(self):
         """
@@ -203,7 +206,10 @@ class GuiserverMetadata(MetadataABC):
         key = 'GUISERVER'
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             fourier_port = config.getint(key, 'fourier_port', fallback=9993)
             reconst_amp_port = config.getint(key, 'reconst_amp_port', fallback=9994)
@@ -254,7 +260,10 @@ class DataloggerMetadata(MetadataABC):
 
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             enabled = config.getboolean(key, 'enabled', fallback=False)
             self.enabled = enabled
@@ -298,7 +307,10 @@ class CameraMetadata(MetadataABC):
 
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             N = config.getint(key, 'N', fallback=2048)
             rate = config.getfloat(key, 'rate', fallback=15.0)
@@ -351,7 +363,11 @@ class CameraServerMetadata(MetadataABC):
         key = 'CAMERA_SERVER'
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
+
             host = config.get(key, 'host', fallback='127.0.0.1')
             frame_port = config.getint(key, 'frame', fallback=2000)
             command_port = config.getint(key, 'command', fallback=2001)
@@ -406,7 +422,11 @@ class FramesourceMetadata(MetadataABC):
         key = 'FRAMESOURCE'
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
+
             datadir = config.get(key, 'datadir', fallback='')
             self.datadir = datadir
 
@@ -468,7 +488,11 @@ class HologramMetadata(MetadataABC):
         key = 'HOLOGRAM'
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
+
             wavelength_str = config.get(key, 'wavelength', fallback='405e-9')
             wavelength = [float(w) for w in wavelength_str.split(',')]
             dx = config.getfloat(key, 'dx', fallback=3.45e-6)
@@ -576,7 +600,10 @@ class ReconstructionMetadata(MetadataABC):
         key = 'RECONSTRUCTION'
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             propagation_dist_str = config.get(key, 'propagation_distance', fallback='0.01')
             propagation_distance = [float(w) for w in propagation_dist_str.split(',')]
@@ -654,7 +681,10 @@ class ReconstructionMetadata(MetadataABC):
 
             try:
                 config = configparser.ConfigParser()
-                config.read(filepath)
+                dataset = config.read(filepath)
+
+                if not dataset:
+                    raise ValueError("File [%s] doesn't exist."%(filepath))
 
                 self.path = config.get(key, 'path', fallback='')
                 self.enabled = config.getboolean(key, 'enabled', fallback=False)
@@ -701,7 +731,10 @@ class ReconstructionMetadata(MetadataABC):
             try:
 
                 config = configparser.ConfigParser()
-                config.read(filepath)
+                dataset = config.read(filepath)
+
+                if not dataset:
+                    raise ValueError("File [%s] doesn't exist."%(filepath))
 
                 center = config.getboolean(key, 'center', fallback=False)
                 center_and_tilt = config.getboolean(key, 'center_and_tilt', fallback=False)
@@ -749,7 +782,10 @@ class ReconstructionMetadata(MetadataABC):
 
             try:
                 config = configparser.ConfigParser()
-                config.read(filepath)
+                dataset = config.read(filepath)
+
+                if not dataset:
+                    raise ValueError("File [%s] doesn't exist."%(filepath))
 
                 enabled = config.getboolean(key, 'enabled', fallback=False)
                 algorithm_str = config.get(key, 'algorithm', fallback='none')
@@ -805,7 +841,10 @@ class ReconstructionMetadata(MetadataABC):
 
             try:
                 config = configparser.ConfigParser()
-                config.read(filepath)
+                dataset = config.read(filepath)
+
+                if not dataset:
+                    raise ValueError("File [%s] doesn't exist."%(filepath))
 
                 mode_str = config.get(key, 'mode', fallback='')
                 if mode_str.lower() == '1d_segment':
@@ -900,7 +939,10 @@ class FouriermaskMetadata(MetadataABC):
 
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             center_x_str = config.get(key, 'center_x', fallback='702, 1117, 1439')
             center_x = [float(c) for c in center_x_str.split(',')]
@@ -950,7 +992,10 @@ class SessionMetadata(MetadataABC):
 
         try:
             config = configparser.ConfigParser()
-            config.read(filepath)
+            dataset = config.read(filepath)
+
+            if not dataset:
+                raise ValueError("File [%s] doesn't exist."%(filepath))
 
             self.name = config.get(key, 'name', fallback='')
             self.description = config.get(key, 'description', fallback='')
@@ -991,7 +1036,10 @@ class SessionMetadata(MetadataABC):
 
             try:
                 config = configparser.ConfigParser()
-                config.read(filepath)
+                dataset = config.read(filepath)
+
+                if not dataset:
+                    raise ValueError("File [%s] doesn't exist."%(filepath))
 
                 focal_length = config.getfloat(key, 'focal_length', fallback=1e-3)
                 numerical_aperture = config.getfloat(key, 'numerical_aperture', fallback=0.1)
