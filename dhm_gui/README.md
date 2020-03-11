@@ -1,7 +1,7 @@
 # ![DHMx](./dhmx_logo_sm.png)
 The DHM Graphical User Interface to be used with DHMSW.
 
-![DHMx GUI](doc/DHMx_Screenshot.jpg)
+![DHMx GUI](doc/DHMx_Screenshot_large.png)
 
 ## Pre-requisities
 * A 64-bit operating system
