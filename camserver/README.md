@@ -204,11 +204,15 @@ The command client connection is active only for accepting the command and retur
 Telemetry header is sent as a header to each image streamed.  See section on frame format from this document.
 
 ## Graphical User Interface
-The python3 script 'dhmxc.py' in the [dhm_guir](../dhm_gui) directory of this repository is the GUI for the camserver.
-For each instances of the camserver, ensure that the frame port, command port, and telemetry port
-specified in the camserver are also the same psecified when running the 'dhmxc.py' script.
+The camera viewer created for the camserver is the 
+python3 script 'dhmxc.py' in the [dhm_guir](../dhm_gui) directory of this repository is the GUI for the camserver.
+
+NOTE: For each instances of the camserver, ensure that the frame port and command port
+specified in the camserver are also the same specified when running the 'dhmxc.py' script.
 
 The 'dhmsw' application in this repository also interfaces also interfaces with the camserver.
+
+![DHMx-C Camera Viewer](../dhm_gui/doc/DHMx_C_screenshot.png)
 
 ## Known Bugs
 * With USB cameras, sometimes the frame capture doesn't start.  Stop the camserver using
