@@ -218,6 +218,8 @@ class Server():
 
         client_had_data = False
 
+        data = None
+
         if sock_r is cli:  ### Is the socket that has activity one of the clients???
             client_had_data = True
 
