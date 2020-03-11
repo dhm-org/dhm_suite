@@ -1,5 +1,7 @@
-# ![DHMx](https://github.jpl.nasa.gov/DHM/dhm_gui/blob/master/dhmx_logo_sm.png?raw=true)
+# ![DHMx](./dhmx_logo_sm.png)
 The DHM Graphical User Interface to be used with DHMSW.
+
+![DHMx GUI](doc/DHMx_Screenshot.jpg)
 
 ## Pre-requisities
 * A 64-bit operating system
@@ -20,13 +22,15 @@ The DHM Graphical User Interface to be used with DHMSW.
 
 * Windows - TBA
 
-## DHMx-c
+## DHMx-c Camer Viewer GUI
 DHMx-c can be used for accessing, monitoring and calibrating the camera(s) being used for the session.
 * DHMx-c can be launched via the terminal as: python3 dhmxc.py
 * Shortcuts
   - 'S' key - will create a snapshot of what is being viewed
   - 'L' key - will enable/disable logging
 * For any additional information about how to launch DHMx-c, please use the -h / --help launch argument and it will provide the user with more information.
+
+![DHMx-C](doc/DHMx_C_screenshot.png)
 
 ## Authors
 * Frank Lima

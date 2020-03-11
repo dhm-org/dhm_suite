@@ -32,7 +32,7 @@ The camera GUI should appear and if connection succesful, should display the ima
 ![DHMx-C Camera Viewer](dhm_gui/doc/DHMx_C_screenshot.png)
 
 ## Start the DHMx GUI to View Images and Reconstruction Products
-NOTE:  The camserver doesn't need to be running if you plan on reconstructing images on file.
+NOTE:  The camserver doesn't need to be running if you plan on reconstructing images stored on file.
 
 First, we need to run the 'dhmsw' software which is the the software the receives the images and performs the reconstruction. 
 Open a terminal and run the following:
@@ -41,7 +41,8 @@ Open a terminal and run the following:
 
 Now open another terminal and run the following:
 
-`cd /opt/DHM/dhm_gui/`
+`cd /opt/DHM/dhm_gui/` 
+
 `python3 dhmx.py`
 
 ![DHMx GUI](dhm_gui/doc/DHMx_Screenshot.jpg)
