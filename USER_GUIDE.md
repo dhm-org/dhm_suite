@@ -9,7 +9,7 @@ and the DHMx GUI on another, the IP address must be specified.  See
 the components usage on how to do that.
 
 **NOTE** A bash script that starts the camserver and DHMx-C GUI exists for your convinience in [start_camserver_runfree](bin/start_camserver_runfree)
-This script encapsulates sections [Start Camserver](#Start Camserver) and [Start Camera GUI](#Start Camera GUI (DHMx-C))
+This script encapsulates sections [Start Camserver](#Start-Camserver) and [Start Camera GUI](#Start-Camera-GUI-DHMx_C)
 
 ## Start Camserver
 To start the camserver with logging initially disabled (-d), verbose enabled and
@@ -17,7 +17,7 @@ logging data to the desktop, issue the following command from a terminal.
 
 `/opt/DHM/bin/camserver -d -v -l ~/Desktop/`
 
-## Start Camera GUI (DHMx-C)
+## Start Camera GUI DHMx_C
 Pre-requisite:  Ensure the camserver is running.  The Camera GUI will poll at 1Hz for a connection 
 if it can't find the camserver.
 
