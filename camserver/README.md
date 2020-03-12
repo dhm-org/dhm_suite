@@ -12,7 +12,7 @@ The camserver software has the following features for a single camera per execut
 *  Receive commands via command socket
 *  Specify execution time via command line option
 
-NOTE:  Multiple instances of the camserver can run simultaneously given that it controls seperate cameras.  Ensure the port numbers for streaming frames and commands are unique for each instance in order properly interface with clients.  See camserver usage (--help).
+**NOTE**:  Multiple instances of the camserver can run simultaneously given that it controls seperate cameras.  Ensure the port numbers for streaming frames and commands are unique for each instance in order properly interface with clients.  See camserver usage (--help).
 
 ## Architecture
 ![camserver architecture diagram](doc/camserver_architecture.jpeg)
@@ -160,12 +160,22 @@ NOTE:  Let's assume I am connecting two cameras with the following IP address: 1
 * GT 2460 (GigE camera)
 * Manta G201B ASG 30fps (GigE camera)
 
-## Reading from Two Cameras
+## Reading From Two Cameras In the Same System
 To read from two cameras, two instances of 'camserver' must be executed making sure the following:
-*  Distinct cameras are selected for each instance.  User is prompted if more than one camera detected.
+*  Distinct cameras are selected for each instance.  User is prompted if more than one camera detected.  The camera serial number can be passed in via command line to avoid user being prompted to select the camera.
 *  If expect to connect clients, ensure distinct port number are passed on the command line on execution.
 *  Recommended that if using two GigE cameras, each one be connected to a single
  
+**Example: Start two instances of the camserver where camera serial numbers are specified.**
+
+Open a terminal and issue the following command:
+
+`/opt/DHM/camserver -d -v -fp 2000 -cp 2001 -s 671092774`
+
+Open another terminal and issue the following command
+
+`/opt/DHM/camserver -d -v -fp 2050 -cp 2051 -s 671234567`
+
 ## Frame Server/Client
 Frames and telemtry are sent to clients at 6Hz or less if frame rate is less than 6Hz.  Clients must
 connect to the frame port (default port 2000, see '--help' for setting frame port).
