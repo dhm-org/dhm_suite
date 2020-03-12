@@ -164,7 +164,7 @@ NOTE:  Let's assume I am connecting two cameras with the following IP address: 1
 To read from two cameras, two instances of 'camserver' must be executed making sure the following:
 *  Distinct cameras are selected for each instance.  User is prompted if more than one camera detected.  The camera serial number can be passed in via command line to avoid user being prompted to select the camera.
 *  If expect to connect clients, ensure distinct port number are passed on the command line on execution.
-*  Recommended that if using two GigE cameras, each one be connected to a single
+*  Recommended that if using two GigE cameras, each one be connected to its own ethernet port.
  
 **Example: Start two instances of the camserver where camera serial numbers are specified.**
 
