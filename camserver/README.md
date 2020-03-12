@@ -206,16 +206,21 @@ The command client connection is active only for accepting the command and retur
 | EXIT              | Stop imageing, close socket connections, and shutdown software        |
 | ENABLE_RECORDING  | Enable recording. All incoming frames will be recorded to disk.       |
 | DISABLE_RECORDING | Disable recording.  Images are not recorded to disk.                  |
-| GAIN=<float>      | Set the gain to specified value in units of decibels(db).             |
-| EXPOSURE=<float>  | Set camera exposure to specified value in units of microseconds(us).  |
+| GAIN=< float >      | Set the gain to specified value in units of decibels(db).             |
+| EXPOSURE=< float >  | Set camera exposure to specified value in units of microseconds(us).  |
 
 ### Command Utility
 The [camcmd.py](./scripts/camcmd.py) python script was created as a utility to send commands
 to the camserver.  This script sends commands to the camserver through port 2001
 To send commands to a different port, modify the script.
 
-Example: Enable recording
+Example 1: Enable recording
+
 `python3 camcmd.py enable_recording`
+
+Example 2:  Set Gain to 3
+
+`python3 camcmd.py gain=3`
 
 ## Telemetry
 Telemetry header is sent as a header to each image streamed.  See section on frame format from this document.
