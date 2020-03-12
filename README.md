@@ -1,5 +1,5 @@
-# Digital Holographic Microscope Software Suite
-The DHM Suite is composed of the following software applications:
+# DHMx Software Suite
+The Digital Holographic Microscope Experience (DHMx) Suite is composed of the following software applications:
 
 * [camserver](camserver/) - Camera interface server software
 * [dhmsw](dhmsw/) - Off-axis hologram reconstruction software
@@ -31,12 +31,31 @@ Testing has been successful on a system with the following requirements
      -  Best for USB to Ethernet adapters
 
 ## Installation Instruction
-With 'sudo' powers, run 'install.sh -all' to setup the environment, install drivers, and install the dhm software.
+To setup the environment, install drivers, and install all components of the DHMx software, run the following:
 
-This install script has options in case you want to do a step at a time.  The following order is recommended
+`sudo ./install.sh -all`
+
+This install script has options in case you want to do a step at a time. 
+
+> usage:  install.sh [options]  
+>   
+> where options are as follows:  
+> -all        Setup environment, install drivers, and install suite software  
+> -verbose    Display instruction verbose to standard out  
+> -env        Environment setup  
+> -drivers    Install external drivers required.  
+> -shampoo    Install Shampoo python module  
+> -camserver  Install camera server application software. Add '-drivers' if you don't have the drivers.  
+> -dhmsw      Install DHM softwares python module  
+> -dhm_gui     Install DHM GUI and necessary packages  
+>   
+> any of the above options may be combined with any other  
+
 
 * Installation location
   - Install script will copy contents of this repo into /opt/DHM/
+* Driver install location
+  - The Vimba driver is instaled in /opt/
 
 ## Uses
 The DHM Suite applications can be used in different ways, but here are the most common uses:
