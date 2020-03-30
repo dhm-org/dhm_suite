@@ -23,7 +23,7 @@
 #include <pthread.h>
 #include <memory> //For unique_ptr
 #include "CamFrame.h"
-#include "VimbaCPP/Include/VimbaCPP.h"
+// #include "VimbaCPP/Include/VimbaCPP.h"
 
 class CircularBuffer 
 {
@@ -31,10 +31,11 @@ class CircularBuffer
 public:
 
     CircularBuffer(size_t size, int width, int height);
-
+    ~CircularBuffer();	
     void Reset(); //Reset (empty) circular buffer
     void TouchReset();
-    void Put(AVT::VmbAPI::FramePtr item, const struct CamFrameHeader *header);
+    // void Put(AVT::VmbAPI::FramePtr item, const struct CamFrameHeader *header);
+	void Put(unsigned char *data, const struct CamFrameHeader *header);
     int Get(struct CamFrame *frame);
     struct CamFrame *Peek();
     bool GetOnSignal(struct CamFrame *frame);

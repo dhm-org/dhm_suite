@@ -18,23 +18,19 @@
  ******************************************************************************
  */
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <unistd.h> //read/write
-#include <netinet/in.h>
-#include <arpa/inet.h> //for inet_addr
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <cstring>
 
 #include "CameraServer.h"
-#include "CamCommands.h"
+#include "Net_MP.h"
+#include "MultiPlatform.h"
+
 
 // ****************************************************************************
 // ***                    Defines
 // ****************************************************************************
-#define SOCKET_ERROR -1
 
 // ****************************************************************************
 // ***                    Support Functions
@@ -44,10 +40,10 @@ int read_from_client(int client, char *buffer, int len)
 {
     int nbytes;
 
-    nbytes = read(client, buffer, len);
+    nbytes = MP_read(client, buffer, len);
     if(nbytes < 0) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Read from socket failed: %s\n", strerror(err));
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Read from socket failed: %s\n", MP_strerror(err));
         return -1;
     }
     else if (nbytes == 0) {
@@ -64,13 +60,13 @@ struct timespec tsSubtract(struct timespec time1, struct timespec time2)
 
     if ((time1.tv_sec < time2.tv_sec) ||
         ((time1.tv_sec == time2.tv_sec) &&
-         (time1.tv_nsec <= time2.tv_nsec))) {		/* TIME1 <= TIME2? */
+         (time1.tv_nsec <= time2.tv_nsec))) {        /* TIME1 <= TIME2? */
         result.tv_sec = result.tv_nsec = 0 ;
-    } else {						/* TIME1 > TIME2 */
+    } else {                        /* TIME1 > TIME2 */
         result.tv_sec = time1.tv_sec - time2.tv_sec ;
         if (time1.tv_nsec < time2.tv_nsec) {
             result.tv_nsec = time1.tv_nsec + 1000000000L - time2.tv_nsec ;
-            result.tv_sec-- ;				/* Borrow a second. */
+            result.tv_sec-- ;                /* Borrow a second. */
         } else {
             result.tv_nsec = time1.tv_nsec - time2.tv_nsec ;
         }
@@ -84,63 +80,22 @@ double tsFloat(struct timespec time)
     return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
 }
 
-int BindServer(int port)
-{
-    int err;
-    int ret;
-    int opt = 1;
-    struct sockaddr_in address;
-    int fd;
-
-
-    // *** Create server socket
-    fd = SOCKET_ERROR;
-
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to create server socket: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR;
-    }
-
-    // *** Set socket options
-    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to set server socket options: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR; 
-    }
-
-    // *** Bind
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(port);
-
-    if((ret = bind(fd, (struct sockaddr *)&address, sizeof(address))) == SOCKET_ERROR) {
-        err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Unable to bind server socket: strerror=%s\n", strerror(err));
-        return SOCKET_ERROR; 
-    }
-
-    return fd;
-}
-
 bool AcceptClient(Server *server, fd_set *readable, char *servername)
 {
     int newclient;
-    struct sockaddr_in clientname;
-    socklen_t size;
     bool client_added = false;
 
-    newclient = accept(server->Fd(), (struct sockaddr *)&clientname, &size);
-    if (newclient == SOCKET_ERROR) {
-        int err = errno;
-        fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, strerror(err));
+    newclient = accept(server->Fd(), NULL, NULL);
+    if (newclient == __INVALID_SOCKET__) {
+        int err = MP_errno();
+        fprintf(stderr, "CameraServer:  Error.  Accept failed[%s]: %s\n", servername, MP_strerror(err));
     }
     else {
         fprintf(stderr, "Client connection accepted...\n");
         // *** If exceed max clients, close connection, else add to clients list
         if (server->NumClients() > CAMERA_SERVER_MAX_CLIENTS) {
             fprintf(stderr, "CameraServer:  Error. Max clients [%d] reached.  Closing new connection.\n", CAMERA_SERVER_MAX_CLIENTS);
-            close(newclient);
+            MP_close(newclient);
         }
         else {
             FD_SET(newclient, readable);
@@ -156,15 +111,18 @@ bool AcceptClient(Server *server, fd_set *readable, char *servername)
 // ***                     Class Method Definitions
 // ****************************************************************************
 Server::Server(int port) :
-    m_serverfd(SOCKET_ERROR),
+    m_serverfd(__INVALID_SOCKET__),
     m_numclients(0),
     m_port(port),
     m_server_connected(false)
 {
     for (int i = 0; i < CAMERA_SERVER_MAX_CLIENTS; i++)
-        m_clients[i] = SOCKET_ERROR;
+        m_clients[i] = __INVALID_SOCKET__;
 
-    m_serverfd = BindServer(m_port);
+    m_serverfd = MP_BindServer(m_port);
+    if (m_serverfd == __INVALID_SOCKET__) {
+        throw std::runtime_error("CameraServer:  Bind socket failed");
+    }
 }
 
 CameraServer::CameraServer(int frame_port, int command_port, int telem_port, float frame_publish_rate_hz) :
@@ -176,6 +134,9 @@ CameraServer::CameraServer(int frame_port, int command_port, int telem_port, flo
          m_circbuff(NULL),
          m_camapi(NULL)
 {
+    if (MP_initsocketuse() < 0) {
+        throw std::runtime_error("CameraServer:  Unable to initialized socket library (Windows only)");
+    }
     m_frame_server = new Server(frame_port);
     m_cmd_server = new Server(command_port);
 }
@@ -203,19 +164,18 @@ CameraServer::~CameraServer()
 void CameraServer::Run()
 {
     int err;
-
+    m_complete = true;
     if((err = pthread_create(&m_serverthread, NULL, &CameraServer::FrameServerThread, this)) != 0) {
         fprintf(stderr, "CameraServer:  Error.  Unable to start server thread.  err=%d\n", err);
         return;
     }
-
+    m_complete = false;	
     //pthread_join(m_serverthread, NULL);
 }
 
 void CameraServer::Stop()
 {
     SetRunning(false);
-
 }
 
 
@@ -230,19 +190,21 @@ void * CameraServer::FrameServerThread(void *arg)
     int ret;
     struct CamFrame frame;
     // This buffer may need to be a class member if we want to change ROI on the fly.
-    char *framedatabuffer; 
+    char *framedatabuffer;
     //int framedatabufferlen = (sizeof(frame) - sizeof(frame.m_data)) + C->CircBuff()->Width() * C->CircBuff()->Height();
     int framedatabufferlen = sizeof(frame.header) + C->CircBuff()->Width() * C->CircBuff()->Height();
     framedatabuffer = (char *)malloc(framedatabufferlen);
 
-    if(listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == SOCKET_ERROR) {
+    printf("framedatabufferlen = %d\n", framedatabufferlen);
+
+    if (listen(C->FrameServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
         return NULL;
     }
 
-    if(listen(C->CommandServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == SOCKET_ERROR) {
+    if (listen(C->CommandServer()->Fd(), CAMERA_SERVER_MAX_CLIENTS) == __SOCKET_ERROR__) {
         int err = errno;
         fprintf(stderr, "CameraServer:  Error.  Listen to server socket failed: %s\n", strerror(err));
         throw std::runtime_error("CameraServer:  Listen to server socket failed");
@@ -254,11 +216,10 @@ void * CameraServer::FrameServerThread(void *arg)
     FD_SET(C->FrameServer()->Fd(), &readable);
     FD_SET(C->CommandServer()->Fd(), &readable);
 
-    fprintf(stdout, "Running FRAME server, port=%d...\n", C->FrameServer()->Port());
-    clock_gettime(CLOCK_REALTIME, &last_ts);
+    MP_clock_gettime(CLOCK_REALTIME, &last_ts);
     C->SetRunning(true);
 
-    while(1) {
+    while (1) {
         fd_set dup_readable = readable;
         fd_set dup_writeable = writeable;
         bool frame_ready = false;
@@ -266,57 +227,60 @@ void * CameraServer::FrameServerThread(void *arg)
         struct timespec et;
         double ts_float;
 
-	FD_ZERO(&readable);
-	FD_ZERO(&writeable);
-	FD_SET(C->FrameServer()->Fd(), &readable);
-	FD_SET(C->CommandServer()->Fd(), &readable);
-	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+        // *** Select on activity on the server socket
+        FD_ZERO(&readable);
+        FD_ZERO(&writeable);
+        FD_SET(C->FrameServer()->Fd(), &readable);
+        FD_SET(C->CommandServer()->Fd(), &readable);
+        for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
             int client = C->FrameServer()->Clients()[j];
-	    if (client == SOCKET_ERROR) continue;
-	    FD_SET(client, &readable);
-	}
-	for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+            if (client == __INVALID_SOCKET__) continue;
+            FD_SET(client, &readable);
+        }
+        for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
             int client = C->CommandServer()->Clients()[j];
-	    if (client == SOCKET_ERROR) continue;
-	    FD_SET(client, &readable);
-	}
-	dup_readable = readable;
-	dup_writeable = writeable;
+            if (client == __INVALID_SOCKET__) continue;
+            FD_SET(client, &readable);
+        }
+        dup_readable = readable;
+        dup_writeable = writeable;
 
         if (!C->IsRunning()) {
             fprintf(stderr, "CameraServer no longer running...\n");
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->FrameServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
-		close(client);
-		fprintf(stderr, "Closed client...\n");
-	    }
+                if (client == __INVALID_SOCKET__) continue;
+                MP_close(client);
+                fprintf(stderr, "Closed client...\n");
+            }
             break;
-	}
+        }
 
-        clock_gettime(CLOCK_REALTIME, &ts);
+        MP_clock_gettime(CLOCK_REALTIME, &ts);
 
         et = tsSubtract(ts, last_ts);
         ts_float = tsFloat(et);
 
         // *** Send Frame to clients
-        if (C->FrameServer()->NumClients() > 0 && ts_float > (1/C->FramePublishRate())) {
-            if(C->CircBuff() != NULL && C->CircBuff()->PeekOnSignal(&frame)) {
-                //int headerlen = sizeof(frame)-sizeof(frame.m_data);
+        if (C->FrameServer()->NumClients() > 0 && ts_float > (1 / C->FramePublishRate())) {
+            if (C->CircBuff() != NULL && C->CircBuff()->PeekOnSignal(&frame)) {
+                //int headerlen = sizeof(frame) - sizeof(frame.m_data);
                 int headerlen = sizeof(frame.header);
+
                 memcpy(framedatabuffer, (char *)&frame, headerlen);
                 memcpy(framedatabuffer + headerlen, frame.m_data, C->CircBuff()->Width() * C->CircBuff()->Height());
-                clock_gettime(CLOCK_REALTIME, &last_ts);
+                //printf("sizeof(frame)=%d, sizeof(frame.m_data)=%d, sizeof(frame.m_header)=%d, headerlen = %d, bufferlen=%d\n", sizeof(frame), sizeof(frame.m_data), sizeof(frame.header), headerlen, frame.header.m_databuffersize);
+                MP_clock_gettime(CLOCK_REALTIME, &last_ts);
                 //fprintf(stderr, "ts_float = %f, frame_id=%llu \n", ts_float, frame.m_frame_id);
                 for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                     int client = C->FrameServer()->Clients()[j];
-    
-                    //if(client == SOCKET_ERROR) {fprintf(stderr, "CameraServer: Client socket error\n"); continue; }
-                    if(client == SOCKET_ERROR) {continue; }
-    
+
+                    //if(client == __INVALID_SOCKET__) {fprintf(stderr, "CameraServer: Client socket error\n"); continue; }
+                    if (client == __INVALID_SOCKET__) { continue; }
                     FD_SET(client, &writeable);
                     frame_ready = true;
+                    //printf("Add client to writable.  j=%d\n", j);
                 }
             }
         }
@@ -324,12 +288,11 @@ void * CameraServer::FrameServerThread(void *arg)
         tv.tv_sec = 0;
         tv.tv_usec = 83333;
 
-        // *** Select on activity on the server socket
+
         dup_readable = readable;
         dup_writeable = writeable;
-
         ret = select(FD_SETSIZE, &dup_readable, &dup_writeable, NULL, &tv);
-        if(ret < 0) {
+        if (ret < 0) {
             int err = errno;
             fprintf(stderr, "CameraServer:  Error. Select failed: %s\n", strerror(err));
             break; //Exit loop
@@ -339,69 +302,267 @@ void * CameraServer::FrameServerThread(void *arg)
             continue;
         }
 
+#ifdef _WIN32
+        int i = 0;
+        char servername[50];
+
+        if (FD_ISSET(C->FrameServer()->Fd(), &dup_readable)) {
+            snprintf(servername, sizeof(servername), "FRAME_SERVER");
+            AcceptClient(C->FrameServer(), &readable, servername);
+            printf("New FRAME_SERVER client connection.\n");
+
+        }
+        else if (FD_ISSET(C->CommandServer()->Fd(), &dup_readable)) {
+            snprintf(servername, sizeof(servername), "COMMAND_SERVER");
+            AcceptClient(C->CommandServer(), &readable, servername);
+            printf("New COMMAND_SERVER client connection.\n");
+            //dup_readable = readable;
+        }
+
+        // *** Check if FRAME SERVER clients are in READ or WRITE Fds
+        for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+            int client = C->FrameServer()->Clients()[j];
+
+            if (client == __INVALID_SOCKET__) continue;
+
+            if (FD_ISSET(client, &dup_readable)) {
+
+                char buffer[CAMERA_SERVER_MAXMSG];
+                int nbytes;
+
+                if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
+                    // *** Client connection closed
+                    MP_close(client);
+                    FD_CLR(client, &readable);
+                    FD_CLR(client, &writeable);
+
+                    C->FrameServer()->Clients()[j] = __INVALID_SOCKET__;
+                    C->FrameServer()->DecNumClients();
+                    fprintf(stderr, "Closed FRAME_SERVER Client\n");
+                }
+                else {
+                    fprintf(stderr, "Got data from FRAME SERVER Client %d bytes.\n", nbytes);
+                }
+
+
+
+            } //Is in readable
+
+            if (FD_ISSET(client, &dup_writeable)) {
+                //Send Frame
+                if (true) {
+                    if (frame_ready) {
+                        int sentbytes;
+                        int totalsent = 0;
+                        //printf("Send Frames!!!, framedatabufferlen=%d\n", framedatabufferlen);
+                        while (totalsent < framedatabufferlen) {
+                            sentbytes = MP_write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
+                            if (sentbytes <= __SOCKET_ERROR__) {
+                                int err = WSAGetLastError();
+                                LPSTR errstr = NULL;
+                                int size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, 0, err, 0, (LPSTR)&errstr, 0, 0);
+
+                                fprintf(stderr, "CameraServer: Error on writing frame. errno=%d, strerror = [%s]\n", err, errstr);
+                                break;
+                            }
+                            totalsent += sentbytes;
+
+                        }
+                        //printf("totalsent=%d, sentbytes=%d, framedatabufferlen=%d\n", totalsent, sentbytes, framedatabufferlen);
+
+                    }
+                    FD_CLR(client, &writeable);
+                }
+            }
+
+        }// End of for loop FRAME_SERVER
+
+        for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
+            int client = C->CommandServer()->Clients()[j];
+
+            if (client == __INVALID_SOCKET__) continue;
+
+            printf("Valid COMMAND_SERVER client.\n");
+            if (FD_ISSET(client, &dup_readable)) {
+
+                printf("COMMAND_SERVER client read.\n");
+                if (true) {
+                    char buffer[CAMERA_SERVER_MAXMSG];
+                    int nbytes;
+
+                    memset(buffer, '\0', sizeof(buffer));
+                    if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
+                        // *** Client connection closed
+                        MP_close(client);
+                        FD_CLR(client, &readable);
+                        FD_CLR(client, &writeable);
+
+                        C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
+                        C->CommandServer()->DecNumClients();
+                        fprintf(stderr, "Closed COMMAND Client\n");
+                    }
+                    else {
+                        int ret;
+                        bool validcmd = false;
+                        char retstatus[CAMERA_SERVER_MAXRESP];
+                        char errstr[CAMERA_SERVER_MAXRESP];
+
+                        fprintf(stderr, "Got COMMAND Client %d bytes. [%s]\n", nbytes, buffer);
+                        // Get the command and close
+                        if ((ret = std::strncmp(buffer, ENA_RECORDING_CMD, strlen(ENA_RECORDING_CMD))) == 0) {
+                            fprintf(stderr, "Enable recording. ret= %d\n", ret);
+                            C->PCamApi()->SetLogging(true);
+                            validcmd = true;
+                        }
+                        else if ((ret = std::strncmp(buffer, DISA_RECORDING_CMD, strlen(DISA_RECORDING_CMD))) == 0) {
+                            fprintf(stderr, "Disabled recording.\n");
+                            C->PCamApi()->SetLogging(false);
+                            validcmd = true;
+                        }
+                        else if ((ret = std::strncmp(buffer, SET_GAIN_CMD, strlen(SET_GAIN_CMD))) == 0) {
+                            int gain;
+
+                            gain = std::stoi(buffer + strlen(SET_GAIN_CMD), nullptr, 10);
+                            //fprintf(stderr, "Set Gain to %d.\n", gain);
+                            C->PCamApi()->SetGain(gain);
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, SET_EXPOSURE_CMD, strlen(SET_EXPOSURE_CMD)) == 0) {
+                            int exposure;
+
+                            //fprintf(stderr, "Set Exposure to %d.\n", exposure);
+                            exposure = std::stoi(buffer + strlen(SET_EXPOSURE_CMD), nullptr, 10);
+                            C->PCamApi()->SetExposure(exposure);
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, SET_OFFSET_X_CMD, strlen(SET_OFFSET_X_CMD)) == 0) {
+                            int offset_x;
+                            //fprintf(stderr, "Set Exposure to %d.\n", exposure);
+                            offset_x = std::stoi(buffer + strlen(SET_OFFSET_X_CMD), nullptr, 10);
+                            C->PCamApi()->SetOffsetX(offset_x);
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, SET_OFFSET_Y_CMD, strlen(SET_OFFSET_Y_CMD)) == 0) {
+                            int offset_y;
+                            //fprintf(stderr, "Set Exposure to %d.\n", exposure);
+                            offset_y = std::stoi(buffer + strlen(SET_OFFSET_Y_CMD), nullptr, 10);
+                            C->PCamApi()->SetOffsetY(offset_y);
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, STOP_IMAGING_CMD, strlen(STOP_IMAGING_CMD)) == 0) {
+
+                            fprintf(stderr, "Stop Imaging\n");
+                            C->PCamApi()->StopImaging();
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, EXIT_CMD, strlen(EXIT_CMD)) == 0) {
+
+                            fprintf(stderr, "Exiting...\n");
+                            C->PCamApi()->Exit();
+                            validcmd = true;
+                        }
+                        else if (std::strncmp(buffer, SNAP_CMD, strlen(SNAP_CMD)) == 0) {
+
+                            fprintf(stderr, "Snap Image...\n");
+                            C->PCamApi()->Snap();
+                            validcmd = true;
+                        }
+                        else {
+                            snprintf(errstr, sizeof(errstr), "Unknown command.");
+                        }
+
+                        if (validcmd) {
+                            snprintf(retstatus, sizeof(retstatus), "ACK: %s\n", buffer);
+                        }
+                        else {
+                            snprintf(retstatus, sizeof(retstatus), "ERR: %s\n", errstr);
+                        }
+
+                        if (MP_write(client, retstatus, strlen(retstatus)) < 0) {
+                            int err = errno;
+                            fprintf(stderr, "CameraServer: Error on writting command response. errno=%d, strerror=[%s]\n", err, strerror(err));
+                        }
+                        MP_close(client);
+                        FD_CLR(client, &readable);
+                        FD_CLR(client, &writeable);
+
+                        C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
+                        C->CommandServer()->DecNumClients();
+                        fprintf(stderr, "Closed COMMAND Client\n");
+
+                    }
+
+                }
+
+            } //Is in readable
+        } //end of CommandServer client forloop
+
+#else
         //fprintf(stderr, "CameraServer:  Select detected activity\n");
         // *** Check the file descriptors for activity
         for (int i = 0; i < FD_SETSIZE; i++) {
-            
+
             // *** Activity on READ FD set
-            if(FD_ISSET(i, &dup_readable)) {
+            if (FD_ISSET(i, &dup_readable)) {
                 char servername[50];
-                
+
+                printf("Activity in server socket:  Accept New connections\n");
                 // *** Activity in server socket:  Accept New connections
-                if(i == C->FrameServer()->Fd()) {
+                if (i == C->FrameServer()->Fd()) {
                     snprintf(servername, sizeof(servername), "FRAME_SERVER");
                     AcceptClient(C->FrameServer(), &readable, servername);
+                    printf("New FRAME_SERVER client connection.\n");
                 }
-                else if(i == C->CommandServer()->Fd()) {
+                else if (i == C->CommandServer()->Fd()) {
                     snprintf(servername, sizeof(servername), "COMMAND_SERVER");
                     AcceptClient(C->CommandServer(), &readable, servername);
+                    printf("New COMMAND_SERVER client connection.\n");
                 }
                 //else if(i == C->TelemetryServer()->Fd()) {
                 //    AcceptClient(C->TelemetryServer(), &readable);
                 //}
             }
-    
+
             // *** Check if FRAME SERVER clients are in READ or WRITE Fds
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->FrameServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
+                if (client == __INVALID_SOCKET__) continue;
 
-                if(FD_ISSET(i, &dup_readable)) {
+                if (FD_ISSET(i, &dup_readable)) {
 
-                    if(i == client) {
+                    if (i == client) {
                         char buffer[CAMERA_SERVER_MAXMSG];
                         int nbytes;
 
                         if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
                             // *** Client connection closed
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->FrameServer()->Clients()[j] = SOCKET_ERROR;
+                            C->FrameServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->FrameServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
                         }
                         else {
                             fprintf(stderr, "Got data from FRAME SERVER Client %d bytes.\n", nbytes);
                         }
-                    
+
                     }
 
                 } //Is in readable
 
-                if(FD_ISSET(i, &dup_writeable)) {
+                if (FD_ISSET(i, &dup_writeable)) {
                     //Send Frame
-                    if(i == client) {
-                        if(frame_ready) {
-                            
+                    if (i == client) {
+                        if (frame_ready) {
                             ssize_t sentbytes;
                             int totalsent = 0;
                             while (totalsent < framedatabufferlen) {
-                                sentbytes = write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
-                                if(sentbytes < 0) {
+                                sentbytes = MP_write(client, framedatabuffer + totalsent, framedatabufferlen - totalsent);
+                                if (sentbytes < 0) {
                                     int err = errno;
-                                    fprintf(stderr, "CameraServer: Error on writting frame. errno=%d, strerror = [%s]\n", err, strerror(err));
+                                    fprintf(stderr, "CameraServer: Error on writing frame. errno=%d, strerror = [%s]\n", err, strerror(err));
                                     break;
                                 }
                                 totalsent += sentbytes;
@@ -413,25 +574,24 @@ void * CameraServer::FrameServerThread(void *arg)
                 }
 
             }//end of client FOR
-
             for (int j = 0; j < CAMERA_SERVER_MAX_CLIENTS; j++) {
                 int client = C->CommandServer()->Clients()[j];
 
-                if (client == SOCKET_ERROR) continue;
+                if (client == __INVALID_SOCKET__) continue;
 
-                if(FD_ISSET(i, &dup_readable)) {
+                if (FD_ISSET(i, &dup_readable)) {
 
-                    if(i == client) {
+                    if (i == client) {
                         char buffer[CAMERA_SERVER_MAXMSG];
                         int nbytes;
 
-			memset(buffer,'\0', sizeof(buffer));
+                        memset(buffer, '\0', sizeof(buffer));
                         if ((nbytes = read_from_client(client, buffer, sizeof(buffer))) < 0) {
                             // *** Client connection closed
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->CommandServer()->Clients()[j] = SOCKET_ERROR;
+                            C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->CommandServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
                         }
@@ -443,74 +603,74 @@ void * CameraServer::FrameServerThread(void *arg)
 
                             fprintf(stderr, "Got COMMAND Client %d bytes. [%s]\n", nbytes, buffer);
                             // Get the command and close
-                            if((ret = std::strncmp(buffer, ENA_RECORDING_CMD, strlen(ENA_RECORDING_CMD))) == 0) {
+                            if ((ret = std::strncmp(buffer, ENA_RECORDING_CMD, strlen(ENA_RECORDING_CMD))) == 0) {
                                 fprintf(stderr, "Enable recording. ret= %d\n", ret);
                                 C->PCamApi()->SetLogging(true);
                                 validcmd = true;
-                            }  
-                            else if((ret = std::strncmp(buffer, DISA_RECORDING_CMD, strlen(DISA_RECORDING_CMD))) == 0) {
+                            }
+                            else if ((ret = std::strncmp(buffer, DISA_RECORDING_CMD, strlen(DISA_RECORDING_CMD))) == 0) {
                                 fprintf(stderr, "Disabled recording.\n");
                                 C->PCamApi()->SetLogging(false);
                                 validcmd = true;
-                            }  
-                            else if((ret = std::strncmp(buffer, SET_GAIN_CMD, strlen(SET_GAIN_CMD))) == 0) {
+                            }
+                            else if ((ret = std::strncmp(buffer, SET_GAIN_CMD, strlen(SET_GAIN_CMD))) == 0) {
                                 int gain;
 
-                                gain = std::stoi(buffer+strlen(SET_GAIN_CMD), nullptr, 10);
+                                gain = std::stoi(buffer + strlen(SET_GAIN_CMD), nullptr, 10);
                                 //fprintf(stderr, "Set Gain to %d.\n", gain);
                                 C->PCamApi()->SetGain(gain);
                                 validcmd = true;
-                            }  
-                            else if(std::strncmp(buffer, SET_EXPOSURE_CMD, strlen(SET_EXPOSURE_CMD)) == 0) {
+                            }
+                            else if (std::strncmp(buffer, SET_EXPOSURE_CMD, strlen(SET_EXPOSURE_CMD)) == 0) {
                                 int exposure;
 
                                 //fprintf(stderr, "Set Exposure to %d.\n", exposure);
-                                exposure = std::stoi(buffer+strlen(SET_EXPOSURE_CMD), nullptr, 10);
+                                exposure = std::stoi(buffer + strlen(SET_EXPOSURE_CMD), nullptr, 10);
                                 C->PCamApi()->SetExposure(exposure);
                                 validcmd = true;
-                            }  
-                            else if(std::strncmp(buffer, STOP_IMAGING_CMD, strlen(STOP_IMAGING_CMD)) == 0) {
+                            }
+                            else if (std::strncmp(buffer, STOP_IMAGING_CMD, strlen(STOP_IMAGING_CMD)) == 0) {
 
                                 fprintf(stderr, "Stop Imaging\n");
                                 C->PCamApi()->StopImaging();
                                 validcmd = true;
-                            }  
-                            else if(std::strncmp(buffer, EXIT_CMD, strlen(EXIT_CMD)) == 0) {
+                            }
+                            else if (std::strncmp(buffer, EXIT_CMD, strlen(EXIT_CMD)) == 0) {
 
                                 fprintf(stderr, "Exiting...\n");
                                 C->PCamApi()->Exit();
                                 validcmd = true;
-                            }  
-                            else if(std::strncmp(buffer, SNAP_CMD, strlen(SNAP_CMD)) == 0) {
+                            }
+                            else if (std::strncmp(buffer, SNAP_CMD, strlen(SNAP_CMD)) == 0) {
 
                                 fprintf(stderr, "Snap Image...\n");
                                 C->PCamApi()->Snap();
                                 validcmd = true;
-                            }  
+                            }
                             else {
                                 snprintf(errstr, sizeof(errstr), "Unknown command.");
                             }
 
-                            if(validcmd) {
+                            if (validcmd) {
                                 snprintf(retstatus, sizeof(retstatus), "ACK: %s\n", buffer);
                             }
                             else {
                                 snprintf(retstatus, sizeof(retstatus), "ERR: %s\n", errstr);
                             }
 
-                            if(write(client, retstatus, strlen(retstatus)) < 0) {
+                            if (MP_write(client, retstatus, strlen(retstatus)) < 0) {
                                 int err = errno;
                                 fprintf(stderr, "CameraServer: Error on writting command response. errno=%d, strerror=[%s]\n", err, strerror(err));
                             }
-                            close(client);
+                            MP_close(client);
                             FD_CLR(client, &readable);
                             FD_CLR(client, &writeable);
-                            C->CommandServer()->Clients()[j] = SOCKET_ERROR;
+                            C->CommandServer()->Clients()[j] = __INVALID_SOCKET__;
                             C->CommandServer()->DecNumClients();
                             fprintf(stderr, "Closed COMMAND Client\n");
-                             
+
                         }
-                    
+
                     }
 
                 } //Is in readable
@@ -518,8 +678,13 @@ void * CameraServer::FrameServerThread(void *arg)
 
         } //end of 
 
+
+#endif    
+
+
     } // End of while(1)
     fprintf(stderr, "Server ended.\n");
+    C->m_complete = true;
     return NULL;
 }
 

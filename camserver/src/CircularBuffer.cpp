@@ -15,22 +15,17 @@
   @author:           S. Felipe Fregoso
   @par Description:  Circular buffer to hold camera frames.
  ******************************************************************************
+
  */
+#include "MultiPlatform.h"
 #include <string.h>
-#include <sys/sysinfo.h>
 #include "CircularBuffer.h"
-#include "VimbaCPP/Include/VimbaCPP.h"
+//#include "VimbaCPP/Include/VimbaCPP.h"
 
 int getRAM(unsigned long *totalram, unsigned long *freeram)
 {
-    struct sysinfo info;
-
-    sysinfo(&info);
-
-    fprintf(stderr, "System Memory:  totalRAM=%ld, freeRAM=%ld\n", info.totalram, info.freeram);
-    *totalram = info.totalram;
-    *freeram = info.freeram;
-
+	MP_getRamStates(totalram, freeram);
+	fprintf(stderr, "System Memory:  totalRAM=%lu, freeRAM=%lu\n", *totalram, *freeram);
     return 0;
 }
 
@@ -41,7 +36,7 @@ size_t computeCircularBufferSizeBasedOffRAM(int width, int height)
 
     //Allocate 20% of the totalram
     getRAM(&totalram, &freeram);
-    ramtouse = freeram * .10;
+    ramtouse = (unsigned long)(freeram * .10);
 
     size = ramtouse/(sizeof(struct CamFrame) + (width * height));
 
@@ -64,8 +59,10 @@ CircularBuffer::CircularBuffer(size_t size, int width, int height) :
 
     tempsize = computeCircularBufferSizeBasedOffRAM(width, height);
     if (tempsize < size) {
-        fprintf(stderr, "Circular buffer size was changed from [%d] to [%d] based off system memory.\n", (int)size, (int)tempsize);
-        size = tempsize;
+        // fprintf(stderr, "Circular buffer size was changed from [%d] to [%d] based off system memory.\n", (int)size, (int)tempsize);
+		fprintf(stderr, "Circular buffer size set to 200\n");
+        // size = tempsize;
+		size = 200;
     }
     m_max_size = size;
 
@@ -105,6 +102,21 @@ CircularBuffer::CircularBuffer(size_t size, int width, int height) :
     fprintf(stderr, "Circular buffer created.\n");
 }
 
+CircularBuffer::~CircularBuffer()
+{
+// Free up allocated data
+//for(size_t i = 0; i <  m_max_size; i++) {
+//       if(m_buf[i].m_data != NULL)
+//		free(m_buf[i].m_data);
+//        }
+
+// Destroy pthread variables
+pthread_mutex_unlock(&m_mutex);
+// pthread_mutex_destroy(&m_mutex);
+// pthread_cond_destroy(&m_cond);
+}
+
+
 /*
  * Reset()
  *     "Emptys the circular buffer by resetting the head and tail pointers
@@ -129,6 +141,7 @@ void CircularBuffer::TouchReset()
     Reset();
 }
 
+/*
 void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame, const struct CamFrameHeader *header)
 {
     VmbUchar_t* data;
@@ -169,7 +182,7 @@ void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame, const struct CamFrameHead
 
     //fprintf(stderr, "timestamp=%lld, frameID=%lld, imgSize=%lld, width=%lld, height=%lld, gain=%f, gain_min=%f, gain_max=%f, exposure=%f, exposure_min=%f, exposure_max=%f, rate=%f, rate_measured=%f, logging=%d\n", m_buf[m_head].header.m_timestamp, m_buf[m_head].header.m_frame_id, m_buf[m_head].header.m_imgsize, m_buf[m_head].header.m_width, m_buf[m_head].header.m_height, m_buf[m_head].header.m_gain, m_buf[m_head].header.m_gain_min, m_buf[m_head].header.m_gain_max, m_buf[m_head].header.m_exposure, m_buf[m_head].header.m_exposure_min, m_buf[m_head].header.m_exposure_max, m_buf[m_head].header.m_rate, m_buf[m_head].header.m_rate_measured, (int)m_buf[m_head].header.m_logging);
 #endif
-    memcpy(m_buf[m_head].m_data, (unsigned char *) data, header->m_imgsize); 
+    memcpy(m_buf[m_head].m_data, (unsigned char *) data, (unsigned long)(header->m_imgsize)); 
 
     if(m_full) {
         // increment tail and wrap around if needed
@@ -185,6 +198,30 @@ void CircularBuffer::Put(AVT::VmbAPI::FramePtr pFrame, const struct CamFrameHead
     pthread_cond_signal(&m_cond);
     pthread_mutex_unlock(&m_mutex);
 }
+*/
+
+void CircularBuffer::Put(unsigned char *data, const struct CamFrameHeader *header)
+{
+	pthread_mutex_lock(&m_mutex);
+	memcpy(&m_buf[m_head].header, header, sizeof(*header));
+
+	//fprintf(stderr, "timestamp=%lld, frameID=%lld, imgSize=%lld, width=%lld, height=%lld, gain=%f, gain_min=%f, gain_max=%f, exposure=%f, exposure_min=%f, exposure_max=%f, rate=%f, rate_measured=%f, logging=%d\n", m_buf[m_head].header.m_timestamp, m_buf[m_head].header.m_frame_id, m_buf[m_head].header.m_imgsize, m_buf[m_head].header.m_width, m_buf[m_head].header.m_height, m_buf[m_head].header.m_gain, m_buf[m_head].header.m_gain_min, m_buf[m_head].header.m_gain_max, m_buf[m_head].header.m_exposure, m_buf[m_head].header.m_exposure_min, m_buf[m_head].header.m_exposure_max, m_buf[m_head].header.m_rate, m_buf[m_head].header.m_rate_measured, (int)m_buf[m_head].header.m_logging);
+	memcpy(m_buf[m_head].m_data, data, (unsigned long)(header->m_imgsize));
+
+	if (m_full) {
+		// increment tail and wrap around if needed
+		m_tail = (m_tail + 1) % m_max_size;
+		fprintf(stderr, "****** Circular Buffer is FULL\n");
+	}
+
+	// increment head and wrap around if needed
+	m_head = (m_head + 1) % m_max_size;
+	m_full = m_head == m_tail;
+
+	m_predicate = 1;
+	pthread_cond_signal(&m_cond);
+	pthread_mutex_unlock(&m_mutex);
+}
 
 
 bool CircularBuffer::GetOnSignal(struct CamFrame *frame)
@@ -194,8 +231,7 @@ bool CircularBuffer::GetOnSignal(struct CamFrame *frame)
     bool updated = false;
 
     pthread_mutex_lock(&m_mutex);
-
-    clock_gettime(CLOCK_REALTIME, &ts);
+	MP_clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += 5;
 
     if(!m_predicate)
@@ -226,11 +262,11 @@ bool CircularBuffer::PeekOnSignal(struct CamFrame *frame)
 
     pthread_mutex_lock(&m_mutex);
 
-    clock_gettime(CLOCK_REALTIME, &ts);
+	MP_clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_nsec += 1000;
     if(ts.tv_nsec >= 1E9) {
         ts.tv_sec += 1;
-        ts.tv_nsec -= 1E9;
+        ts.tv_nsec -= (long)(1E9);
     }
 
     if(!m_predicate)
@@ -259,7 +295,7 @@ struct CamFrame *CircularBuffer::GetOnSignal()
 
     pthread_mutex_lock(&m_mutex);
 
-    clock_gettime(CLOCK_REALTIME, &ts);
+	MP_clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += 3;
 
     if(!m_predicate)

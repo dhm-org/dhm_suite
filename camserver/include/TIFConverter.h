@@ -1,25 +1,21 @@
-#include "FrameObserver.h"
-#include <string.h>
-#include "VimbaCPP/Include/VimbaCPP.h"
+// #include "FrameObserver.h"
+#include <iostream>
+#include <string>
+// #include "VimbaCPP/Include/VimbaCPP.h"
 //#include "ProgramConfig.h"
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif //WIN32
+using namespace std;
 
-
-
-namespace AVT {
-namespace VmbAPI {
-namespace Examples {
 
 class TIFConverter 
 {
 public:
-	TIFConverter(std:: string fname, FramePtr Data); 
-	TIFConverter(std:: string fname); 
-        TIFConverter(std::string fname, int frame_id, int imgSize, int width, int height);
+	// TIFConverter(std:: string fname, FramePtr Data); 
+	TIFConverter(std::string fname); 
+    TIFConverter(std::string fname, int frame_id, int imgSize, int width, int height);
 	~TIFConverter();
-	int convertToTIF();
 	int convertToTIF(char* imageBuf);
 	//getters and setters:
 	int getShutter();
@@ -36,7 +32,7 @@ public:
 private:
 	
 	void saveMetaDataToTxt();
-	FramePtr imgData;
+	// FramePtr imgData;
 	// unsigned char* imgData;
 	//std::string Filename;
 	std::string Filename;
@@ -50,4 +46,4 @@ private:
 
 };
 
-}}} // namespace AVT::VmbAPI::Examples
+// }}} // namespace AVT::VmbAPI::Examples

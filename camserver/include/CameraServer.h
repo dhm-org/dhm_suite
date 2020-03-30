@@ -17,11 +17,13 @@
  ******************************************************************************
  */
 #include "CamApi.h"
+#include "CamCommands.h"
 #ifndef _CAMERA_SERVER_H_
 #define _CAMERA_SERVER_H_
 
 #include <pthread.h>
 #include "CircularBuffer.h"
+#include <string>
 
 #define CAMERA_SERVER_MAX_CLIENTS 5
 #define CAMERA_SERVER_MAXMSG 256
@@ -44,7 +46,7 @@ private:
     int m_clients[CAMERA_SERVER_MAX_CLIENTS];
     int m_numclients;
     int m_port;
-    int m_server_connected;
+    bool m_server_connected;
 };
 
 class CameraServer
@@ -65,6 +67,7 @@ public:
     float FramePublishRate(){return m_frame_publish_rate_hz;}
     void SetRunning(bool state){m_running = state;}
     bool IsRunning(){return m_running;}
+    bool IsComplete(){return m_complete;}	
     CircularBuffer *CircBuff(){return m_circbuff;}
     CamApi *PCamApi(){return m_camapi;}
     void UpdateFrame(struct CamFrame *frame);
@@ -79,6 +82,7 @@ private:
     static void *FrameServerThread(void *arg);
 
     bool m_running;
+    bool m_complete = false;
     float m_frame_publish_rate_hz;
     pthread_t m_serverthread;
     CircularBuffer *m_circbuff;

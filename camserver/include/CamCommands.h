@@ -10,6 +10,8 @@
 #define  DISA_RECORDING_CMD   "DISABLE_RECORDING" //Disable recording
 #define  SET_GAIN_CMD         "GAIN=" //db  Set gain value of camera
 #define  SET_EXPOSURE_CMD     "EXPOSURE=" //us  Set exposure value of camera
+#define  SET_OFFSET_X_CMD     "OFFSET_X=" // Image X offset in pixels
+#define  SET_OFFSET_Y_CMD     "OFFSET_Y=" // Image Y offset in pixels
 
 
 #endif

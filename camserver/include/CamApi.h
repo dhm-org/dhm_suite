@@ -13,49 +13,39 @@
 
   @file              CamApi.h
   @author:           S. Felipe Fregoso
-  @par Description:  Camera interface
+  @Modified			 F. Loya
+  @par Description:  Abstract Camera Interface Class
  ******************************************************************************
  */
 #ifndef _CAM_API_H_
 #define _CAM_API_H_
 
-#include "VimbaCPP/Include/VimbaCPP.h"
-#include <VimbaCPP/Include/VimbaSystem.h>
-#include "FrameObserver.h"
-//#include "CameraServer.h"
 
 
 class CamApi {
 
 public:
-    CamApi();
-    int Startup();
-    void Shutdown();
-    int QueryConnectedCameras();
-    int FindCameraWithSerialNum(char *sn);
-    AVT::VmbAPI::CameraPtrVector GetCameraList();
-    //int OpenAndConfigCamera(int cameraidx, struct UserParams *userparams);
-    FrameObserver *PFrameObserver(){return m_pFrameObserver;}
-    int OpenAndConfigCamera(int cameraidx, int width_in, int height_in, double rate_in, const char *configfile, const char *triggersource);
-    int StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_enabled, char *rootdir, char *datadir, char *sessiondir);
-    int StopAsyncContinuousImageAcquisition();
-    int StartCameraServer(int frame_port, int command_port, int telem_port);
-    void SetVerbose(bool verbose) {m_verbose = verbose;}
-    void SetLogging(bool state);
-    void SetGain(int gain);
-    void SetExposure(int exposure);
-    void StopImaging();
-    void Exit();
-    void Snap();
-    int PrepareTrigger(AVT::VmbAPI::CameraPtr camera, const char *triggerSelector, const char *triggerMode, const char *triggerSource);
-
-private:
-    AVT::VmbAPI::VimbaSystem *       m_system;                   // A reference to our Vimba singleton
-    AVT::VmbAPI::CameraPtrVector     m_cameras;
-    AVT::VmbAPI::CameraPtr           m_pCamera;                  // The currently streaming camera
-    FrameObserver*       m_pFrameObserver;           // Every camera has its own frame observer
-    CircularBuffer *m_circbuff;
-    bool m_verbose;
+  
+    	virtual int Startup() = 0;
+	virtual void Shutdown() = 0;
+	virtual int QueryConnectedCameras() = 0;
+	virtual int FindCameraWithSerialNum(char *sn) = 0;
+	virtual int OpenAndConfigCamera(int cameraidx, int width_in, int height_in, int offset_x_in, int offset_y_in, double rate_in, const char *configfile, const char *triggersource) = 0;
+	virtual int StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_enabled, char *rootdir, char *datadir, char *sessiondir) = 0;
+	virtual int StopAsyncContinuousImageAcquisition() = 0;
+	virtual int StartCameraServer(int frame_port, int command_port, int telem_port) = 0;
+	virtual void SetVerbose(bool verbose) = 0;
+	virtual void SetLogging(bool state) = 0;
+	virtual void SetGain(int gain) = 0;
+	virtual void SetExposure(int exposure) = 0;
+	virtual void StopImaging() = 0;
+	virtual void Exit() = 0;
+	virtual void Snap() = 0;
+	virtual int PrepareTrigger(const char *triggerSelector, const char *triggerMode, const char *triggerSource) = 0;
+	virtual void SetOffsetX(int offset_x) = 0;
+	virtual void SetOffsetY(int offset_y) = 0;
+	virtual void openSDK() = 0;
+	virtual void closeSDK() = 0;
 };
 
 #endif
