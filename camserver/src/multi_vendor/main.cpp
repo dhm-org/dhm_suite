@@ -16,8 +16,6 @@
   @par Description:  Multi_vendor Main for the camera server.
  ******************************************************************************
  */
-
-
 #include <iostream>
 #include <MultiPlatform.h>
 #include <stdio.h>
@@ -129,7 +127,6 @@ void usage(char *name)
     printf( "\t-x  trigger_source Set camera's FrameStart Trigger Source. Default is Freerun. -r option has not effect.\n");
     printf( "\t                   Valid values [Freerun|Line0 (FLIR) |Line1|Line2|FixedRate|Software|Action0|Action1].\n");
 }
-
 
 void parse_commandline(int argc, char* argv[], struct UserParams *params)
 {
@@ -412,11 +409,14 @@ void *sharedLib4 = NULL;
 int loadSpinnakerAPI(void)
 	{
         char *error;
-	sharedLib3 = dlopen("/usr/lib/libSpinnaker.so.1.27.0.48",RTLD_NOW | RTLD_GLOBAL);
+        char dllpath[256] = "/usr/lib/libSpinnaker.so.";
+	strcat(dllpath,SPINNAKER_SDK_VERSION);
+	// sharedLib3 = dlopen("/usr/lib/libSpinnaker.so.1.27.0.48",RTLD_NOW | RTLD_GLOBAL);
+	sharedLib3 = dlopen(dllpath,RTLD_NOW | RTLD_GLOBAL);
 	if (sharedLib3 == NULL)
                 {
 		error = dlerror();
-                std::cout << "Error loading /usr/lib/libSpinnaker.so.1.27.0.48: " << error << ", exiting" << std::endl;
+                std::cout << "Error loading " << dllpath << ": " << error << ", exiting" << std::endl;
                 return -3;
                 }
         sharedLib2 = dlopen("/usr/lib/x86_64-linux-gnu/libtiff.so.5",RTLD_NOW | RTLD_GLOBAL);
@@ -426,7 +426,7 @@ int loadSpinnakerAPI(void)
                 std::cout << "Error loading /usr/lib/x86_64-linux-gnu/libtiff.so.5: " << error << ", exiting" << std::endl;
                 return -2;
                 }
-	sharedLib1 = dlopen("/opt/DHM/camserver/libSpinnakerCamAPI.so",RTLD_NOW);
+	sharedLib1 = dlopen("/opt/DHM/camserver/lib/libSpinnakerCamAPI.so",RTLD_NOW);
         if (sharedLib1 == NULL)
             {
             error = dlerror();
@@ -439,18 +439,25 @@ int loadSpinnakerAPI(void)
 int loadVimbaAPI(void)
 	{
 	char *error;
-	sharedLib4 = dlopen("/opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaC.so",RTLD_NOW | RTLD_GLOBAL);
+	char dllpath[256] = "/opt/";
+	int prefix_offset;
+	strcpy(dllpath+5,VIMBA_SDK_VERSION);
+	prefix_offset = strlen(dllpath);
+	strcpy(dllpath+prefix_offset,"/VimbaCPP/DynamicLib/x86_64bit/libVimbaC.so");
+	sharedLib4 = dlopen(dllpath,RTLD_NOW | RTLD_GLOBAL);
         if (sharedLib4 == NULL)
             {
             error = dlerror();
-            std::cout << "Error loading /opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaC.so: " << error << ", exiting" << std::endl;
+            std::cout << "Error loading " << dllpath << ": " << error << ", exiting" << std::endl;
             return -4;
             }
-	sharedLib3 = dlopen("/opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaCPP.so",RTLD_NOW | RTLD_GLOBAL);
+
+	strcpy(dllpath+prefix_offset,"/VimbaCPP/DynamicLib/x86_64bit/libVimbaCPP.so");
+	sharedLib3 = dlopen(dllpath,RTLD_NOW | RTLD_GLOBAL);
         if (sharedLib3 == NULL)
             {
             error = dlerror();
-            std::cout << "Error loading /opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaCPP.so: " << error << ", exiting" << std::endl;
+            std::cout << "Error loading " << dllpath << ": " << error << ", exiting" << std::endl;
             return -3;
             }
 	sharedLib2 = dlopen("/usr/lib/x86_64-linux-gnu/libtiff.so.5",RTLD_NOW | RTLD_GLOBAL);
@@ -490,8 +497,6 @@ int main( int argc, char* argv[] )
     #ifdef _WIN32
         HMODULE camAPiDll;
     #endif
-
-    
 
     char *error;
     CreateCamAPI_t CreateCamAPI;             // Pointer to CamAPI Create Function from DLL/Loadable Library

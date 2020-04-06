@@ -529,21 +529,27 @@ void SpinnakerCamApi::Shutdown()
 	cout << "Shutting down the Spinnaker Frame Observer" << endl;
 
 	// Terminates the Frame consumer thread and waits for the
-    // termination to complete
-	m_pFrameObserver->ShutdownFrameConsumer();
-
-	try     {
-		m_cameras.Clear();   // Must call before exiting
-        m_pCamera->DeInit();
-		m_pCamera = nullptr; // Overloaded '=' operator de-references smart pointer (decrements usage count)
-		printf("Shutting down the Spinnaker System Singleton.\n");
-		this->closeSDK();
-		printf("Spinnaker System Singleton Released.\n");
-		}
-	catch (Spinnaker::Exception &e)
+    	// termination to complete
+	if(m_pFrameObserver != NULL)
 		{
-		cout << "Error: " << e.what() << endl;
+		m_pFrameObserver->ShutdownFrameConsumer();
+		try     {
+			m_cameras.Clear();   // Must call before exiting
+        		m_pCamera->DeInit();
+			m_pCamera = nullptr; // Overloaded '=' operator de-references smart pointer (decrements usage count)
+			printf("Shutting down the Spinnaker System Singleton.\n");
+			this->closeSDK();
+			}
+		catch (Spinnaker::Exception &e)
+			{
+			cout << "Error: " << e.what() << endl;
+			}
 		}
+	else
+		{
+		this->closeSDK();
+		}
+	printf("Spinnaker System Singleton Released.\n");
 	
 }
 

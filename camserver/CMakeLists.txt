@@ -1,5 +1,5 @@
 # Specify the minimum version for CMake
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.15)
 
 # Project's name
 project(camserver)
@@ -36,10 +36,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_SOURCE_DIR}/lib")
 
 # UBUNTU 18.04
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin/Ubu18.04/Release/)
+	set(VIMBA_SDK_VERSION "Vimba_3_1")
+	set(SPINNAKER_SDK_VERSION "1.27.0.48")
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin/Ubu18.04/Release/)
 	set(SPINNAKER_SDK_INCLUDE_DIR "/usr/include/spinnaker")
 	set(TIFF_SOURCE_DIR "/usr/lib/x86-linux-gnu")
-	set(VIMBA_SDK_INCLUDE_DIR "/opt/Vimba_3_1/")
+	set(VIMBA_SDK_INCLUDE_DIR "/opt/${VIMBA_SDK_VERSION}")
 	
 	
 	include_directories(${PROJECT_SOURCE_DIR} PUBLIC	${COMMON_CAM_INCLUDE_DIR}
@@ -92,15 +94,15 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	# 	First specify a new library 'target', with the given flags
 	add_library(libSpinnaker SHARED IMPORTED GLOBAL)
 	# 	Now set that target's IMPORTED_LOCATION property to the shared librarie's file path
-	set_target_properties(libSpinnaker PROPERTIES IMPORTED_LOCATION /usr/lib/libSpinnaker.so.1.27.0.48)
+	set_target_properties(libSpinnaker PROPERTIES IMPORTED_LOCATION /usr/lib/libSpinnaker.so.${SPINNAKER_SDK_VERSION})
 
 	add_library(libVimbaCPP SHARED IMPORTED GLOBAL)
 	# 	Now set that target's IMPORTED_LOCATION property to the shared librarie's file path
-	set_target_properties(libVimbaCPP PROPERTIES IMPORTED_LOCATION /opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaCPP.so)
+	set_target_properties(libVimbaCPP PROPERTIES IMPORTED_LOCATION /opt/${VIMBA_SDK_VERSION}/VimbaCPP/DynamicLib/x86_64bit/libVimbaCPP.so)
 
 	add_library(libVimbaC SHARED IMPORTED GLOBAL)
 	# 	Now set that target's IMPORTED_LOCATION property to the shared librarie's file path
-	set_target_properties(libVimbaC PROPERTIES IMPORTED_LOCATION /opt/Vimba_3_1/VimbaCPP/DynamicLib/x86_64bit/libVimbaC.so)
+	set_target_properties(libVimbaC PROPERTIES IMPORTED_LOCATION /opt/${VIMBA_SDK_VERSION}/VimbaCPP/DynamicLib/x86_64bit/libVimbaC.so)
 
 	# We do the same thing for the Tiff library
 	add_library(libTiff SHARED IMPORTED GLOBAL)
@@ -119,6 +121,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 	# Builds the Multi vendor version of camserver, use 'target_compile_definitions' for pre-processor defines
 	add_executable(multi_camserver ${MULTI_VENDOR_CAM_SOURCE_DIR}/main.cpp ${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp)
+	target_compile_definitions(multi_camserver PRIVATE VIMBA_SDK_VERSION=\"${VIMBA_SDK_VERSION}\" SPINNAKER_SDK_VERSION=\"${SPINNAKER_SDK_VERSION}\")
 	add_library(libDL SHARED IMPORTED GLOBAL)
 	set_target_properties(libDL PROPERTIES IMPORTED_LOCATION /usr/lib/x86_64-linux-gnu/libdl.so)
 	target_link_libraries(multi_camserver libDL)
@@ -126,14 +129,16 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 						
 # WINDOWS 10, Visual Studio 2019 using V140 Toolset for Windows SDK 8.1
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin/Win32/)
+	set(VIMBA_SDK_VERSION "Vimba_3.1")
+	set(SPINNAKER_SDK_VERSION "1.27.0.48")
+    	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin/Win32/)
 	set(CMAKE_CXX_FLAGS "/MD /O2 /Ob2 /Y- /EHsc /DNDEBUG")
 	set(SPINNAKER_SDK_INCLUDE_DIR "C:/Program Files/Point Grey Research/Spinnaker/include")
 	set(SPINNAKER_SDK_LIB_DIR "C:/Program Files/Point Grey Research/Spinnaker/lib/vs2015")
 	set(TIFF_SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib/libTIFF")
 	set(PTHREADS_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/pthreads-w32-2-9-1-release/x86")
 	set(PTHREADS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include/pthreads-w32-2-9-1/include")
-	set(VIMBA_SDK_INCLUDE_DIR "C:/Program Files/Allied Vision/Vimba_3.1")
+	set(VIMBA_SDK_INCLUDE_DIR "C:/Program Files/Allied Vision/${VIMBA_SDK_VERSION}")
 	# Add include directories
 	include_directories(${PROJECT_SOURCE_DIR} PUBLIC	${COMMON_CAM_INCLUDE_DIR}
 						${TIFF_INCLUDE_DIR}
@@ -146,8 +151,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
     link_directories(	"${PROJECT_SOURCE_DIR}/lib/pthreads-w32-2-9-1-release/x86"
 						"C:/Program Files/Point Grey Research/Spinnaker/lib/vs2015"
-						"C:/Program Files/Allied Vision/Vimba_3.1/VimbaCPP/Lib/Win32"
-						"C:/Program Files/Allied Vision/Vimba_3.1/VimbaC/Lib/Win32"
+						"C:/Program Files/Allied Vision/${VIMBA_SDK_VERSION}/VimbaCPP/Lib/Win32"
+						"C:/Program Files/Allied Vision/${VIMBA_SDK_VERSION}/VimbaC/Lib/Win32"
 						"${PROJECT_SOURCE_DIR}/lib/libtiff"
 	)
 
@@ -213,6 +218,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	target_link_libraries(allied_camserver VimbaCPP VimbaC pthreadVSE2 libtiff)
 	
 	add_executable(multi_camserver ${MULTI_VENDOR_CAM_SOURCE_DIR}/main.cpp ${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp)
+	target_compile_definitions(multi_camserver PRIVATE VIMBA_SDK_VERSION=\"${VIMBA_SDK_VERSION}\" SPINNAKER_SDK_VERSION=\"${SPINNAKER_SDK_VERSION}\")
 	add_custom_command(TARGET multi_camserver POST_BUILD
  	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/lib/pthreadVSE2.dll
             ${PROJECT_SOURCE_DIR}/bin/Win32/Release/pthreadVSE2.dll VERBATIM
