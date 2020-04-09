@@ -54,6 +54,7 @@ class guiclient(QThread):
         self.outdata = None
         self.init = False
         self.outdata_RGB = None
+        self.enable_image = True
         self.enable_histogram = True
 
         self.w = None 
@@ -124,19 +125,23 @@ class guiclient(QThread):
                for i in range(255):
                   self.sig_hist_val.emit(i,self.histogram[i])
 
-               # Create an RGB version of the received image to display absolute minimums and maximums
+            if self.enable_image:
+               # Create an RGB version of the received image to display
+               # absolute minimums and maximums
                self.outdata_RGB = np.stack((self.outdata,)*3, axis=-1)
                self.outdata_RGB[self.outdata == 255] = [255,0,0]
                self.outdata_RGB[self.outdata == 0] = [0,0,255]  
 
-            # Create an image timestamp in UTC format
-            current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+               # Create an image timestamp in UTC format
+               current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-            # Emit to Qt/QML that the processed image is ready to be displayed
-            # NOTE: Had to swap the signal for width and height for QML (See dhmx for more details)
-            self.sig_img_complete.emit(current_time)
-            self.sig_header.emit(self.m_height, self.m_width, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max, self.m_gain, self.m_exposure, self.m_rate, self.m_rate_measured)
-            self.init = True
+               # Emit to Qt/QML that the processed image is ready
+               # to be displayed.
+               # NOTE: Had to swap the signal for width and height
+               # for QML (See dhmx for more details)
+               self.sig_img_complete.emit(current_time)
+               self.sig_header.emit(self.m_height, self.m_width, self.m_frame_id, self.m_timestamp, self.m_gain_min, self.m_gain_max, self.m_exposure_min, self.m_exposure_max, self.m_gain, self.m_exposure, self.m_rate, self.m_rate_measured)
+               self.init = True
 
 
 

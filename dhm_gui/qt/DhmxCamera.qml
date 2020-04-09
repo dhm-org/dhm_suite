@@ -417,24 +417,33 @@ ApplicationWindow {
             signal qml_enable_hist(bool checked)
             x: 32
             y: 558
-            text: qsTr("Enable")
+            text: qsTr("Enable Histogram")
             checkable: true
             checked: true
             enabled: true
 
             onClicked: {
-                if (checked == true) {
-                    checked = true
-                    subwin_histogram.enabled = true
-
-                }
-                else if (checked == false) {
-                    checked = false
-                    subwin_histogram.enabled = false
-                }
+                subwin_histogram.enabled = checkbox_enable_histogram.checked
                 qml_enable_hist(checkbox_enable_histogram.checked)
             }
         }
+
+        CheckBox {
+            id: checkbox_enable_image
+            objectName: "checkbox_enable_image"
+            signal qml_enable_image(bool checked)
+            x: 32
+            y: 608
+            text: qsTr("Enable Image")
+            checkable: true
+            checked: true
+            enabled: true
+
+            onClicked: {
+                qml_enable_image(checkbox_enable_image.checked)
+            }
+        }
+
 
         CheckDelegate {
             id: checkDelegate_recording
