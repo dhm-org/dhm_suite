@@ -54,7 +54,7 @@ class guiclient(QThread):
         self.outdata = None
         self.init = False
         self.outdata_RGB = None
-        self.enable_histogram = False
+        self.enable_histogram = True
 
         self.w = None 
         self.h = None
@@ -118,15 +118,16 @@ class guiclient(QThread):
             if platform.system() == 'Linux':
                 self.outdata.setflags(write=1)
 
-            # Bin historgram values together to display
-            self.histogram,self.bins = np.histogram(self.outdata,bins=np.arange(0,256,1))
-            for i in range(255):
-               self.sig_hist_val.emit(i,self.histogram[i])
+            if self.enable_histogram:
+               # Bin historgram values together to display
+               self.histogram,self.bins = np.histogram(self.outdata,bins=np.arange(0,256,1))
+               for i in range(255):
+                  self.sig_hist_val.emit(i,self.histogram[i])
 
-            # Create an RGB version of the received image to display absolute minimums and maximums
-            self.outdata_RGB = np.stack((self.outdata,)*3, axis=-1)
-            self.outdata_RGB[self.outdata == 255] = [255,0,0]
-            self.outdata_RGB[self.outdata == 0] = [0,0,255]  
+               # Create an RGB version of the received image to display absolute minimums and maximums
+               self.outdata_RGB = np.stack((self.outdata,)*3, axis=-1)
+               self.outdata_RGB[self.outdata == 255] = [255,0,0]
+               self.outdata_RGB[self.outdata == 0] = [0,0,255]  
 
             # Create an image timestamp in UTC format
             current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]

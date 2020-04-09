@@ -187,15 +187,17 @@ class MainWin(QObject):
       self.textField_exposure = self.win.findChild(QObject, "textField_exposure")
       self.textField_gain = self.win.findChild(QObject, "textField_gain")
       self.slider_exposure = self.win.findChild(QObject, "slider_exposure")
-      self.slider_gain = self.win.findChild(QObject,"slider_gain")
-      self.button_save = self.win.findChild(QObject,"button_save")
-      self.button_load = self.win.findChild(QObject,"button_load")
+      self.slider_gain = self.win.findChild(QObject, "slider_gain")
+      self.button_save = self.win.findChild(QObject, "button_save")
+      self.button_load = self.win.findChild(QObject, "button_load")
+      self.enable_hist = self.win.findChild(QObject, "checkbox_enable_histogram")
 
       # Connect QObject signals
       self.win.send_cmd.connect(CameraServerCommand)
       self.check_recording.qml_signal_recording.connect(self.ApplyRecording)
       self.button_save.clicked.connect(self.SaveData)
       self.button_load.clicked.connect(self.LoadData)
+      self.enable_hist.qml_enable_hist.connect(self.EnableHistogram)
 
       # Start streaming images
       self.display_t = guiclient(HOST,FRAME_SERVER_PORT)
@@ -264,6 +266,11 @@ class MainWin(QObject):
       self.img_data = self.display_t.outdata_RGB
       self.image_sample.reload()
 
+   # Called fromthe checkbox_enable_histogram object.  Enables or disables
+   # the histogram from updating
+   def EnableHistogram(self, enabled):
+      print ("Enabled = %d" % enabled)
+      self.display_t.enable_histogram = enabled
 
 
    def UpdateConfigFile(self):
