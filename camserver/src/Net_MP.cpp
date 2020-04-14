@@ -1,30 +1,44 @@
 #include "Net_MP.h"
 
 #ifdef _WIN32
-#include <stdlib.h>
-#include <stdio.h>
+	#include <stdlib.h>
+	#include <stdio.h>
 //#include <ws2tcpip.h>
 //#include "winsock.h"
 
-#define CLOCK_REALTIME 0
-#pragma comment(lib, "Ws2_32.lib")
+	#define CLOCK_REALTIME 0
+	#pragma comment(lib, "Ws2_32.lib")
+#endif
 
+#ifdef _LINUX
+	#include <string.h>
+	#include <stdio.h>
+	#include <errno.h>
+	#include <sys/sysinfo.h>
+	#include <sys/time.h> //struct timezone
+	#include <unistd.h> //usleep
+	#include <netdb.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <strings.h>
+	#include <sys/select.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h> //for inet_addr
+#endif
 
-#else
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <sys/sysinfo.h>
-#include <sys/time.h> //struct timezone
-#include <unistd.h> //usleep
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <strings.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <arpa/inet.h> //for inet_addr
-
+#ifdef _MAC
+	#include <string.h>
+	#include <stdio.h>
+	#include <errno.h>
+	#include <sys/time.h> //struct timezone
+	#include <unistd.h> //usleep
+	#include <netdb.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <strings.h>
+	#include <sys/select.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h> //for inet_addr
 #endif
 
 int MP_initsocketuse()
@@ -141,9 +155,9 @@ int MP_BindServer(int port)
         fprintf(stderr, "CameraServer:  Error.  Unable to bind server socket: strerror=%s\n", errstr);
         return __INVALID_SOCKET__;
     }
+#endif
 
-#else
-
+#ifdef _LINUX
     // *** Create server socket
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == __INVALID_SOCKET__) {
         err = MP_errno();
@@ -166,6 +180,28 @@ int MP_BindServer(int port)
     }
 #endif
 
+#ifdef _MAC
+	// *** Create server socket
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == __INVALID_SOCKET__) {
+			err = MP_errno();
+			fprintf(stderr, "CameraServer:  Error.  Unable to create server socket: strerror=%s\n", MP_strerror(err));
+			return __INVALID_SOCKET__;
+		}
+
+		// *** Set socket options
+		if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == __SOCKET_ERROR__) {
+			err = MP_errno();
+			fprintf(stderr, "CameraServer:  Error.  Unable to set server socket options: strerror=%s\n", MP_strerror(err));
+			return __INVALID_SOCKET__;
+		}
+
+		// *** Bind
+		if((ret = bind(fd, (struct sockaddr *)&address, sizeof(address))) == __SOCKET_ERROR__) {
+			err = MP_errno();
+			fprintf(stderr, "CameraServer:  Error.  Unable to bind server socket: strerror=%s\n", MP_strerror(err));
+			return __INVALID_SOCKET__;
+		}
+#endif
+
     return fd;
 }
-

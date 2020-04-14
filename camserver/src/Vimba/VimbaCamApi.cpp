@@ -170,7 +170,7 @@ int VimbaCamApi::FindCameraWithSerialNum(char *sn)
     return camidx;
 }
 
-int VimbaCamApi::QueryConnectedCameras()
+int VimbaCamApi::QueryConnectedCameras(bool verbose)
 {
     VmbErrorType err;
     AVT::VmbAPI::CameraPtrVector::const_iterator iter;
@@ -180,13 +180,13 @@ int VimbaCamApi::QueryConnectedCameras()
     int count = 0;
 
     if((err = m_system->GetCameras(m_cameras)) != VmbErrorSuccess) {
-        printf("Error.  Unable to get cameras. err=%d\n", err);
+        if(verbose) printf("Error.  Unable to get cameras. err=%d\n", err);
         return -1;
     }
 
-    printf("\nNumber of cameras found: %zu\n", m_cameras.size());
+    if (verbose) printf("\nNumber of cameras found: %zu\n", m_cameras.size());
     if(m_cameras.size() < 0) {
-        printf("\nNo cameras connected.\n");
+        if (verbose) printf("\nNo cameras connected.\n");
         return -1;
     }
 
@@ -194,27 +194,27 @@ int VimbaCamApi::QueryConnectedCameras()
         VmbAccessModeType eAccessMode = VmbAccessModeNone;
 
         if((err = (*iter)->GetPermittedAccess( eAccessMode )) != VmbErrorSuccess) {
-            printf("Error.  Unable to get camera's permitted access.  err=%d\n", err);
+            if (verbose) printf("Error.  Unable to get camera's permitted access.  err=%d\n", err);
             return -1;
         }
 
         if ((err = (*iter)->GetID(cameraID)) != VmbErrorSuccess) {
-            printf("Error.  Unable to get camera's ID.  err=%d\n", err);
+            if (verbose) printf("Error.  Unable to get camera's ID.  err=%d\n", err);
             return -1;
         }
 
         if ((err = (*iter)->GetModel(cameraModel)) != VmbErrorSuccess) {
-            printf("Error.  Unable to get camera's model number.  err=%d\n", err);
+            if (verbose) printf("Error.  Unable to get camera's model number.  err=%d\n", err);
             return -1;
         }
 
         if ((err = (*iter)->GetSerialNumber(cameraSN)) != VmbErrorSuccess) {
-            printf("Error.  Unable to get camera's serial number.  err=%d\n", err);
+            if (verbose) printf("Error.  Unable to get camera's serial number.  err=%d\n", err);
             return -1;
 
         }
 
-        printf("%d) %s; S/N %s (%s)\n", count+1, cameraModel.c_str(), cameraSN.c_str(), (VmbAccessModeFull == (VmbAccessModeFull & eAccessMode))?"FULL ACCESS":"LIMITED ACCESS");
+        if (verbose) printf("%d) %s; S/N %s (%s)\n", count+1, cameraModel.c_str(), cameraSN.c_str(), (VmbAccessModeFull == (VmbAccessModeFull & eAccessMode))?"FULL ACCESS":"LIMITED ACCESS");
     }
 
     return m_cameras.size();
@@ -274,6 +274,17 @@ int VimbaCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height_in,
             return -1;
         }
     }
+
+    // Zero the offsets, then try to set them after the width and height
+    camera->GetFeatureByName("OffsetX", pFeature);
+    if ((err = pFeature->SetValue(0)) != VmbErrorSuccess) {
+        printf("Error. Unable to zero offset X, err=%d\n",err);
+    }
+    camera->GetFeatureByName("OffsetY", pFeature);
+    if ((err = pFeature->SetValue(0)) != VmbErrorSuccess) {
+        printf("Error. Unable to zero offset Y, err=%d\n",err);
+    }
+
     // *** Validate width is withing allowable range and if it is set it.
     camera->GetFeatureByName("Width", pFeature);
     if ((err = pFeature->GetValue(width)) == VmbErrorSuccess && (err = pFeature->GetRange(minWidth, maxWidth)) == VmbErrorSuccess) {

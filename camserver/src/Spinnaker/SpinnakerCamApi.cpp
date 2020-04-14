@@ -1,14 +1,14 @@
 /**
  ******************************************************************************
-  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED. 
-  United States Government Sponsorship acknowledged. Any commercial use must be 
-  negotiated with the Office of Technology Transfer at the 
+  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED.
+  United States Government Sponsorship acknowledged. Any commercial use must be
+  negotiated with the Office of Technology Transfer at the
   California Institute of Technology.
 
-  This software may be subject to U.S. export control laws. By accepting this software, 
-  the user agrees to comply with all applicable U.S. export laws and regulations. 
-  User has the responsibility to obtain export licenses, or other export authority 
-  as may be required before exporting such information to foreign countries or providing 
+  This software may be subject to U.S. export control laws. By accepting this software,
+  the user agrees to comply with all applicable U.S. export laws and regulations.
+  User has the responsibility to obtain export licenses, or other export authority
+  as may be required before exporting such information to foreign countries or providing
   access to foreign persons.
 
   @file              SpinnakerCamApi.cpp
@@ -22,7 +22,7 @@
 #include "SpinnakerCamApi.h"
 
 //#include <iostream>
-//#include <sstream> 
+//#include <sstream>
 
 #define FRAME_BUFFER_COUNT 3
 #define CIRC_BUFF_SIZE 1000
@@ -137,17 +137,17 @@ int SpinnakerCamApi::PrepareTrigger(const char *triggerSelector, const char *tri
 			}
 			ptrTriggerSource->SetIntValue(ptrTriggerSourceHardware->GetValue());
 		}
-		
+
 		// Fast version of setting trigger edge polarity
 		//CEnumerationPtr LineInverter = nodeMap.GetNode("LineInverter");
 		//LineInverter->SetIntValue(true);
 		//m_pCamera->LineInverter = true;
-	
+
 	}
 	catch (Spinnaker::Exception &e)
 	{
 		cout << "Error: " << e.what() << endl;
-	}   
+	}
     return 0;
 }
 
@@ -189,15 +189,15 @@ int SpinnakerCamApi::FindCameraWithSerialNum(char *sn)
     return camidx;
 }
 
-int SpinnakerCamApi::QueryConnectedCameras()
+int SpinnakerCamApi::QueryConnectedCameras(bool verbose)
 {
 	int count,num_cams = 0;
 	CameraPtr cam = nullptr;
-	
+
 	m_system->UpdateCameras();
 	m_cameras = m_system->GetCameras();
 	num_cams = m_cameras.GetSize();
- 
+
 	/*
 	if (!m_system.IsValid())
 	{
@@ -208,7 +208,7 @@ int SpinnakerCamApi::QueryConnectedCameras()
 	*/
 
 	// printf("\nNumber of cameras found: %zu\n",num_cams);
-	cout << endl << "Number of cameras found: " << num_cams << endl;
+	if(verbose) cout << endl << "Number of cameras found: " << num_cams << endl;
     if(!num_cams) {
 		cout << endl << "No cameras connected." << endl;
         // printf("\nNo cameras connected.\n");
@@ -216,7 +216,7 @@ int SpinnakerCamApi::QueryConnectedCameras()
     }
 	for (count = 0; count < num_cams; count++)
 		{
-		cout << count+1 << ": ";
+		if(verbose) cout << count+1 << ": ";
 		cam = m_cameras.GetByIndex(count);
 		INodeMap& nodeMapTLDevice = cam->GetTLDeviceNodeMap();
 
@@ -226,7 +226,7 @@ int SpinnakerCamApi::QueryConnectedCameras()
 			{
 			gcstring deviceVendorName = ptrDeviceVendorName->ToString();
 
-			cout << deviceVendorName << " ";
+			if(verbose) cout << deviceVendorName << " ";
 			}
 
 		CStringPtr ptrDeviceModelName = nodeMapTLDevice.GetNode("DeviceModelName");
@@ -235,8 +235,8 @@ int SpinnakerCamApi::QueryConnectedCameras()
 			{
 			gcstring deviceModelName = ptrDeviceModelName->ToString();
 
-			cout << deviceModelName << " ";
-			
+			if(verbose) cout << deviceModelName << " ";
+
 			}
 
 		CStringPtr ptrDeviceSerialNumber = nodeMapTLDevice.GetNode("DeviceSerialNumber");
@@ -245,16 +245,16 @@ int SpinnakerCamApi::QueryConnectedCameras()
 			{
 			gcstring deviceSerialNumber = ptrDeviceSerialNumber->ToString();
 
-			cout << deviceSerialNumber << " ";
+			if(verbose) cout << deviceSerialNumber << " ";
 			}
-		
+
 		CEnumerationPtr ptrDeviceAccessStatus = nodeMapTLDevice.GetNode("DeviceAccessStatus");
 
 		if (IsAvailable(ptrDeviceAccessStatus) && IsReadable(ptrDeviceAccessStatus))
 			{
 			gcstring deviceAccessStatus = ptrDeviceAccessStatus->ToString();
 
-			cout << deviceAccessStatus << endl;
+			if(verbose) cout << deviceAccessStatus << endl;
 			}
 
 		cam = nullptr;
@@ -284,7 +284,7 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 	else
 		cout << "m_system valid" << endl;
 	*/
-	
+
 	printf("Access camera %d, width_in=%d, height_in=%d, rate_in=%f\n", cameraidx, width_in, height_in, rate_in);
 	try {
 		// cout << "Still here" << endl;
@@ -296,11 +296,11 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		cout << "Error: " << e.what() << endl;
 		return -1;
 		}
-	
+
 	// cout << "m_cameras.GetSize() = " << m_cameras.GetSize() << endl;
 
 	if(m_cameras.GetSize() == 0) return -1;
-	
+
 	m_pCamera = m_cameras.GetByIndex(cameraidx);
 	m_pCamera->Init();
 	cout << "Camera initialized." << endl;
@@ -311,17 +311,17 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		cout << "m_pCamera invalid" << endl;
 		return -1;
 	}
-	else 
+	else
 		cout << "m_pCamera valid" << endl;
     */
-	
+
 	// cout << "Getting Node Maps" << endl;
 	// Retrieve GenICam nodemaps
-	
+
 	INodeMap& nodeMap = m_pCamera->GetNodeMap();
 	INodeMap& nodeMapTLDevice = m_pCamera->GetTLDeviceNodeMap();
 	INodeMap& nodeMapStream = m_pCamera->GetTLStreamNodeMap();
-	
+
 	// cout << "Getting Access Status" << endl;
 	CEnumerationPtr ptrDeviceAccessStatus = nodeMapTLDevice.GetNode("DeviceAccessStatus");
 
@@ -330,11 +330,11 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		gcstring deviceAccessStatus = ptrDeviceAccessStatus->ToString();
 		#ifdef _WIN32
 			gcstring RWACCESS = "ReadWrite";
-		#else		
+		#else
 			gcstring RWACCESS = "OpenReadWrite";
 		#endif
 		cout << "Access is: " << deviceAccessStatus << endl;
-		
+
 		if (deviceAccessStatus != RWACCESS)
 			{
 			cout << "Error. Camera has access : " << deviceAccessStatus << " Make sure no other process has a hold of the camera." << endl;
@@ -360,22 +360,40 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		}
 	}
 	*/
-
+	// Set offsets to 0 initally, then adjust them to
+	// requested values if possible
+	CIntegerPtr ImageOffsetX = nodeMap.GetNode("OffsetX");
+	ImageOffsetX->SetValue(0);
+	CIntegerPtr ImageOffsetY = nodeMap.GetNode("OffsetY");
+	ImageOffsetY->SetValue(0);
 
 	// Set height and width
 	CIntegerPtr ImageMaxWidth = nodeMap.GetNode("WidthMax");
 	maxWidth = ImageMaxWidth->GetValue();
 	CIntegerPtr ImageMaxHeight = nodeMap.GetNode("HeightMax");
 	maxHeight = ImageMaxHeight->GetValue();
+
 	if (width_in > maxWidth)
+		{
 		width = maxWidth;
+		cout << "Requested Width Exceeds Max Width, Adjusting to " << width << endl;
+		}
 	else
+		{
 		width = width_in;
+		cout << "Setting Frame Width To " << width << endl;
+		}
+
 	if (height_in > maxHeight)
+		{
 		height = maxHeight;
+		cout << "Requested Height Exceeds Max Height, Adjusting to " << height << endl;
+		}
 	else
-		height = height_in;
-	// cout << "Width and Height compared to max " << endl;
+	{
+	height = height_in;
+	cout << "Setting Frame Height To " << height << endl;
+	}
 
 	CIntegerPtr ImageWidth = nodeMap.GetNode("Width");
 	ImageWidth->SetValue(width);
@@ -383,17 +401,27 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 	ImageHeight->SetValue(height);
 
 	// cout << "Width and Height Set " << endl;
-
-	// Set offsets, so we have code here for when its truly implemented 
-	CIntegerPtr ImageOffsetX = nodeMap.GetNode("OffsetX");
-	ImageOffsetX->SetValue(offset_x_in);
-	cout << "Image Offset X set to: " << offset_x_in << endl;
-	CIntegerPtr ImageOffsetY = nodeMap.GetNode("OffsetY");
-	cout << "Image Offset y set to: " << offset_y_in << endl;
-	ImageOffsetY->SetValue(offset_y_in);
-
-
-	// cout << "Offsets set to 0 " << endl;
+  // Test Requested offsets, ignore if results exceed the sensor dimensions
+	if((width + offset_x_in) > maxWidth)
+		{
+		cout << "Requested Width Offset of " << offset_x_in << " ,Given Width " << width << " ,Exceeds Sensor Dimensions: Ignored." << endl;
+		}
+	else
+		{
+		CIntegerPtr ImageOffsetX = nodeMap.GetNode("OffsetX");
+		ImageOffsetX->SetValue(offset_x_in);
+		cout << "Image Offset X set to: " << offset_x_in << endl;
+		}
+	if((height + offset_y_in) > maxHeight)
+			{
+			cout << "Requested Height Offset of " << offset_y_in << " ,Given Height " << height << " ,Exceeds Sensor Dimensions: Ignored." << endl;
+			}
+	else
+			{
+			CIntegerPtr ImageOffsetY = nodeMap.GetNode("OffsetY");
+			ImageOffsetY->SetValue(offset_y_in);
+			cout << "Image Offset Y set to: " << offset_y_in << endl;
+			}
 
 	// Turning AcquisitionFrameRateEnable on for manual frame rate adjust
 	CBooleanPtr ptrFrameRateEnable = nodeMap.GetNode("AcquisitionFrameRateEnable");
@@ -441,9 +469,9 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		cout << "Unable to set AcquisitionFrameRate. Aborting..." << endl << endl;
 		return false;
 	}
-	
+
 	maxRate = AcquisitionFrameRateNode->GetMax();
-	
+
 	if(rate_in > maxRate)
 		{
 		cout << "Requested acquisition rate of " << rate_in << " exceeds the maximum rate of " << maxRate << ", Setting to " << floor(maxRate) << endl;
@@ -489,7 +517,7 @@ int SpinnakerCamApi::OpenAndConfigCamera(int cameraidx, int width_in, int height
 		}
 		m_circbuff = new CircularBuffer(CIRC_BUFF_SIZE, (int)width_in, (int)height_in);
 		m_circbuff->TouchReset();
-	
+
 		// cout << "Exiting config" << endl;
 		return 0;
 	}
@@ -550,16 +578,16 @@ void SpinnakerCamApi::Shutdown()
 		this->closeSDK();
 		}
 	printf("Spinnaker System Singleton Released.\n");
-	
+
 }
 
 int SpinnakerCamApi::StopAsyncContinuousImageAcquisition()
 {
 	cout << "Stopping Continuous Acquisition." << endl;
 	try
-	{	
+	{
 	// Causes Frame Receiver Thread Termination, when thread temrinates,
-	// the frame_receiver_complete flag becomes true	
+	// the frame_receiver_complete flag becomes true
 	m_pFrameObserver->disableImageTransfer();
 	while (m_pFrameObserver->IsFrameReceiverComplete() == false)
 		{
@@ -587,13 +615,13 @@ int SpinnakerCamApi::StopAsyncContinuousImageAcquisition()
 }
 
 int SpinnakerCamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool logging_enabled, char *rootdir, char *datadir, char *sessiondir)
-{  
+{
    std::string strValue;
    int64_t wintime;
    int64_t width, height;
-   	
+
    // int64_t tsTickFreq;
-   
+
    // Retrieve GenICam nodemaps
    INodeMap& nodeMap = m_pCamera->GetNodeMap();
    INodeMap& nodeMapTLDevice = m_pCamera->GetTLDeviceNodeMap();
@@ -653,7 +681,7 @@ int SpinnakerCamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool lo
 			   cout << "         Power cycle camera when done debugging to re-enable the heartbeat..." << endl << endl;
 		   }
 
-	   // Can adjust GEV bandwidth and buffer stuff here 
+	   // Can adjust GEV bandwidth and buffer stuff here
 	   }
    }
 
@@ -661,7 +689,7 @@ int SpinnakerCamApi::StartAsyncContinuousImageAcquisition(int cameraidx, bool lo
    // Enable Spinnaker image 'Chunking', which is a header type appendage (a footer actually) added to the end of the image data.
    // This is used by the SpinnakerFrameObserver to get header information
 
-  
+
 try
 {
    CBooleanPtr ptrChunkModeActive = nodeMap.GetNode("ChunkModeActive");
@@ -679,11 +707,11 @@ try
    // *** NOTES ***
    // Enabling chunk data requires working with nodes: "ChunkSelector"
    // is an enumeration selector node and "ChunkEnable" is a boolean. It
-   // requires retrieving the selector node (which is of enumeration node 
-   // type), selecting the entry of the chunk data to be enabled, retrieving 
-   // the corresponding boolean, and setting it to true. 
+   // requires retrieving the selector node (which is of enumeration node
+   // type), selecting the entry of the chunk data to be enabled, retrieving
+   // the corresponding boolean, and setting it to true.
    //
-   // In this example, all chunk data is enabled, so these steps are 
+   // In this example, all chunk data is enabled, so these steps are
    // performed in a loop. Once this is complete, chunk mode still needs to
    // be activated.
    //
@@ -787,10 +815,10 @@ catch (Spinnaker::Exception &e)
 }
 */
 cout << endl;
- 
+
    m_pFrameObserver = new SpinnakerFrameObserver(m_pCamera, m_circbuff, logging_enabled, (int)width, (int)height, rootdir, datadir, sessiondir, m_verbose);
 
-  try 
+  try
 	{
 	   // Begin acquiring images
 	m_pCamera->BeginAcquisition();
@@ -802,7 +830,7 @@ cout << endl;
 	  cout << "Error: " << e.what() << endl;
 	  return -1;
   }
- 
+
     return 0;
 }
 

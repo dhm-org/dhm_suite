@@ -22,23 +22,23 @@
 #include "CircularBuffer.h"
 //#include "VimbaCPP/Include/VimbaCPP.h"
 
-int getRAM(unsigned long *totalram, unsigned long *freeram)
+int getRAM(unsigned long long *totalram, unsigned long long *freeram)
 {
 	MP_getRamStates(totalram, freeram);
-	fprintf(stderr, "System Memory:  totalRAM=%lu, freeRAM=%lu\n", *totalram, *freeram);
+	fprintf(stderr, "System Memory:  totalRAM=%llu bytes, freeRAM=%llu bytes\n", *totalram, *freeram);
     return 0;
 }
 
 size_t computeCircularBufferSizeBasedOffRAM(int width, int height)
 {
-    unsigned long totalram, freeram, ramtouse;
+    unsigned long long totalram, freeram, ramtouse;
     size_t size;
 
     //Allocate 20% of the totalram
     getRAM(&totalram, &freeram);
     ramtouse = (unsigned long)(freeram * .10);
 
-    size = ramtouse/(sizeof(struct CamFrame) + (width * height));
+    size = ramtouse/(sizeof(struct CamFrame) + ((unsigned long long)width * (unsigned long long)height));
 
     if (size <= 0) {
         size = 1;
@@ -60,12 +60,13 @@ CircularBuffer::CircularBuffer(size_t size, int width, int height) :
     tempsize = computeCircularBufferSizeBasedOffRAM(width, height);
     if (tempsize < size) {
         // fprintf(stderr, "Circular buffer size was changed from [%d] to [%d] based off system memory.\n", (int)size, (int)tempsize);
-		fprintf(stderr, "Circular buffer size set to 200\n");
-        // size = tempsize;
-		size = 200;
+		
+        size = tempsize;
+        //size = 200;
     }
     m_max_size = size;
-
+    printf("Circular buffer size set to %llu\n",size);
+    
     // Allocate entries in the circular buffer
     try {
         m_buf = (struct CamFrame *)malloc(size * sizeof(struct CamFrame));
@@ -89,12 +90,12 @@ CircularBuffer::CircularBuffer(size_t size, int width, int height) :
             }
         }
         catch (int x) {
-            fprintf(stderr, "Unable to allocate [%d] bytes memory for cicular buffer entry [%d].\n", width * height, x);
+            fprintf(stderr, "Unable to allocate [%d] bytes memory for circular buffer entry [%d].\n", width * height, x);
             throw x;
         }
     }
 
-    fprintf(stderr, "Circular buffer [%d entries] allocation size totals [%ld] bytes.\n", (int)size, (size * (sizeof(struct CamFrame) + (width * height))));
+    fprintf(stderr, "Circular buffer [%d entries] allocation size totals [%d] bytes.\n", (int)size, (int)(size * (sizeof(struct CamFrame) + (width * height))));
 
     m_mutex = PTHREAD_MUTEX_INITIALIZER;
     m_cond = PTHREAD_COND_INITIALIZER;

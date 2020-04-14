@@ -1,19 +1,19 @@
 /**
  ******************************************************************************
-  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED. 
-  United States Government Sponsorship acknowledged. Any commercial use must be 
-  negotiated with the Office of Technology Transfer at the 
+  Copyright 2019, by the California Institute of Technology. ALL RIGHTS RESERVED.
+  United States Government Sponsorship acknowledged. Any commercial use must be
+  negotiated with the Office of Technology Transfer at the
   California Institute of Technology.
 
-  This software may be subject to U.S. export control laws. By accepting this software, 
-  the user agrees to comply with all applicable U.S. export laws and regulations. 
-  User has the responsibility to obtain export licenses, or other export authority 
-  as may be required before exporting such information to foreign countries or providing 
+  This software may be subject to U.S. export control laws. By accepting this software,
+  the user agrees to comply with all applicable U.S. export laws and regulations.
+  User has the responsibility to obtain export licenses, or other export authority
+  as may be required before exporting such information to foreign countries or providing
   access to foreign persons.
 
   @file              SpinnakerFrameObserver.cpp
   @author:           S. Felipe Fregoso
-  @modified	     F. Loya	
+  @modified	     F. Loya
   @par Description:  Frame Observer Class for Spinnaker SDK; Gets frames from the camera and places into circular buffer
  ******************************************************************************
  */
@@ -40,10 +40,10 @@ volatile bool spinnaker_consumer_thread_running = false; /*!< TBD */
 ExtendedThreadArgs<SpinnakerFrameObserver*>  spinnaker_consumer_thread_args; /*!< TBD */
 ExtendedThreadArgs<SpinnakerFrameObserver*>  spinnaker_receiver_thread_args; /*!< TBD */
 
-char SpinnakerImageStates[14][40] = {   "IMAGE_UNKNOWN_ERROR",						
+char SpinnakerImageStates[14][40] = {   "IMAGE_UNKNOWN_ERROR",
 										"IMAGE_NO_ERROR",
 										"IMAGE_CRC_CHECK_FAILED",
-										"IMAGE_DATA_OVERFLOW",                             
+										"IMAGE_DATA_OVERFLOW",
 										"IMAGE_MISSING_PACKETS",
 										"IMAGE_LEADER_BUFFER_SIZE_INCONSISTENT",
 										"IMAGE_TRAILER_BUFFER_SIZE_INCONSISTENT",
@@ -71,10 +71,10 @@ void *SpinnakerFrameLoggerThread(void *arg)
             //*** Wait for conditional variable
                 pthread_cond_wait(&threadArgs->cv, &threadArgs->mutex);
 
-            //*** Set flag that processing data 
+            //*** Set flag that processing data
             threadArgs->is_waiting_to_run = false;
             threadArgs->is_busy = true;
-            
+
             //*** Log the data
             // printf("Thread[%d] Frame ID = %d\n", threadArgs->id, (int)spinnaker_log_args[threadArgs->id].frameID);
 	    // printf("SpinnakerFrameLoggerThread:\n");
@@ -98,9 +98,9 @@ void* SpinnakerFrameConsumerThread(void *arg)
 {
     ExtendedThreadArgs<SpinnakerFrameObserver*> *args = (ExtendedThreadArgs<SpinnakerFrameObserver*> *)arg;
 
-   
+
     *args->running = true;
-#if FO_THREAD_PER_FRAME == 1 
+#if FO_THREAD_PER_FRAME == 1
     int thread_count = 0;
 
     for (int i = 0; i < FO_MAX_NUM_THREADS; i++) {
@@ -131,15 +131,15 @@ void* SpinnakerFrameConsumerThread(void *arg)
 
         if((frame_ptr = args->circbuff->Get()) != NULL) {
         //if((frame_ptr = args->circbuff->GetOnSignal()) != NULL) {
-	   
+
             if(*args->logging_enabled || *args->snap_enabled) {
 				struct LogArgs logargs;
 
-                
+
                logargs.frame = frame_ptr;
                logargs.datadir = args->datadir;
                logargs.sessiondir = args->sessiondir;
-#if FO_THREAD_PER_FRAME == 1 
+#if FO_THREAD_PER_FRAME == 1
                 WriteToTimestampFile(&logargs, reset);
                 bool thread_assigned = false;
                 for(int i = 0; i < FO_MAX_NUM_THREADS; i++) {
@@ -177,22 +177,22 @@ void* SpinnakerFrameConsumerThread(void *arg)
                     }
 #if FO_LOG_THREAD_ALWAYS_ON == 1
 #else
-                    
+
                     MP_clock_gettime(CLOCK_REALTIME, &ts);
                     ts.tv_nsec += 1000;
                     if(ts.tv_nsec >= 1E9) {ts.tv_sec+=1; ts.tv_nsec-=1E9;}
                     if(spinnaker_log_threads[i].is_running) {
                         if((ret = pthread_timedjoin_np(spinnaker_log_threads[i].thread, NULL, &ts)) == 0) {
-                            spinnaker_log_threads[i].is_running = false; 
+                            spinnaker_log_threads[i].is_running = false;
                             thread_count--;
                             fprintf(stderr, "COMPLETED thread %d, thread_count=%d\n", i, thread_count);
                         }
                         //else fprintf(stderr, "Thread %d not terminated\n", i);
                     }
-                    
+
 #endif
                 }
-       
+
                 if(!thread_assigned) {
                     //fprintf(stderr, "****** Thread not assigned. Processing in this thread\n");
 					cout << "Logging Frame ID = " << logargs.frameID << endl;
@@ -220,12 +220,12 @@ void* SpinnakerFrameConsumerThread(void *arg)
         if(!spinnaker_consumer_thread_running) {
             // fprintf(stderr, "CircBuff Size= %d\n", (int)args->circbuff->Size());
             if(*args->logging_enabled) grab_till_empty = true;
-            else 
+            else
                 break;
         }
     } // end while(1)?
 
-#if FO_THREAD_PER_FRAME == 1 
+#if FO_THREAD_PER_FRAME == 1
 #if FO_LOG_THREAD_ALWAYS_ON == 1
 // De-activate log threads
 for (int i = 0; i < FO_MAX_NUM_THREADS; i++) {
@@ -252,7 +252,7 @@ for (int i = 0; i < FO_MAX_NUM_THREADS; i++) {
 #endif
 
 #endif
-	
+
     cout << "Ended FrameConsumerThread" << endl;
     cout << "CircBuff Size = " << (int)args->circbuff->Size() << endl;
     args->pFrameObserver->m_frame_consumer_complete = true;
@@ -267,7 +267,7 @@ void* SpinnakerFrameReceiverThread(void *arg)
 	struct CamFrameHeader header;
 	enum ImageStatus imageState;
 	int errorLine;
-	
+
 	unsigned char* imd;
 	while(args->pFrameObserver->m_image_transfer_enabled)
 	{
@@ -287,13 +287,13 @@ void* SpinnakerFrameReceiverThread(void *arg)
 				// ImagePtr convertedImage = pResultImage->Convert(PixelFormat_Mono8, HQ_LINEAR);
 				imd = (unsigned char*)(pResultImage->GetData());
 				args->circbuff->Put(imd, &header);
-			
+
 				if (args->pFrameObserver->m_verbose) {
 					cout << "W: " << header.m_width << " H: " << header.m_height << " IS: " << header.m_imgsize << " FID: " << header.m_frame_id << " TS: " << header.m_timestamp << endl; // " DP: " << setbase(16) << (__int64)imd << endl;
 					}
 				}
 			// Release image
-			pResultImage->Release();		
+			pResultImage->Release();
 			}
 		}
 		catch (Spinnaker::Exception &e)
@@ -344,20 +344,20 @@ SpinnakerFrameObserver::SpinnakerFrameObserver(CameraPtr pCamera, CircularBuffer
     m_verbose = verbose;
     m_logging_enabled = logging_enabled;
     m_snap_enabled = false;
-    
+
     //printf("Width=%d, Height=%d\n", maxWidth, maxHeight);
     m_rootdir[0] = '\0';
     m_datadir[0] = '\0';
     m_sessiondir[0] = '\0';
-	
+
     strcpy(m_rootdir, rootdir);
     m_pCamera = pCamera;
     if (logging_enabled) {
         create_datadir(m_rootdir, m_datadir, m_sessiondir);
         CreateCameraMetadata(pCamera, m_sessiondir);
     }
-    strcpy(m_datadir, datadir);
-    strcpy(m_sessiondir, sessiondir);
+    //strcpy(m_datadir, datadir);
+    //strcpy(m_sessiondir, sessiondir);
     printf("Rootdir: %s\nDatadir: %s\nSessionDir: %s\n", m_rootdir, m_datadir, m_sessiondir);
 
     m_circbuff = circbuff;
@@ -413,7 +413,7 @@ void SpinnakerFrameObserver::ShutdownFrameConsumer()
 {
     m_running = false;
     spinnaker_consumer_thread_running = false;
-    
+
     pthread_detach(m_image_receiver_thread);
     pthread_join(m_image_receiver_thread, NULL);
 
@@ -421,9 +421,9 @@ void SpinnakerFrameObserver::ShutdownFrameConsumer()
 		{
 		MP_Sleep(1);
 		}
-    pthread_detach(m_image_handler_thread);	 
+    pthread_detach(m_image_handler_thread);
     pthread_join(m_image_handler_thread, NULL);
-    
+
     // Overloaded '=' operator de-references smart pointer (decrements usage count)
     m_pCamera = nullptr;
 }
@@ -468,7 +468,7 @@ void SpinnakerFrameObserver::CountFPS()
 {
     static int nFrames = FO_MAX_FRAME_COUNT;
     static struct timespec lastts;
-	
+
     if (nFrames == FO_MAX_FRAME_COUNT)
     {
         MP_clock_gettime(CLOCK_REALTIME, &lastts);
@@ -495,7 +495,7 @@ void SpinnakerFrameObserver::CountFPS()
 
 void SpinnakerFrameObserver::getFrameHeaderInfo(const ImagePtr pImage, struct CamFrameHeader *header)
 {
-	
+
         // *** Measure the frame rate
         CountFPS();
 	// WE take this off the incoming image.
@@ -506,12 +506,12 @@ void SpinnakerFrameObserver::getFrameHeaderInfo(const ImagePtr pImage, struct Ca
 	// header->m_offset_x =  = pImage->GetOffsetX();
 	// header->m_offset_y =  = pImage->GetOffsetY();
 	header->m_imgsize   = pImage->GetImageSize();
-	
+
 
     //m_buf[m_head].m_databuffersize = sizeof(m_buf[m_head].m_data);
     header->m_databuffersize = header->m_width * header->m_height;
     //*** Had to do this to make it compatible with dhmsw
-   
+
     header->m_logging = m_logging_enabled;
     header->m_gain = m_gain;
     header->m_gain_min = m_gain_min;
@@ -561,7 +561,7 @@ void  SpinnakerFrameObserver::SetExposureAutoMode(int mode)
 		// Turn off automatic exposure mode
 		//
 		// *** NOTES ***
-		// Automatic exposure prevents the manual configuration of exposure 
+		// Automatic exposure prevents the manual configuration of exposure
 		// time and needs to be turned off.
 
 		CEnumerationPtr ptrExposureAuto = nodeMap.GetNode("ExposureAuto");
@@ -605,7 +605,7 @@ void  SpinnakerFrameObserver::SetExposureAutoMode(int mode)
 			ptrExposureAuto->SetIntValue(ptrExposureAutoOn->GetValue());
 			cout << "Automatic exposure enabled..." << endl;
 			}
-		
+
 	}
 	catch (Spinnaker::Exception &e)
 	{
@@ -622,7 +622,7 @@ void  SpinnakerFrameObserver::SetGainAutoMode(int mode)
 		// Turn off automatic gain mode
 		//
 		// *** NOTES ***
-		// Automatic gain prevents the manual configuration of gain 
+		// Automatic gain prevents the manual configuration of gain
 		// and needs to be turned off.
 
 		CEnumerationPtr ptrGainAuto = nodeMap.GetNode("GainAuto");
@@ -685,10 +685,10 @@ void SpinnakerFrameObserver::SetGain(int gain)
 		// Set gain manually
 		//
 		// *** NOTES ***
-		// The node is checked for availability and writability prior to the 
-		// setting of the node. Further, it is ensured that the desired gain 
+		// The node is checked for availability and writability prior to the
+		// setting of the node. Further, it is ensured that the desired gain
 		// time does not exceed the maximum
-		// 
+		//
 		CFloatPtr ptrGain = nodeMap.GetNode("Gain");
 		if (!IsAvailable(ptrGain) || !IsWritable(ptrGain))
 		{
@@ -753,7 +753,7 @@ void SpinnakerFrameObserver::SetOffsetY(int offset_y)
 	{
 		cout << "Error: " << e.what() << endl;
 	}
-}   
+}
 
 
 // Sets the exposure time in microseconds
@@ -766,17 +766,17 @@ void SpinnakerFrameObserver::SetExposure(int exposure)
 
 	try
 	{
-		
+
 		//
 		// Set exposure time manually; exposure time recorded in microseconds
 		//
 		// *** NOTES ***
-		// The node is checked for availability and writability prior to the 
-		// setting of the node. Further, it is ensured that the desired exposure 
-		// time does not exceed the maximum. Exposure time is counted in 
-		// microseconds. This information can be found out either by 
+		// The node is checked for availability and writability prior to the
+		// setting of the node. Further, it is ensured that the desired exposure
+		// time does not exceed the maximum. Exposure time is counted in
+		// microseconds. This information can be found out either by
 		// retrieving the unit with the GetUnit() method or by checking SpinView.
-		// 
+		//
 		CFloatPtr ptrExposureTime = nodeMap.GetNode("ExposureTime");
 		if (!IsAvailable(ptrExposureTime) || !IsWritable(ptrExposureTime))
 		{
@@ -789,7 +789,7 @@ void SpinnakerFrameObserver::SetExposure(int exposure)
 
 		if (exposure > exposureTimeMax)
 			exposure = (int)exposureTimeMax;
-		
+
 
 		ptrExposureTime->SetValue(exposure);
 		m_exposure = exposure;
@@ -800,4 +800,3 @@ void SpinnakerFrameObserver::SetExposure(int exposure)
 		cout << "Error: " << e.what() << endl;
 	}
 }
-

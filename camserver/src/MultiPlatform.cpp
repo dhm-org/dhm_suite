@@ -32,6 +32,9 @@ int MP_clock_gettime(int clockID, struct timespec *spec)
 #else
     clock_gettime(CLOCK_REALTIME, spec);
 #endif
+
+
+
 return 0;
 }
 
@@ -66,18 +69,51 @@ int MP_getMsTime(void)
 #endif
 }
 
-void MP_getRamStates(unsigned long *totalram, unsigned long *freeram)
+void MP_getRamStates(unsigned long long *totalram, unsigned long long *freeram)
 {
 #ifdef _WIN32
     MEMORYSTATUSEX memStates;
+    memStates.dwLength = sizeof(memStates);
     GlobalMemoryStatusEx(&memStates);
-    *totalram = (unsigned long)(memStates.ullTotalPhys / 1048576);
-    *freeram = (unsigned long)(memStates.ullAvailPhys / 1048576);
-#else
+    *totalram = (unsigned long long)(memStates.ullTotalPhys);
+    *freeram = (unsigned long long)(memStates.ullAvailPhys);
+#endif
+
+#ifdef _LINUX
     struct sysinfo info;
     sysinfo(&info);
-    *totalram = info.totalram;
-    *freeram = info.freeram;
+    *totalram = (unsigned long long)info.totalram;
+    *freeram = (unsigned long long)info.freeram;
+#endif
+
+#ifdef _MAC
+int mib [] = { CTL_HW, HW_MEMSIZE };
+int64_t value = 0;
+size_t length = sizeof(value);
+
+if(sysctl(mib, 2, &value, &length, NULL, 0) == -1)
+  *totalram = 16000*1048576);
+else
+	*totalram = (unsigned long long)(value);
+	//
+
+mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+vm_statistics_data_t vmstat;
+if(KERN_SUCCESS != host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vmstat, &count))
+   {
+   *freeram  = 8000*1048576;
+   }
+else
+  {
+  double total = vmstat.wire_count + vmstat.active_count + vmstat.inactive_count + vmstat.free_count;
+  double wired = vmstat.wire_count/total;
+  double active = vmstat.active_count/total;
+  double inactive = vmstat.inactive_count/total;
+  double free = vmstat.free_count/total;
+  // printf("used: %f unused %f\n",(wired+active)*16384.0,(inactive+free)*16384);
+
+  *freeram  = (unsigned long long)(((double)(*totalram))*(inactive+free));
+  }
 #endif
 }
 
@@ -104,6 +140,5 @@ SetConsoleCtrlHandler((PHANDLER_ROUTINE)consoleHandler, TRUE);
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
-    #endif
+#endif
 }
-

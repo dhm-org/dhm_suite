@@ -33,7 +33,7 @@ public:
     VimbaCamApi();
     int Startup();
     void Shutdown();
-    int QueryConnectedCameras();
+    int QueryConnectedCameras(bool verbose=true);
     int FindCameraWithSerialNum(char *sn);
    
     int OpenAndConfigCamera(int cameraidx, int width_in, int height_in, int offset_x_in, int offset_y_in, double rate_in, const char *configfile, const char *triggersource);
