@@ -54,41 +54,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 						)
 	add_compile_definitions(_LINUX)
 	
-	# Build a shared library for our vendor specific CamApi
-	add_library(SpinnakerCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
-						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
-						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
-						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
-						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
-						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
-						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerCamApi.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerFrameObserver.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/launchAPI.cpp
-						)
-	set_target_properties(SpinnakerCamAPI PROPERTIES LINK_FLAGS -export-dynamic)
-	set_target_properties(SpinnakerCamAPI PROPERTIES LINK_FLAGS -ldl)
-	add_custom_command(TARGET SpinnakerCamAPI POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/lib/libSpinnakerCamAPI.so
-            ${PROJECT_SOURCE_DIR}/bin/Ubu18.04/Release/libSpinnakerCamAPI.so VERBATIM)
-
-	# Build a shared library for our vendor specific CamApi	
-	add_library(VimbaCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
-						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
-						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
-						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
-						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
-						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
-						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
-						${VIMBA_CAM_SOURCE_DIR}/VimbaCamApi.cpp
-						${VIMBA_CAM_SOURCE_DIR}/VimbaFrameObserver.cpp
-						${VIMBA_CAM_SOURCE_DIR}/launchAPI.cpp
-						)
-	set_target_properties(VimbaCamAPI PROPERTIES LINK_FLAGS -export-dynamic)
-	set_target_properties(VimbaCamAPI PROPERTIES LINK_FLAGS -ldl)
-	add_custom_command(TARGET VimbaCamAPI POST_BUILD
- 	 COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/lib/libVimbaCamAPI.so
-             ${PROJECT_SOURCE_DIR}/bin/Ubu18.04/Release/libVimbaCamAPI.so VERBATIM)
    
 	# Since we are linking to a pre-existing, shared library outside of the 'normal' cmake project targets, we have
 	# to take a few extra steps.  
@@ -110,15 +75,57 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	#set_target_properties(libTiff PROPERTIES IMPORTED_LOCATION /usr/lib/x86_64-linux-gnu/libtiff.so.5.3.0)
 	set_target_properties(libTiff PROPERTIES IMPORTED_LOCATION /usr/lib/x86_64-linux-gnu/libtiff.so.5)
 
-	# Builds the Flir version of camserver, use 'target_compile_definitions' for pre-processor defines
-	add_executable(flir_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp)
-	target_compile_definitions(flir_camserver PRIVATE USE_SPINNAKER_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
-	target_link_libraries(flir_camserver SpinnakerCamAPI libSpinnaker libTiff)
+	if(EXISTS "${SPINNAKER_SDK_INCLUDE_DIR}")
+	message("Building Camserver for Spinnaker SDK")
+	# Build a shared library for our vendor specific CamApi
+		add_library(SpinnakerCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
+						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
+						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
+						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
+						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
+						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
+						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerCamApi.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerFrameObserver.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/launchAPI.cpp
+						)
+		set_target_properties(SpinnakerCamAPI PROPERTIES LINK_FLAGS -export-dynamic)
+		set_target_properties(SpinnakerCamAPI PROPERTIES LINK_FLAGS -ldl)
+		add_custom_command(TARGET SpinnakerCamAPI POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/lib/libSpinnakerCamAPI.so
+			    ${PROJECT_SOURCE_DIR}/bin/Ubu18.04/Release/libSpinnakerCamAPI.so VERBATIM)
 
-	# Builds the Allied version of camserver, use 'target_compile_definitions' for pre-processor defines
-	add_executable(allied_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp)
-	target_compile_definitions(allied_camserver PRIVATE USE_VIMBA_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
-	target_link_libraries(allied_camserver VimbaCamAPI libVimbaCPP libVimbaC libTiff)
+		# Builds the Flir version of camserver, use 'target_compile_definitions' for pre-processor defines
+		add_executable(flir_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp)
+		target_compile_definitions(flir_camserver PRIVATE USE_SPINNAKER_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
+		target_link_libraries(flir_camserver SpinnakerCamAPI libSpinnaker libTiff)
+	endif()
+
+	if(EXISTS "${VIMBA_SDK_INCLUDE_DIR}")
+		message("Building Camserver for Vimba SDK")
+		# Build a shared library for our vendor specific CamApi	
+		add_library(VimbaCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
+						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
+						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
+						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
+						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
+						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
+						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
+						${VIMBA_CAM_SOURCE_DIR}/VimbaCamApi.cpp
+						${VIMBA_CAM_SOURCE_DIR}/VimbaFrameObserver.cpp
+						${VIMBA_CAM_SOURCE_DIR}/launchAPI.cpp
+						)
+		set_target_properties(VimbaCamAPI PROPERTIES LINK_FLAGS -export-dynamic)
+		set_target_properties(VimbaCamAPI PROPERTIES LINK_FLAGS -ldl)
+		add_custom_command(TARGET VimbaCamAPI POST_BUILD
+ 		COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/lib/libVimbaCamAPI.so
+			     ${PROJECT_SOURCE_DIR}/bin/Ubu18.04/Release/libVimbaCamAPI.so VERBATIM)
+
+		# Builds the Allied version of camserver, use 'target_compile_definitions' for pre-processor defines
+		add_executable(allied_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp)
+		target_compile_definitions(allied_camserver PRIVATE USE_VIMBA_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
+		target_link_libraries(allied_camserver VimbaCamAPI libVimbaCPP libVimbaC libTiff)
+	endif()
 
 	# Builds the Multi vendor version of camserver, use 'target_compile_definitions' for pre-processor defines
 	add_executable(multi_camserver ${MULTI_VENDOR_CAM_SOURCE_DIR}/main.cpp ${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp)
@@ -183,22 +190,10 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 						${LIBTIFF_LIB_DIR}
 						)
 
-	# Build a shared library for Spinnaker CamApi, used by multi_camserver
-	add_library(SpinnakerCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
-						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
-						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
-						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
-						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
-						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
-						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerCamApi.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerFrameObserver.cpp
-						${SPINNAKER_CAM_SOURCE_DIR}/launchAPI.cpp
-						)
-	target_link_libraries(SpinnakerCamAPI pthreadVC2 libtiff Spinnaker_v140)
-	
-	# Build a shared library for Vimba CamApi, used by multi_camserver
-	add_library(VimbaCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
+	if(EXISTS "C:/Program Files/Allied Vision/${VIMBA_SDK_VERSION}")
+		message("Building Camserver for Vimba SDK")
+		# Build a shared library for Vimba CamApi, used by multi_camserver
+		add_library(VimbaCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
 						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
 						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
 						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
@@ -209,10 +204,44 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 						${VIMBA_CAM_SOURCE_DIR}/VimbaFrameObserver.cpp
 						${VIMBA_CAM_SOURCE_DIR}/launchAPI.cpp
 						)
-	target_link_libraries(VimbaCamAPI VimbaCPP VimbaC pthreadVC2 libtiff) 					
+		target_link_libraries(VimbaCamAPI VimbaCPP VimbaC pthreadVC2 libtiff)
+		
+		
+		# Builds the Allied version of camserver, use 'target_compile_definitions' for pre-processor defines
+		add_executable(allied_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp
+									${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
+	                                ${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
+									${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
+									${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
+									${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
+									${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
+									${COMMON_CAM_SOURCE_DIR}/tspec.cpp
+									${VIMBA_CAM_SOURCE_DIR}/VimbaCamApi.cpp
+									${VIMBA_CAM_SOURCE_DIR}/VimbaFrameObserver.cpp
+		)
+		target_compile_definitions(allied_camserver PRIVATE USE_VIMBA_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
+		target_link_libraries(allied_camserver VimbaCPP VimbaC pthreadVC2 libtiff)
+	endif()
+
 	
-	# Builds the Flir version of camserver, use 'target_compile_definitions' for pre-processor defines
-	add_executable(flir_camserver   ${COMMON_CAM_SOURCE_DIR}/main.cpp
+	if(EXISTS "C:/Program Files/Point Grey Research/Spinnaker")
+		message("Building Camserver for Spinnaker SDK")
+		# Build a shared library for Spinnaker CamApi, used by multi_camserver
+		add_library(SpinnakerCamAPI   SHARED	${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
+						${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
+						${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
+						${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
+						${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
+						${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
+						${COMMON_CAM_SOURCE_DIR}/tspec.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerCamApi.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerFrameObserver.cpp
+						${SPINNAKER_CAM_SOURCE_DIR}/launchAPI.cpp
+						)
+		target_link_libraries(SpinnakerCamAPI pthreadVC2 libtiff Spinnaker_v140)		
+	
+		# Builds the Flir version of camserver, use 'target_compile_definitions' for pre-processor defines
+		add_executable(flir_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp
 									${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
 									${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
 									${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
@@ -223,23 +252,10 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 									${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerCamApi.cpp
 									${SPINNAKER_CAM_SOURCE_DIR}/SpinnakerFrameObserver.cpp
 		                          )
-	target_compile_definitions(flir_camserver PRIVATE USE_SPINNAKER_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
-	target_link_libraries(flir_camserver Spinnaker_v140 pthreadVC2 libtiff)
-
-	# Builds the Allied version of camserver, use 'target_compile_definitions' for pre-processor defines
-	add_executable(allied_camserver ${COMMON_CAM_SOURCE_DIR}/main.cpp
-									${COMMON_CAM_SOURCE_DIR}/CameraServer.cpp
-	                                ${COMMON_CAM_SOURCE_DIR}/CircularBuffer.cpp
-									${COMMON_CAM_SOURCE_DIR}/FrameObserverUtilities.cpp
-									${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp
-									${COMMON_CAM_SOURCE_DIR}/Net_MP.cpp
-									${COMMON_CAM_SOURCE_DIR}/TIFConverter.cpp
-									${COMMON_CAM_SOURCE_DIR}/tspec.cpp
-									${VIMBA_CAM_SOURCE_DIR}/VimbaCamApi.cpp
-									${VIMBA_CAM_SOURCE_DIR}/VimbaFrameObserver.cpp
-	)
-	target_compile_definitions(allied_camserver PRIVATE USE_VIMBA_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
-	target_link_libraries(allied_camserver VimbaCPP VimbaC pthreadVC2 libtiff)
+		target_compile_definitions(flir_camserver PRIVATE USE_SPINNAKER_API) # Need to define USE_SPINNAKER_API for main.ppp to compile properly
+		target_link_libraries(flir_camserver Spinnaker_v140 pthreadVC2 libtiff)
+	endif()
+	
 	
 	# The multi_camserver.exe: Should always build this even if you don't use it
 	add_executable(multi_camserver ${MULTI_VENDOR_CAM_SOURCE_DIR}/main.cpp ${COMMON_CAM_SOURCE_DIR}/MultiPlatform.cpp)
@@ -248,13 +264,21 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	add_custom_command(TARGET multi_camserver POST_BUILD
  	COMMAND ${CMAKE_COMMAND} -E copy ${PTHREADS_LIB_DIR}/pthreadVC2.dll
             ${PROJECT_SOURCE_DIR}/bin/${CMAKE_GENERATOR_PLATFORM}/Release/pthreadVC2.dll VERBATIM
-	COMMAND ${CMAKE_COMMAND} -E copy ${SPINNAKER_SDK_BIN_DIR}/Spinnaker_v140.dll
+			)
+	if(EXISTS "C:/Program Files/Point Grey Research/Spinnaker")
+		add_custom_command(TARGET multi_camserver POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy ${SPINNAKER_SDK_BIN_DIR}/Spinnaker_v140.dll
             ${PROJECT_SOURCE_DIR}/bin/${CMAKE_GENERATOR_PLATFORM}/Release/Spinnaker_v140.dll VERBATIM
-	COMMAND ${CMAKE_COMMAND} -E copy ${VIMBA_SDK_CPP_BIN_DIR}/VimbaCPP.dll
+			)
+	endif()
+	if(EXISTS "C:/Program Files/Allied Vision/${VIMBA_SDK_VERSION}")
+		add_custom_command(TARGET multi_camserver POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy ${VIMBA_SDK_CPP_BIN_DIR}/VimbaCPP.dll
             ${PROJECT_SOURCE_DIR}/bin/${CMAKE_GENERATOR_PLATFORM}/Release/VimbaCPP.dll VERBATIM
-	COMMAND ${CMAKE_COMMAND} -E copy ${VIMBA_SDK_C_BIN_DIR}/VimbaC.dll
+		COMMAND ${CMAKE_COMMAND} -E copy ${VIMBA_SDK_C_BIN_DIR}/VimbaC.dll
             ${PROJECT_SOURCE_DIR}/bin/${CMAKE_GENERATOR_PLATFORM}/Release/VimbaC.dll VERBATIM
 			)
+	endif()
 	# libtiff dependencies unqique to 32-bit version
     if(${CMAKE_GENERATOR_PLATFORM} MATCHES "Win32") 
 		add_custom_command(TARGET multi_camserver POST_BUILD

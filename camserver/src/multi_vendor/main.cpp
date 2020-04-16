@@ -359,13 +359,22 @@ int list_cameras(CamApi *cam_api)
 	default:
 	break;
 	}
-		
-    cam_api->Startup();
-    if((numcameras = cam_api->QueryConnectedCameras()) <= 0) {
-        cam_api->Shutdown();
-    }
 
+     cam_api->Startup();	
+     if((numcameras = cam_api->QueryConnectedCameras()) <= 0) {
+     MP_Sleep(1000);	
+     cam_api->Shutdown();
+    }			
+    
     return numcameras;
+}
+
+void prompt_proceed()
+{
+	 char userinput;
+	 std::cout << "Proceed? (y/n): ";
+	 std::cin >> userinput;
+	 if (userinput != 'Y' && userinput != 'y') exitflag = true;
 }
 
 void prompt_user_select_camera(CamApi *cam_api, int numcameras, int *cameraidx, struct UserParams *params)
@@ -426,11 +435,11 @@ int loadSpinnakerAPI(void)
                 std::cout << "Error loading /usr/lib/x86_64-linux-gnu/libtiff.so.5: " << error << ", exiting" << std::endl;
                 return -2;
                 }
-	sharedLib1 = dlopen("/opt/DHM/camserver/lib/libSpinnakerCamAPI.so",RTLD_NOW);
+	sharedLib1 = dlopen("libSpinnakerCamAPI.so",RTLD_NOW);
         if (sharedLib1 == NULL)
             {
             error = dlerror();
-            std::cout << "Error loading /opt/DHM/camserver/lib/libSpinnakerCamAPI.so: " << error << ", exiting" << std::endl;
+            std::cout << "Error loading libSpinnakerCamAPI.so: " << error << ", exiting" << std::endl;
             return -1;
             }
 	return 0;
@@ -467,11 +476,11 @@ int loadVimbaAPI(void)
             std::cout << "Error loading /usr/lib/x86_64-linux-gnu/libtiff.so.5: " << error << ", exiting" << std::endl;
             return -2;
             }
-	sharedLib1 = dlopen("/opt/DHM/camserver/lib/libVimbaCamAPI.so",RTLD_NOW);
+	sharedLib1 = dlopen("libVimbaCamAPI.so",RTLD_NOW);
         if (sharedLib1 == NULL)
             {
             error = dlerror();
-            std::cout << "Error loading /opt/DHM/camserver/lib/libVimbaCamAPI.so: " << error << ", exiting" << std::endl;
+            std::cout << "Error loading libVimbaCamAPI.so: " << error << ", exiting" << std::endl;
             return -1;
             }
 	return 0;
@@ -610,7 +619,14 @@ switch(camApiIndex)
         return -1;
     }
     
-	std::cout << "Found " << numcameras << " cameras." << std::endl;
+    std::cout << "Found " << numcameras << " cameras." << std::endl;
+    prompt_proceed();
+	if (exitflag)
+		{
+		g_cam_api->Shutdown();
+		exit(0);
+		}
+
     // *** Prompt user to select a camera
     prompt_user_select_camera(g_cam_api, numcameras, &cameraidx, &userparams);
 	std::cout << "Selecting Camera #" << cameraidx << std::endl;
