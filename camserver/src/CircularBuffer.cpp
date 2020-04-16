@@ -65,7 +65,7 @@ CircularBuffer::CircularBuffer(size_t size, int width, int height) :
         //size = 200;
     }
     m_max_size = size;
-    printf("Circular buffer size set to %llu\n",size);
+    printf("Circular buffer size set to %zu\n",size);
     
     // Allocate entries in the circular buffer
     try {
