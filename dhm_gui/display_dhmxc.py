@@ -207,8 +207,8 @@ class guiclient(QThread):
                     
                     if meta is None and datalen > struct.calcsize(headerStruct.format):
                         try:
-                           self.m_width, \
                            self.m_height, \
+                           self.m_width, \
                            self.m_img_size, \
                            self.m_databuffersize, \
                            self.m_timestamp, \
