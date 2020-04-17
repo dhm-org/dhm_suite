@@ -254,8 +254,8 @@ class CamServerFramePkt():
         offset = self.header_packet_size()
         header = self.header()
 
-        width = header[0]
-        height = header[1]
+        height = header[0]
+        width = header[1]
         imgsize = header[2]
         data = np.fromstring(self._data[offset:offset+imgsize], dtype=np.uint8)
         data = np.reshape(data, (width, height))
