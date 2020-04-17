@@ -127,8 +127,10 @@ int TIFConverter::convertToTIF(char *frame_data){
 	
 
 	image_buf = (char*) frame_data;
-
-	TIFFSetField (tiffOut, TIFFTAG_IMAGEWIDTH, getWidth());
+    //printf("W: %d HT: %d\n", getWidth(), getHeight());
+    //TIFFSetField(tiffOut, TIFFTAG_IMAGEWIDTH, getHeight());
+    //TIFFSetField(tiffOut, TIFFTAG_IMAGELENGTH, getWidth()); 
+	TIFFSetField(tiffOut, TIFFTAG_IMAGEWIDTH, getWidth());
 	TIFFSetField(tiffOut, TIFFTAG_IMAGELENGTH, getHeight()); 
 	TIFFSetField(tiffOut, TIFFTAG_SAMPLESPERPIXEL, SAMPLE_PER_PX); 
 	TIFFSetField(tiffOut, TIFFTAG_BITSPERSAMPLE, 8);
@@ -141,7 +143,7 @@ int TIFConverter::convertToTIF(char *frame_data){
 	TIFFSetField(tiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 	TIFFSetField(tiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 
-        linebytes=SAMPLE_PER_PX*getWidth();
+        linebytes=SAMPLE_PER_PX*getHeight();
 
 	//fprintf(stderr, "TIFFScanlineSize(tiffOut)>linebytes: %d > %d\n", (int)TIFFScanlineSize(tiffOut), (int)linebytes);
 	if (TIFFScanlineSize(tiffOut)>=linebytes) {

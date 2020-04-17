@@ -620,13 +620,14 @@ switch(camApiIndex)
     }
     
     std::cout << "Found " << numcameras << " cameras." << std::endl;
+    /*
     prompt_proceed();
 	if (exitflag)
 		{
 		g_cam_api->Shutdown();
 		exit(0);
 		}
-
+    */
     // *** Prompt user to select a camera
     prompt_user_select_camera(g_cam_api, numcameras, &cameraidx, &userparams);
 	std::cout << "Selecting Camera #" << cameraidx << std::endl;

@@ -438,12 +438,15 @@ int main( int argc, char* argv[] )
     }
 
 	cout << "Found " << numcameras << " cameras." << endl;
-	prompt_proceed();
+	
+    /*
+    prompt_proceed();
 	if (exitflag)
 		{
 		g_cam_api->Shutdown();
 		exit(0);
 		}
+    */
 
     // *** Prompt user to select a camera
     prompt_user_select_camera(g_cam_api, numcameras, &cameraidx, &userparams);

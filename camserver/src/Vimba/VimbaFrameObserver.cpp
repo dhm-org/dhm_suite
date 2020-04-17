@@ -451,8 +451,8 @@ void VimbaFrameObserver::getFrameHeaderInfo(const AVT::VmbAPI::FramePtr pFrame, 
     header->m_databuffersize = width * height;
     
     //*** Had to do this to make it compatible with dhmsw
-    header->m_width = height;
-    header->m_height = width;
+    header->m_width = width;
+    header->m_height = height;
     // header->m_offset_x = offset_x
     // header->m_offset_y = offset_y
     header->m_logging = m_logging_enabled;

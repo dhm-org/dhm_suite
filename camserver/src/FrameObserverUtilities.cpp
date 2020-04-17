@@ -179,9 +179,9 @@ void *FrameReceived_TIFConvert(void *arg)
 
 	sprintf(buff, "%s/%05d_holo.tif", datadir, (int)logargs->frameID);
 	Filename = buff;
-	//TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_width, (int)frame->header.m_height);
-    // NOTE:  The width and height are swapped here so that non-square frames are recorded correctly
-	TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_height, (int)frame->header.m_width);
+	TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_width, (int)frame->header.m_height);
+        // NOTE:  The width and height are swapped here so that non-square frames are recorded correctly
+	//TIFConverter tifCon(Filename, (int)logargs->frameID, (int)frame->header.m_imgsize, (int)frame->header.m_height, (int)frame->header.m_width);
 
 	tifCon.convertToTIF((char *)frame->m_data);
 
