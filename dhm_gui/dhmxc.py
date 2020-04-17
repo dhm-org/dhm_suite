@@ -187,15 +187,19 @@ class MainWin(QObject):
       self.textField_exposure = self.win.findChild(QObject, "textField_exposure")
       self.textField_gain = self.win.findChild(QObject, "textField_gain")
       self.slider_exposure = self.win.findChild(QObject, "slider_exposure")
-      self.slider_gain = self.win.findChild(QObject,"slider_gain")
-      self.button_save = self.win.findChild(QObject,"button_save")
-      self.button_load = self.win.findChild(QObject,"button_load")
+      self.slider_gain = self.win.findChild(QObject, "slider_gain")
+      self.button_save = self.win.findChild(QObject, "button_save")
+      self.button_load = self.win.findChild(QObject, "button_load")
+      self.enable_image = self.win.findChild(QObject, "checkbox_enable_image")
+      self.enable_hist = self.win.findChild(QObject, "checkbox_enable_histogram")
 
       # Connect QObject signals
       self.win.send_cmd.connect(CameraServerCommand)
       self.check_recording.qml_signal_recording.connect(self.ApplyRecording)
       self.button_save.clicked.connect(self.SaveData)
       self.button_load.clicked.connect(self.LoadData)
+      self.enable_image.qml_enable_image.connect(self.EnableImage)
+      self.enable_hist.qml_enable_hist.connect(self.EnableHistogram)
 
       # Start streaming images
       self.display_t = guiclient(HOST,FRAME_SERVER_PORT)
@@ -261,9 +265,17 @@ class MainWin(QObject):
    # Called by raw_display.py.  When an image is finished being reconstructed
    # It writes to a file and then emits a signal that is received by this function
    def UpdateImage(self):
-      self.img_data = self.display_t.outdata_RGB
-      self.image_sample.reload()
+      if self.display_t.enable_image:
+         self.img_data = self.display_t.outdata_RGB
+         self.image_sample.reload()
 
+   def EnableImage(self, enabled):
+      self.display_t.enable_image = enabled
+
+   # Called fromthe checkbox_enable_histogram object.  Enables or disables
+   # the histogram from updating
+   def EnableHistogram(self, enabled):
+      self.display_t.enable_histogram = enabled
 
 
    def UpdateConfigFile(self):
