@@ -681,8 +681,8 @@ class Framesource(ComponentABC):
 
                     ### If he haven't processed the header/meta, then lets.
                     if meta is None and datalen > ms_pkt.header_packet_size():
-                        width, \
                         height, \
+                        width, \
                         size, \
                         packetsize, \
                         tstamp, \
@@ -697,8 +697,8 @@ class Framesource(ComponentABC):
                         rate, \
                         rate_measured = ms_pkt.unpack_header(data)
                         meta = ( \
-                                width,\
-                                height, \
+                                height,\
+                                width, \
                                 size, \
                                 packetsize, \
                                 tstamp, \
