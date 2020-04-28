@@ -92,7 +92,7 @@ int64_t value = 0;
 size_t length = sizeof(value);
 
 if(sysctl(mib, 2, &value, &length, NULL, 0) == -1)
-  *totalram = 16000*1048576);
+  *totalram = 16000*1048576;
 else
 	*totalram = (unsigned long long)(value);
 	//
