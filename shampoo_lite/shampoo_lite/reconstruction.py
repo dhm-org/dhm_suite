@@ -24,11 +24,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-#import datatypes
 from .datatypes import (BOOLDTYPE, FLOATDTYPE, COMPLEXDTYPE, FRAMEDIMENSIONS, NUMFFTTHREADS)
 
-#import fftutils
 from .fftutils import (fftshift, fft2, ifft2, fft3, ifft3, FFT_3)
+
+# Used for spectral peak computation
+from scipy.ndimage import gaussian_filter, maximum_filter
 
 #from shampoo_lite.mask import(Circle, Mask)
 
@@ -48,6 +49,36 @@ def reshape_to_3d(array, dtype):
     """
     return np.atleast_1d(array).reshape((1, 1, -1)).astype(dtype)
 
+def _find_peak_centroid(image, wavelength=405e-9, gaussian_width=10):
+    """
+    Smooth the image, find centroid of peak in the image.
+    """
+    wavelength = np.atleast_1d(wavelength).reshape((1,1,-1))
+    F = gaussian_filter(image, gaussian_width) # Filter with a gaussian
+    M = maximum_filter(F,3) # Get 8-neighbor maxima
+    tfm = M==F # Maxima location TF array
+    m = F[tfm] # Maxima
+    idx = m.argsort()[::-1] # Sort the maxima, get the sorted indices in descending order
+    x, y = np.nonzero(tfm) # Maxima locations
+    # Grab top 2*#wavelengths + 1 peaks
+    x = x[idx[0:(2*wavelength.shape[2]+1)]]
+    y = y[idx[0:(2*wavelength.shape[2]+1)]]
+    rsq = (x-image.shape[0]/2)**2 + (y-image.shape[1]/2)**2
+    dist = np.sort(rsq)[1:] # Sort distances in ascending order
+    idx = np.argsort(rsq)[1:] # Get sorted indices
+    order = wavelength.reshape(-1).argsort()
+    peaks = np.zeros([wavelength.shape[2],2])
+    for o in order:
+        i1 = idx[2*o]
+        i2 = idx[2*o + 1]
+        y1 = y[i1]
+        y2 = y[i2]
+        i = i1
+        if y1 < y2:
+            i = i2
+        peaks[o,:] = [x[i], y[i]]
+
+    return peaks
 ###########################################################
 ###              Classes
 ###########################################################
@@ -57,15 +88,41 @@ class Hologram():
     """
     def __init__(self, hologram, crop_fraction=None, wavelength=405e-3,
                  rebin_factor=1, pix_dx=3.45, pix_dy=3.45, system_magnification=1.0,
-                 mask=None, apodize=True):
+                 fourier_mask=None, apodize=True):
         """
         Constructor
+
+        Parameters
+        ----------
+        hologram : 2D np.array
+            Image array which is the hologram
+        crop_fraction : float or None
+            TBD
+        wavelength : float or np.array
+            Wavelength in units of um
+        rebin_factor : float
+            TBD
+        pix_dx : float
+            Pixel size (image space) in X dimension
+        pix_dy : float
+            Pixel size (image space) in Y dimension
+        system_magnification : float
+            Magnficiation of the system
+        mask : TBD or None
+            TBD
+        apodize : bool
+            Apply apodize mask to hologram if TRUE, else FALSE
         """
         self._crop_fraction = crop_fraction
         self._rebin_factor = rebin_factor
         self._system_magnification = system_magnification
         self._random_seed = RANDOM_SEED
-        self.mask = mask
+        if fourier_mask:
+            self.spectral_mask_uncentered = fourier_mask[0]
+            self.spectral_mask_centered = fourier_mask[1]
+        else:
+            self.spectral_mask_uncentered = None
+            self.spectral_mask_centered = None
         self.hologram = None
         self.hololen = None
         self.wavelength = None
@@ -107,6 +164,11 @@ class Hologram():
     def set_hologram(self, hologram):
         """
         Sets the hologram image and validates it
+
+        Parameters
+        ----------
+        hologram : 2D np.array
+            Image hologram
         """
         hologram = np.asarray(hologram, dtype=FLOATDTYPE)
         if hologram.ndim != 2:
@@ -134,11 +196,16 @@ class Hologram():
 
         return self._ft_hologram
 
-    def get_ft_hologram(self, apodize=False):
+    @property
+    def ft_hologram(self, apodize=False):
         """
         Return the FT of hologram
+
+        If internal ft_hologram exists, then return that, else
+        compute recompute fourier transform and update.
         """
-        if not self._ft_hologram:
+        if self._ft_hologram is None:
+
            self.update_ft_hologram(apodize=apodize)
 
         return self._ft_hologram
@@ -208,11 +275,20 @@ class Hologram():
     def set_pixel_width(self, pix_dx, pix_dy):
         """
         Set the pixel width based on input deltas
+
+        Parameters
+        -----------
+        pix_dx : float
+            Pixel size in X dimension in image space
+        pix_dy : float
+            Pixel size in Y dimension in image space
         """
         if pix_dx:
-            self._pix_width_x = pix_dx/self._system_magnification * self._rebin_factor
+            effective_pixel_size = pix_dx/self._system_magnification # object space
+            self._pix_width_x = effective_pixel_size * self._rebin_factor
         if pix_dy:
-            self._pix_width_y = pix_dy/self._system_magnification * self._rebin_factor
+            effective_pixel_size = pix_dy/self._system_magnification # object space
+            self._pix_width_y =  effective_pixel_size * self._rebin_factor
 
         self.dk = 2*np.pi/(self.hololen * self._pix_width_x)
 
@@ -261,6 +337,51 @@ class Hologram():
 
         return self._angular_spec_hologram
 
+    def fourier_peak_centroid(self, gaussian_width=10):
+        """
+        Calculate the centroid of the signal spike in Fourier space near the
+        frequencies of the real image.
+
+        Parameters
+        ----------
+        fourier_arr : `~numpy.ndarray`
+            Fourier-transform of the hologram
+        margin_factor : int
+            Fraction of the length of the Fourier-transform of the hologram
+            to ignore near the edges, where spurious peaks occur there.
+
+        Returns
+        -------
+        pixel : `~numpy.ndarray`
+            Pixel at the centroid of the spike in Fourier transform of the
+            hologram near the real image.
+        """
+
+        return _find_peak_centroid(np.abs(self.ft_hologram), self.wavelength, gaussian_width)
+
+    def update_spectral_peak(self, spectral_peak):
+        """  
+        Update spectral peak centroid values.
+        
+        Parameters
+        ----------
+        spectral_peak : `~numpy.ndarray`
+            Centroid of spectral peak for wavelength in power spectrum of hologram FT 
+            (len(self.wavelength) x 2)
+        """
+     
+        spectral_peak = np.atleast_2d(spectral_peak)
+     
+        if spectral_peak.shape[1] != 2 or spectral_peak.shape[0] != self.wavelength.shape[2]:
+            message = ("Spectral peak array must be of shape {0} by 2. "
+                       "{0} is the number of wavelengths."
+                       .format(self.wavelength.shape[2]))
+            raise UpdateError(message)
+
+        spectral_peak = spectral_peak.astype(int)
+     
+        self._spectral_peak = spectral_peak.swapaxes(0,1)
+
     @property
     def spectral_peak(self):
         if self._spectral_peak is None:
@@ -270,16 +391,36 @@ class Hologram():
         return self._spectral_peak
 
     def spectral_mask(self, center_x_pix, center_y_pix, radius_pix):
-        """ Spectral Mask in frequency coordinates"""
+        """ 
+        Compute spectral mask in frequency coordinates
+        
+        Two arrays are computed, the first a circular spectral mask where only the pixels within
+        the mask are '1' and all else is '0'.  The other array is the same spectral mask
+        but centered.
+
+        Parameters
+        ----------
+        center_x_pix : float
+            X coordinate in pixels of max spectral peak 
+            This should be the center location of a fourier satellite
+        center_y_pix : float
+            Y coordinate in pixels of max spectral peak 
+            This should be the center location of a fourier satellite
+        radius_pix : float
+            Radius of satellite in pixels
+
+        Return : tuple of 2 np.array
+            (spectral_mask, spectral_mask_centered)
+        """
         kx = np.arange(-self.hololen/2, self.hololen/2) * self.dk
         ky = np.arange(-self.hololen/2, self.hololen/2) * self.dk
         centerX = kx[center_x_pix] # um^-1 frequency coordinate
         centerY = ky[center_y_pix] # um^-1
         radius = radius_pix * self.dk # um^-1
-        spectralMask = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
-        spectralMask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)
+        spectral_mask_uncentered = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
+        spectral_mask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)
 
-        return (spectralMask, spectralMask_centered)
+        return (spectral_mask_uncentered, spectral_mask_centered,)
 
     def real_image_mask(self, center_x, center_y, radius):
         """
@@ -315,7 +456,7 @@ class Hologram():
         return mask
 
 
-    def propagation_kernel(self, propagation_distance, spectralMask_centered):
+    def propagation_kernel(self, propagation_distance, spectral_mask_centered):
         """
         Compute and return propagation kernel
         """
@@ -323,7 +464,7 @@ class Hologram():
         propKernel = np.zeros((self.hololen, self.hololen, self.wavelength.size)) * 1j
 
         for i, wvl in enumerate(self.wavelength):
-            propKernel[spectralMask_centered, i] = np.exp(1j*propagation_distance*self.propagation_array[spectralMask_centered, i])
+            propKernel[spectral_mask_centered, i] = np.exp(1j*propagation_distance*self.propagation_array[spectral_mask_centered, i])
 
         return propKernel
 
@@ -331,57 +472,74 @@ class Hologram():
     ###              Reconstruction
     ###################################################################3
     def reconstruct(self, propagation_distance, compute_spectral_peak=False, compute_digital_phase_mask=False, digital_phase_mask=None, fourier_mask=None, chromatic_shift=None, G_factor=None):
+        """
+        Parameters
+        -----------
+        propagation_distance : float or np.array of floats
+            TBD
+        compute_spectral_peak : boolean
+            If TRUE then mathematically find the peak of the fourier image for each wavelength and create spectral mask.
+            If FALSE then input mask 'fourier_mask' must be used
+        
+        """
 
         propagation_distance = reshape_to_3d(propagation_distance, FLOATDTYPE)
 
         if chromatic_shift is not None:
             self.update_chromatic_shift(chromatic_shift)
 
-        ang_spec = holo.angular_spectrum
+        ang_spec = self.angular_spectrum
 
-        if not compute_spectral_peak:
-            # Spectral Mask, in frequency coordinates
-            coor = [(1389, 455, 250), (674, 1625, 250), (1267, 1497, 250)]
+        if compute_spectral_peak:
+            # Find location of all spectral peaks per wavelength. These are the center of the fourier mask
+            spectral_peak_loc= self.spectral_peak
 
-            spectralMask = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
-            spectralMask_centered = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
+            # Create empty spectral mask
+            spectral_mask_uncentered = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
+            spectral_mask_centered = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
+            spectral_mask_coordinates = []
 
+            # populate spectral mask
             for i in range(self.wavelength.size):
-                centerX_pix, centerY_pix, radius_pix = coor[i]
-                spectralMask[:, :, i], spectralMask_centered[:, :, i] = self.spectral_mask(centerX_pix, centerY_pix, radius_pix)
 
-            self.mask = spectralMask
+                #center_x_pix, center_y_pix, radius_pix = (spectral_peak_loc[1][i], spectral_peak_loc[0][i], 250) #coor[i]
+                spectral_mask_coordinates.append((spectral_peak_loc[1][i], spectral_peak_loc[0][i], 250)) #coor[i]
+                spectral_mask_uncentered[:, :, i], spectral_mask_centered[:, :, i] = self.spectral_mask(spectral_mask_coordinates[i][0], spectral_mask_coordinates[i][1], spectral_mask_coordinates[i][2])
 
+            self.spectral_mask_uncentered = spectral_mask_uncentered
+            self.spectral_mask_centered = spectral_mask_centered
+        else:
+            pass
 
         wave = np.zeros((self.hololen, self.hololen, propagation_distance.size, self.wavelength.size), dtype=ang_spec.dtype)
 
         for i in range(self.wavelength.size):
 
-            propKernel = self.propagation_kernel(propagation_distance[0, 0, 0], spectralMask_centered[:, :, i])
-            print(propKernel.shape)
+            dist_idx = 0 # because we going to process a single propagation distance only
+            print("propagation distance: ", propagation_distance[0, 0, dist_idx])
+            propKernel = self.propagation_kernel(propagation_distance[0, 0, dist_idx], self.spectral_mask_centered[:, :, i])
 
-            maskedHolo = np.roll(ang_spec*spectralMask[:, :, i], (int(self.hololen/2 - centerY_pix), int(self.hololen/2 - centerX_pix)), axis=(0, 1))
+            maskedHolo = np.roll(ang_spec * self.spectral_mask_uncentered[:, :, i], (int(self.hololen/2 - spectral_mask_coordinates[i][1]), int(self.hololen/2 - spectral_mask_coordinates[i][0])), axis=(0, 1))
 
-            proppedWave = propKernel[:, :, 0] * maskedHolo
-            wave[:, :, 0, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
-
-            #reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
+            proppedWave = propKernel[:, :, dist_idx] * maskedHolo
+            wave[:, :, dist_idx, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen * self.dk * self.hololen * self.dk)/(2 * np.pi)
 
             # Energy conservation
-            spectralMaskNumber = np.sum(spectralMask**2)
-            print(spectralMaskNumber)
+            spectral_maskNumber = np.sum(self.spectral_mask_uncentered**2)
+            print(spectral_maskNumber)
 
-#            E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
-#            E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
-#            E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
-#            E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
-#            print('E_image', E_image)
-#            print('E_fft', E_fft)
-#            print('E_maskedFFT', E_maskedFFT)
-#            print('E_reconstruction', E_reconstruction)
+            reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
 
+            E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
+            E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
+            E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
+            E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
+            print('E_image', E_image)
+            print('E_fft', E_fft)
+            print('E_maskedFFT', E_maskedFFT)
+            print('E_reconstruction', E_reconstruction)
 
-        return ReconstructedWave(reconstructed_wave=wave, fourier_mask=self.mask,
+        return ReconstructedWave(reconstructed_wave=wave, fourier_mask=self.spectral_mask_uncentered,
                                  wavelength=self.wavelength, depths=propagation_distance)
 
 class ReconstructedWave():
@@ -428,7 +586,7 @@ class ReconstructedWave():
         `~numpy.ndarray` of the reconstructed amplitude
         """
         if self._amplitude_image is None:
-            self._amplitude_image = self.reconstructed_wave*np.conj(self.reconstructed_wave)
+            self._amplitude_image = np.abs(self.reconstructed_wave*np.conj(self.reconstructed_wave))
 
         return self._amplitude_image
 
@@ -496,21 +654,21 @@ if __name__ == "__main__":
     showFigs = True
 
     #im = imread('../data/USAF_multi.tif')
-    im = mpimg.imread('../data/USAF_multi.tif')
+    im = mpimg.imread('./data/USAF_multi.tif')
     #im = imread('../data/Hologram.tif')
 
     propagation_distance = 370 #um
-    wvl = [405e-3, 532e-3, 605e-3] #Wavelength um
+    #wvl = [405e-3, 532e-3, 605e-3] #Wavelength um
+    wvl = [405e-3] #Wavelength um
     m = 10 #System magnification
     p = 3.45 #um, pixel size (image space)
     dx = p/m
 
     start_time = time.time()
     holo = Hologram(im, wavelength=wvl,
-                    pix_dx=p, pix_dy=p, system_magnification=m)
+                    #pix_dx=p, pix_dy=p, system_magnification=m)
+                    pix_dx=dx, pix_dy=dx, system_magnification=m)
     print("Elapsed Time: ", time.time()-start_time)
-
-    ang_spec = holo.angular_spectrum
 
     start_time = time.time()
     wave = holo.reconstruct(propagation_distance)
@@ -535,8 +693,8 @@ if __name__ == "__main__":
 #            #plt.show()
 #
 #            plt.figure(2)
-#            #plt.imshow( np.log10(np.real((ang_spec*(spectralMask+0.1))*np.conj(ang_spec*(spectralMask+0.1)))) , extent=[kx[0],kx[-1],ky[0],ky[-1]], aspect=1, cmap='gray')
-#            plt.imshow( np.log10(np.real((ang_spec*(spectralMask+0.1))*np.conj(ang_spec*(spectralMask+0.1)))) , aspect=1, cmap='gray')
+#            #plt.imshow( np.log10(np.real((ang_spec*(spectral_mask+0.1))*np.conj(ang_spec*(spectral_mask+0.1)))) , extent=[kx[0],kx[-1],ky[0],ky[-1]], aspect=1, cmap='gray')
+#            plt.imshow( np.log10(np.real((ang_spec*(spectral_mask+0.1))*np.conj(ang_spec*(spectral_mask+0.1)))) , aspect=1, cmap='gray')
 #            plt.xlabel('Frequency Space, um^-1')
 #            plt.title('Angular Spectrum - Showing Masked Region')
 #            #plt.show()

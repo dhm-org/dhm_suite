@@ -616,6 +616,8 @@ class Reconstructor(MP.Process):
 
     def _compute_spectral_peak(self, recompute_mask):
         """
+        Find the spectral peak mathematically of the fourier image and create a mask around the peak
+        The computed mask and peak locations are stored into self.holo.mask, self.holo.x_peak, and self.holo.y_peak
         """
         ### Compute the spectral peak and the mask
         if self._reconst_meta.compute_spectral_peak or recompute_mask:
