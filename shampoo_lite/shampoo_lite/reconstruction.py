@@ -15,23 +15,26 @@
 #  author:	S. Felipe Fregoso
 #  description:	Module containing reconstruction algorithms
 #               This module was named after Brett Morris' version SHAMPOO
-#               but many of the algorithms there were not adequate and
+#               but much was gutted out henche the 'lite', also
+#               many of the algorithms there were not adequate and
 #               were redone for our purposes
 #
 ###############################################################################
 """
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 
 from .datatypes import (BOOLDTYPE, FLOATDTYPE, COMPLEXDTYPE, FRAMEDIMENSIONS, NUMFFTTHREADS)
-
+from .util import (circ_prop, crop_image)
+from .mask import (Circle, Mask)
 from .fftutils import (fftshift, fft2, ifft2, fft3, ifft3, FFT_3)
 
 # Used for spectral peak computation
 from scipy.ndimage import gaussian_filter, maximum_filter
 
 #from shampoo_lite.mask import(Circle, Mask)
+
+class UpdateError(Exception):
+    pass
 
 ###########################################################
 ###              Constants
@@ -117,14 +120,13 @@ class Hologram():
         self._rebin_factor = rebin_factor
         self._system_magnification = system_magnification
         self._random_seed = RANDOM_SEED
-        if fourier_mask:
-            self.spectral_mask_uncentered = fourier_mask[0]
-            self.spectral_mask_centered = fourier_mask[1]
-        else:
-            self.spectral_mask_uncentered = None
-            self.spectral_mask_centered = None
+
         self.hologram = None
         self.hololen = None
+        self.fourier_mask = None
+        if fourier_mask:
+            self.fourier_mask = fourier_mask
+        self.propagation_kernel = None
         self.wavelength = None
         self.wavenumber = None
         self._pix_width_x = None
@@ -160,6 +162,13 @@ class Hologram():
 #            fftutils.ifft3 = myFFT3.ifft3
 #            fftutils.fft2 = myFFT3.fft2
 #            fftutils.ifft2 = myFFT3.ifft2
+
+    def set_G_factor(self, G_factor_array):
+        self.propagation_kernel = G_factor_array
+
+    def update_G_factor(self, propagation_distance):
+        print("fourier_mask type: ", type(self.fourier_mask))
+        self.propagation_kernel = self.generate_propagation_kernel(propagation_distance, self.fourier_mask.mask_centered)
 
     def set_hologram(self, hologram):
         """
@@ -206,14 +215,15 @@ class Hologram():
         """
         if self._ft_hologram is None:
 
-           self.update_ft_hologram(apodize=apodize)
+            self.update_ft_hologram(apodize=apodize)
 
         return self._ft_hologram
 
     def update_hologram(self, hologram, crop_fraction=None,
                         wavelength=None, rebin_factor=None,
                         pix_dx=None, pix_dy=None,
-                        mask=None):
+                        system_magnification=1.0,
+                        fourier_mask=None, apodize=True):
         """
         Update the object based on inputs
         This avoids creating a new hologram object
@@ -231,6 +241,8 @@ class Hologram():
         self.set_pixel_width(pix_dx, pix_dy)
 
         self._ft_hologram = None;
+
+        self.fourier_mask = fourier_mask
 
 #        global FRAMEDIMENSIONS
 #        global myFFT3
@@ -261,7 +273,7 @@ class Hologram():
 
         # Crop the hologram by factor crop_factor, centered on original center
         if self._crop_fraction is not None:
-            self.hologram = _crop_image(binned_hologram, self._crop_fraction)
+            self.hologram = crop_image(binned_hologram, self._crop_fraction)
         else:
             self.hologram = binned_hologram
 
@@ -315,8 +327,8 @@ class Hologram():
     def f_mgrid(self):
         """ Frequency Coordinates MGrid"""
         if self._f_mgrid is None:
-            kx = np.arange(-self.hololen/2, self.hololen/2) * self.dk
-            ky = np.arange(-self.hololen/2, self.hololen/2) * self.dk
+            kx = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
+            ky = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
             self._f_mgrid = np.meshgrid(kx, ky) # meshgrid of pixels, useful for indexing
 
         return self._f_mgrid
@@ -412,8 +424,8 @@ class Hologram():
         Return : tuple of 2 np.array
             (spectral_mask, spectral_mask_centered)
         """
-        kx = np.arange(-self.hololen/2, self.hololen/2) * self.dk
-        ky = np.arange(-self.hololen/2, self.hololen/2) * self.dk
+        kx = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
+        ky = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
         centerX = kx[center_x_pix] # um^-1 frequency coordinate
         centerY = ky[center_y_pix] # um^-1
         radius = radius_pix * self.dk # um^-1
@@ -456,22 +468,94 @@ class Hologram():
         return mask
 
 
-    def propagation_kernel(self, propagation_distance, spectral_mask_centered):
+    def generate_propagation_kernel(self, propagation_distance, spectral_mask_centered):
         """
         Compute and return propagation kernel
+
+        Parameters
+        ----------
+        propagation_distance : float
+            Propagation disance in units of um
+        spectral_mask_centered : N x N x wavelength.size np.array
+            Spectral mask(s) where the mask is in the center of the image
+
+        Return : N x N x wavelength.size np.array
+           Propagation kernel array
         """
 
         propKernel = np.zeros((self.hololen, self.hololen, self.wavelength.size)) * 1j
 
-        for i, wvl in enumerate(self.wavelength):
-            propKernel[spectral_mask_centered, i] = np.exp(1j*propagation_distance*self.propagation_array[spectral_mask_centered, i])
+        for i, _ in enumerate(self.wavelength):
+            #propKernel[spectral_mask_centered, i] = np.exp(1j*propagation_distance*self.propagation_array[spectral_mask_centered, i])
+            propKernel[spectral_mask_centered[:,:,i], i] = np.exp(1j*propagation_distance*self.propagation_array[spectral_mask_centered[:,:,i], i])
+            #propKernel[:,:, i] = np.exp(1j*propagation_distance*self.propagation_array[:, :, i])
+            #a = np.exp(1j*propagation_distance*self.propagation_array[spectral_mask_centered, i])
+            #print("a.shape = ", a.shape)
+            #propKernel[spectral_mask_centered, i] = a
 
         return propKernel
+
+    def generate_spectral_mask(self, compute_spectral_peak=False, center_x=None, center_y=None, radius=250):
+        """
+        """
+
+        if not compute_spectral_peak:
+            if center_x is None or center_y is None:
+                raise ValueError("Center_x, center_y and radius must be a scalar or array when compute_spectal_peak is FALSE")
+
+        circle_list = []
+
+        if compute_spectral_peak:
+
+            radius = np.atleast_1d(radius)
+            # Find location of all spectral peaks per wavelength. These are the center of the fourier mask
+            spectral_peak_loc= self.spectral_peak
+            print(spectral_peak_loc)
+
+            for i in range(self.wavelength.size):
+                circle_list.append(Circle(spectral_peak_loc[1][i], spectral_peak_loc[0][i], radius[0]))
+
+        else:
+            center_x = np.atleast_1d(center_x)
+            center_y = np.atleast_1d(center_y)
+            radius = np.atleast_1d(radius)
+
+            if center_x.size != self.wavelength.size or center_y.size != self.wavelength.size or radius.size != self.wavelength.size:
+                raise ValueError("Center_x, center_y, and radius must be list or array of same length as wavelength array")
+
+            for i in range(self.wavelength.size):
+
+                circle_list.append(Circle(center_x[i], center_y[i], radius[i]))
+
+        self.fourier_mask = Mask(self.hololen, circle_list, self.dk)
+
+        return self.fourier_mask
+
+    def update_chromatic_shift(self,chromatic_shift):
+        """  
+        Update chromatic shift values for changed depth of focus for different wavelengths.
+        
+        Parameters
+        ----------
+        spectral_peak : `~numpy.ndarray`
+            1xN_wavelength list of depth of focus changes
+        """
+        if chromatic_shift is not None:
+
+            chromatic_shift = np.atleast_1d(chromatic_shift).reshape((1,1,-1)).astype(FLOATDTYPE)
+            if chromatic_shift.shape[2] != self.wavelength.shape[2]:
+                message = ("Chromatic shift must be of length {0} (number of wavelengths)."
+                            .format(self.wavelength.shape[2]))
+                raise UpdateError(message)
+     
+        self._chromatic_shift = chromatic_shift
 
     ###################################################################3
     ###              Reconstruction
     ###################################################################3
-    def reconstruct(self, propagation_distance, compute_spectral_peak=False, compute_digital_phase_mask=False, digital_phase_mask=None, fourier_mask=None, chromatic_shift=None, G_factor=None):
+    def reconstruct(self, propagation_distance, compute_spectral_peak=False,
+                    compute_digital_phase_mask=False, digital_phase_mask=None, fourier_mask=None,
+                    chromatic_shift=None, G_factor=None):
         """
         Parameters
         -----------
@@ -482,64 +566,62 @@ class Hologram():
             If FALSE then input mask 'fourier_mask' must be used
         
         """
-
         propagation_distance = reshape_to_3d(propagation_distance, FLOATDTYPE)
 
         if chromatic_shift is not None:
             self.update_chromatic_shift(chromatic_shift)
 
+
+        # Compute the angular spectrum
         ang_spec = self.angular_spectrum
 
-        if compute_spectral_peak:
-            # Find location of all spectral peaks per wavelength. These are the center of the fourier mask
-            spectral_peak_loc= self.spectral_peak
+        # Compute the fourier mask or used the input fourier mask
+        if compute_spectral_peak or self.fourier_mask is None and fourier_mask is None:
 
-            # Create empty spectral mask
-            spectral_mask_uncentered = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
-            spectral_mask_centered = np.zeros((self.hololen, self.hololen, self.wavelength.size), dtype=BOOLDTYPE)
-            spectral_mask_coordinates = []
+            self.generate_spectral_mask(compute_spectral_peak=True)
 
-            # populate spectral mask
-            for i in range(self.wavelength.size):
+        elif fourier_mask:
+            if not isinstance(fourier_mask, Mask):
+                raise ValueError("Fourier mask must be of type Mask")
 
-                #center_x_pix, center_y_pix, radius_pix = (spectral_peak_loc[1][i], spectral_peak_loc[0][i], 250) #coor[i]
-                spectral_mask_coordinates.append((spectral_peak_loc[1][i], spectral_peak_loc[0][i], 250)) #coor[i]
-                spectral_mask_uncentered[:, :, i], spectral_mask_centered[:, :, i] = self.spectral_mask(spectral_mask_coordinates[i][0], spectral_mask_coordinates[i][1], spectral_mask_coordinates[i][2])
+            self.fourier_mask = fourier_mask
 
-            self.spectral_mask_uncentered = spectral_mask_uncentered
-            self.spectral_mask_centered = spectral_mask_centered
+        if G_factor is None:
+            self.update_G_factor(propagation_distance[0, 0, 0])
         else:
-            pass
+            if not isinstance(G_factor, np.ndarray) or G_factor.shape[0] != self.hololen or G_factor.shape[0] != G_factor.shape[1] or G_factor.shape[2] != self.wavelength.size:
+                raise ValueError("G_factor propgation distance must be shape (%d, %d, %d)"%(self.hololen, self.hololen, self.wavelength.size))
+            self.propagation_kernel = G_factor
 
+        # Initialize the reconstructed wave array
         wave = np.zeros((self.hololen, self.hololen, propagation_distance.size, self.wavelength.size), dtype=ang_spec.dtype)
+
 
         for i in range(self.wavelength.size):
 
             dist_idx = 0 # because we going to process a single propagation distance only
-            print("propagation distance: ", propagation_distance[0, 0, dist_idx])
-            propKernel = self.propagation_kernel(propagation_distance[0, 0, dist_idx], self.spectral_mask_centered[:, :, i])
 
-            maskedHolo = np.roll(ang_spec * self.spectral_mask_uncentered[:, :, i], (int(self.hololen/2 - spectral_mask_coordinates[i][1]), int(self.hololen/2 - spectral_mask_coordinates[i][0])), axis=(0, 1))
+            maskedHolo = np.roll(ang_spec * self.fourier_mask.mask_uncentered[:, :, i],
+                                 (int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][1]), int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][0])),
+                                 axis=(0, 1))
 
-            proppedWave = propKernel[:, :, dist_idx] * maskedHolo
+            proppedWave = self.propagation_kernel[:, :, dist_idx] * maskedHolo
             wave[:, :, dist_idx, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen * self.dk * self.hololen * self.dk)/(2 * np.pi)
 
-            # Energy conservation
-            spectral_maskNumber = np.sum(self.spectral_mask_uncentered**2)
-            print(spectral_maskNumber)
+            ### Energy conservation
+            #spectral_maskNumber = self.fourier_mask.mask_number;
+            #print(spectral_maskNumber)
+            #reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
+            #E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
+            #E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
+            #E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
+            #E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
+            #print('E_image', E_image)
+            #print('E_fft', E_fft)
+            #print('E_maskedFFT', E_maskedFFT)
+            #print('E_reconstruction', E_reconstruction)
 
-            reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
-
-            E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
-            E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
-            E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
-            E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
-            print('E_image', E_image)
-            print('E_fft', E_fft)
-            print('E_maskedFFT', E_maskedFFT)
-            print('E_reconstruction', E_reconstruction)
-
-        return ReconstructedWave(reconstructed_wave=wave, fourier_mask=self.spectral_mask_uncentered,
+        return ReconstructedWave(reconstructed_wave=wave, fourier_mask=self.fourier_mask,
                                  wavelength=self.wavelength, depths=propagation_distance)
 
 class ReconstructedWave():
@@ -638,78 +720,4 @@ def _rebin_image(a, binning_factor):
     sh = (new_shape[0], a.shape[0]//new_shape[0], new_shape[1],
           a.shape[1]//new_shape[1])
     return a.reshape(map(int, sh)).mean(-1).mean(1)
-
-def circ_prop(kx, ky, k):
-
-    r = np.sqrt(kx**2+ky**2)/k
-    z = r < 1
-
-    return z.astype(np.float)
-
-
-if __name__ == "__main__":
-    #from skimage.io import imread
-    import time
-
-    showFigs = True
-
-    #im = imread('../data/USAF_multi.tif')
-    im = mpimg.imread('./data/USAF_multi.tif')
-    #im = imread('../data/Hologram.tif')
-
-    propagation_distance = 370 #um
-    #wvl = [405e-3, 532e-3, 605e-3] #Wavelength um
-    wvl = [405e-3] #Wavelength um
-    m = 10 #System magnification
-    p = 3.45 #um, pixel size (image space)
-    dx = p/m
-
-    start_time = time.time()
-    holo = Hologram(im, wavelength=wvl,
-                    #pix_dx=p, pix_dy=p, system_magnification=m)
-                    pix_dx=dx, pix_dy=dx, system_magnification=m)
-    print("Elapsed Time: ", time.time()-start_time)
-
-    start_time = time.time()
-    wave = holo.reconstruct(propagation_distance)
-    reconAmplitude = wave.amplitude
-    reconPhase = wave.phase
-    print("Elapsed Time: ", time.time()-start_time)
-
-#
-#        if showFigs:
-#            x = np.arange(-holo.n/2,holo.n/2) * holo.dx # Object space x and y vectors
-#            y = np.arange(-holo.n/2,holo.n/2) * holo.dy
-#
-#            dk = 2*np.pi/(holo.n*holo.dx)
-#            kx = np.arange(-holo.n/2,holo.n/2) * dk
-#            ky = np.arange(-holo.n/2,holo.n/2) * dk
-#
-#            # Plot the results
-#            plt.figure(1)
-#            plt.imshow(holo.hologram, extent=[x[0], x[-1], y[0], y[-1]], aspect=1, cmap='gray')
-#            plt.xlabel('Object Space, um')
-#            plt.title('Raw Hologram - US Air Force Resolution Target')
-#            #plt.show()
-#
-#            plt.figure(2)
-#            #plt.imshow( np.log10(np.real((ang_spec*(spectral_mask+0.1))*np.conj(ang_spec*(spectral_mask+0.1)))) , extent=[kx[0],kx[-1],ky[0],ky[-1]], aspect=1, cmap='gray')
-#            plt.imshow( np.log10(np.real((ang_spec*(spectral_mask+0.1))*np.conj(ang_spec*(spectral_mask+0.1)))) , aspect=1, cmap='gray')
-#            plt.xlabel('Frequency Space, um^-1')
-#            plt.title('Angular Spectrum - Showing Masked Region')
-#            #plt.show()
-#
-#            plt.figure(6)
-#            plt.imshow(np.real(reconAmplitude), extent=[x[0],x[-1],y[0],y[-1]], aspect=1, cmap='gray')
-#            plt.xlabel('Object Space, um')
-#            plt.title('Reconstructed Intensity')
-#            #plt.show()
-#
-#            plt.figure(7)
-#            plt.imshow(reconPhase, extent=[x[0],x[-1],y[0],y[-1]], aspect=1, cmap='hsv')
-#            plt.xlabel('Object Space, um')
-#            plt.title('Reconstructed Phase')
-#            plt.colorbar()
-#            plt.show()
-
 
