@@ -22,7 +22,7 @@ import time
 import configparser
 from abc import ABC, abstractmethod
 
-from shampoo.mask import (Circle, Mask)
+from shampoo_lite.mask import (Circle, Mask)
 
 class MetadataABC(ABC):
     """

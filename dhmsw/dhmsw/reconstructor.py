@@ -26,8 +26,8 @@ import time
 import queue
 import numpy as np
 
-from shampoo.reconstruction import (Hologram)
-from shampoo.mask import (Circle, Mask)
+from shampoo_lite.reconstruction import (Hologram)
+from shampoo_lite.mask import (Circle, Mask)
 
 from . import telemetry_iface_ag
 from . import interface as Iface
@@ -557,20 +557,22 @@ class Reconstructor(MP.Process):
                                  wavelength=self._holo_meta.wavelength,
                                  crop_fraction=self._holo_meta.crop_fraction,
                                  rebin_factor=self._holo_meta.rebin_factor,
-                                 dx=self._holo_meta.dx,
-                                 dy=self._holo_meta.dy,
-                                 mask=self._mask,
+                                 pix_dx=self._holo_meta.dx,
+                                 pix_dy=self._holo_meta.dy,
+                                 system_magnification=self._session_meta.lens.system_magnification,
+                                 fourier_mask=self._mask,
                                 )
         else:
             self.holo.update_hologram(img,
                                       wavelength=self._holo_meta.wavelength,
                                       crop_fraction=self._holo_meta.crop_fraction,
                                       rebin_factor=self._holo_meta.rebin_factor,
-                                      dx=self._holo_meta.dx,
-                                      dy=self._holo_meta.dy,
-                                      mask=self._mask
+                                      pix_dx=self._holo_meta.dx,
+                                      pix_dy=self._holo_meta.dy,
+                                      system_magnification=self._session_meta.lens.system_magnification,
+                                      fourier_mask=self._mask,
                                      )
-            self._mask = self.holo.mask
+            self._mask = self.holo.fourier_mask
 
     def _update_g_factor_db(self):
         """
@@ -579,7 +581,7 @@ class Reconstructor(MP.Process):
         start_time = time.time()
 
         g_key = repr(self._reconst_meta.propagation_distance) + \
-                "_" + repr(self.holo.n) + \
+                "_" + repr(self.holo.hololen) + \
                 "_" + repr(self._holo_meta.dx) + \
                 "_" + repr(self._holo_meta.dy) + \
                 "_" + repr(self._holo_meta.wavelength)
@@ -593,8 +595,8 @@ class Reconstructor(MP.Process):
 
             if self._verbose:
                 print('Updating G factor for g_key=%s'%(g_key))
-            self.holo.update_G_factor(self._reconst_meta.propagation_distance)
-            self._g_db[g_key] = self.holo.G
+            self.holo.update_G_factor(self._reconst_meta.propagation_distance[0])
+            self._g_db[g_key] = self.holo.propagation_kernel
 
         if self._verbose:
             print('%f: Reconstruction G Database. Elapsed Time: %f'\
@@ -604,11 +606,11 @@ class Reconstructor(MP.Process):
         """
         Inidicates if need to recompute mask
         """
-        recompute_mask = False
+        recompute_mask = True
         if self._mask is not None:
-            recompute_mask = self._mask.shape[0] != self.holo.ft_hologram.shape[0] or\
-                             self._mask.shape[1] != self.holo.ft_hologram.shape[1]
-            print("%%%%%%%%%%%%%%%%%: ", self._mask.shape,
+            recompute_mask = self._mask.N != self.holo.ft_hologram.shape[0] or\
+                             self._mask.N != self.holo.ft_hologram.shape[1]
+            print("%%%%%%%%%%%%%%%%%: ", self._mask.mask_uncentered.shape,
                   self.holo.ft_hologram.shape,
                   recompute_mask)
 
@@ -622,14 +624,15 @@ class Reconstructor(MP.Process):
         ### Compute the spectral peak and the mask
         if self._reconst_meta.compute_spectral_peak or recompute_mask:
 
-            self.holo.x_peak,\
-            self.holo.y_peak,\
-            self._mask = self.holo.compute_spectral_peak_mask(mask_radius=150)
+            self.holo.generate_spectral_mask(compute_spectral_peak=True, radius=150)
 
-            self.holo.mask = self._mask
             self._reconst_meta.compute_spectral_peak = False
+
+            self._mask = self.holo.fourier_mask
+            self._fouriermask_meta.mask = self.holo.fourier_mask
+
             print("((((((((((((((( Computing spectral peak:",
-                  self.holo.mask.shape, self._mask.shape
+                  self._mask.mask_uncentered.shape
                  )
         elif self._update_fourier_mask:
             print('Updating Fourier Mask...')
@@ -639,18 +642,12 @@ class Reconstructor(MP.Process):
 
                 print('Really Updating Fourier Mask...')
                 idx = slice(0, len(self._holo_meta.wavelength))
-                self._fouriermask_meta.mask = Mask(self.holo.n,
+
+                self._fouriermask_meta.mask = Mask(self.holo.hololen,
                                                    self._fouriermask_meta.center_list[idx])
-                self.holo.x_peak = np.zeros((len(self._holo_meta.wavelength), 1), dtype=np.int)
-                self.holo.y_peak = np.zeros((len(self._holo_meta.wavelength), 1), dtype=np.int)
 
-                for _ in range(len(self._holo_meta.wavelength)):
-
-                    self.holo.x_peak[_] = self._fouriermask_meta.center_list[_].centery
-                    self.holo.y_peak[_] = self._fouriermask_meta.center_list[_].centerx
-
-                self._mask = self._fouriermask_meta.mask.mask
-                self.holo.mask = self._mask
+                self._mask = self._fouriermask_meta.mask
+                self.holo.fourier_mask = self._mask
 
     def _validate_wavelength_chromatic_shift(self):
         """
@@ -676,15 +673,22 @@ class Reconstructor(MP.Process):
         """
         Performs reconstruction
         """
-        prop_dist = self._reconst_meta.propagation_distance
+        prop_dist = self._reconst_meta.propagation_distance[0]
         chromatic_shift = self._reconst_meta.chromatic_shift
         comp_dig_phase = self._reconst_meta.compute_digital_phase_mask
-        www = self.holo.my_reconstruct(prop_dist,
-                                       fourier_mask=None,
-                                       compute_digital_phase_mask=comp_dig_phase,
-                                       compute_spectral_peak=False,
-                                       chromatic_shift=chromatic_shift,
-                                      )
+        #www = self.holo.my_reconstruct(prop_dist,
+        #                               fourier_mask=None,
+        #                               compute_digital_phase_mask=comp_dig_phase,
+        #                               compute_spectral_peak=False,
+        #                               chromatic_shift=chromatic_shift,
+        #                              )
+        www = self.holo.reconstruct(prop_dist,
+                                  fourier_mask=None,
+                                  compute_digital_phase_mask=comp_dig_phase,
+                                  compute_spectral_peak=False,
+                                  chromatic_shift=chromatic_shift,
+                                 )
+                                  
         return www
 
     def perform_reconstruction(self, data):
@@ -742,14 +746,14 @@ class Reconstructor(MP.Process):
             ### Compute the Fourier Transform
             self.holo.ft_hologram
 
-            ### Update the G Factor database
-            self._update_g_factor_db()
-
             ### If mask shape not equal to ft_hologram, need to recompute mask
             recompute_mask = self._recompute_mask()
 
             ### Compute the spectral peak and the mask
             self._compute_spectral_peak(recompute_mask)
+
+            ### Update the G Factor database. Depends on fourier mask so must be after its creation
+            self._update_g_factor_db()
 
             ### Ensure that the wavelenght and the
             ### chromatic shift are of the same length

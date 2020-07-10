@@ -1,10 +1,10 @@
 import sys
-from shampoo.reconstruction import (Hologram, arrshift)
+from shampoo_lite.reconstruction import (Hologram, arrshift)
 from skimage.io import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-from shampoo.mask import (Circle, Mask)
+from shampoo_lite.mask import (Circle, Mask)
 
 path = './snapimg.tiff'
 im = imread(path)
@@ -37,7 +37,7 @@ holo = Hologram(im, wavelength=wl)
 ### Execute the G factor. 
 
 holo.update_G_factor(propagation_dist)
-G = holo.G
+G = holo.propagation_kernel
 
 import time
 start_time = time.time()

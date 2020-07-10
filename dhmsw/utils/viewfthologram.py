@@ -4,7 +4,7 @@ import time
 import sys
 from skimage.io import imsave
 from pymba import *
-from shampoo.reconstruction import Hologram
+from shampoo_lite.reconstruction import Hologram
 sys.path.append('..')
 import DEFAULT
 
