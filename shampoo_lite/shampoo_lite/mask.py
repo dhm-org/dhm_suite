@@ -38,6 +38,9 @@ class Mask(object):
         for _ in range(len(self.circle_list)):
 
             centerx, centery, radius = self.circle_list[_].get_params
+            print("centerx: ", centerx);
+            print("centery: ", centery);
+            print("radius: ", radius);
             self._mask_coordinates.append(self.circle_list[_].get_params)
             self._mask_uncentered[:, :, _], \
             self._mask_centered[:, :, _] = self.spectral_mask(centerx, centery, radius)
@@ -74,10 +77,10 @@ class Mask(object):
 
         Parameters
         ----------
-        center_x_pix : float
+        center_x_pix : integer
             X coordinate in pixels of max spectral peak 
             This should be the center location of a fourier satellite
-        center_y_pix : float
+        center_y_pix : integer
             Y coordinate in pixels of max spectral peak 
             This should be the center location of a fourier satellite
         radius_pix : float
@@ -86,8 +89,8 @@ class Mask(object):
         Return : tuple of 2 np.array
             (spectral_mask, spectral_mask_centered)
         """
-        centerX = self.kx[center_x_pix] # um^-1 frequency coordinate
-        centerY = self.ky[center_y_pix] # um^-1
+        centerX = self.kx[int(center_x_pix)] # um^-1 frequency coordinate
+        centerY = self.ky[int(center_y_pix)] # um^-1
         radius = radius_pix * self.dk # um^-1
         spectral_mask_uncentered = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
         spectral_mask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)

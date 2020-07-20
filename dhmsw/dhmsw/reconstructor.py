@@ -26,6 +26,7 @@ import time
 import queue
 import numpy as np
 
+sys.path.append('../shampoo_lite');
 from shampoo_lite.reconstruction import (Hologram)
 from shampoo_lite.mask import (Circle, Mask)
 

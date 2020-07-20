@@ -959,7 +959,9 @@ class FouriermaskMetadata(MetadataABC):
             for i in range(len(wavelength)):
                 self.center_list.append(Circle(center_x[i], center_y[i], radius[i]))
 
-            self.mask = Mask(N, self.center_list[0:len(wavelength)])
+            dk = 1 #2*np.pi/(self.hololen * self._pix_width_x)
+            #self.mask = Mask(N, self.center_list[0:len(wavelength)], dk)
+            self.mask = Mask(N, self.center_list, dk)
 
         except configparser.Error as err:
             print('File read error:  [%s] due to error [%s]. Key=[%s].'\
