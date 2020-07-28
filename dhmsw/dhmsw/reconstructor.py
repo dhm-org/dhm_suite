@@ -603,6 +603,7 @@ class Reconstructor(MP.Process):
             print('%f: Reconstruction G Database. Elapsed Time: %f'\
                   %(time.time(), time.time()-start_time))
 
+
     def _recompute_mask(self):
         """
         Inidicates if need to recompute mask
@@ -684,10 +685,11 @@ class Reconstructor(MP.Process):
         #                               chromatic_shift=chromatic_shift,
         #                              )
         www = self.holo.reconstruct(prop_dist,
-                                  fourier_mask=None,
+                                  fourier_mask=None, #mask is created before this function is called
                                   compute_digital_phase_mask=comp_dig_phase,
-                                  compute_spectral_peak=False,
+                                  compute_spectral_peak=False, #spectral peak gets computed before this function is called.
                                   chromatic_shift=chromatic_shift,
+                                  G_factor = self.holo.propagation_kernel, # Gets computed before this function is called
                                  )
                                   
         return www
@@ -731,6 +733,7 @@ class Reconstructor(MP.Process):
             processing_mode = self._reconst_meta.processing_mode
 
             if processing_mode == MetaC.ReconstructionMetadata.RECONST_NONE:
+                print('RECONSTRUCTION:  Reconst mode is NONE. Return without computing ')
                 return
 
             start_time = time.time()
@@ -788,12 +791,13 @@ class Reconstructor(MP.Process):
 
             fourier_image = np.log(np.abs(self.holo.ft_hologram)).astype(np.uint8)
             reconstproduct = Iface.ReconstructorProduct(img,
-                                                        self.holo,
+                                                        #self.holo,
                                                         fourier_image,
                                                         www,
                                                         self._reconst_meta,
                                                         self._holo_meta,
                                                        )
+            print("Sizeof(reconstproduct): ", sys.getsizeof(reconstproduct))
             self._pub.publish('reconst_product', reconstproduct)
             self._pub.publish('reconst_done', Iface.MetadataPacket(MetaC.ReconstructionDoneMetadata(done=True)))
 
@@ -812,7 +816,7 @@ class Reconstructor(MP.Process):
                                                             args=(self._reconstprocessor['queue'],),
                                                            )
         self._reconstprocessor['thread'].daemon = True
-        self._reconstprocessor['thread'].start()
+        #self._reconstprocessor['thread'].start()
 
     def create_heartbeat(self):
         """
@@ -854,7 +858,10 @@ class Reconstructor(MP.Process):
         elif not self._reconst_meta.running:
             print("%f: Reconstructor:  Got Image!"%(time.time()))
             self._reconst_meta.running = True
-            self._reconstprocessor['queue'].put(data)
+            #self._reconstprocessor['queue'].put(data)
+            self._reconst_meta.running = True
+            self.perform_reconstruction(data)
+            self._reconst_meta.running = False
         else:
             pass
 

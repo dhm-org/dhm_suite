@@ -96,7 +96,7 @@ class WDHeartbeat(threading.Thread):
         msg_pkt.complete_packet()
         gui_pkt = Iface.GuiPacket('telemetry', msg_pkt.to_bytes())
         self._wdq.put_nowait(gui_pkt)
-        #print('Watchdog:  Sending Heartbeat to GUISERVER')
+        #print('Watchdog:  Sending Heartbeat to GUISERVER: ', time.time())
 
     def _process_exceptions(self):
         """

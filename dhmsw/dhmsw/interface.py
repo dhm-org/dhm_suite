@@ -312,13 +312,14 @@ class ReconstructorProduct():
     """
     Class used to contain the reconstruction products as sent to the components
     """
-    def __init__(self, image, hologram, ft_hologram, reconstwave, reconst_meta, holo_meta):
+    #def __init__(self, image, hologram, ft_hologram, reconstwave, reconst_meta, holo_meta):
+    def __init__(self, image, ft_hologram, reconstwave, reconst_meta, holo_meta):
         """
         Constructor
         """
         # pylint: disable=too-many-arguments
         self.image = image
-        self.hologram = hologram
+        #self.hologram = hologram
         self.ft_hologram = ft_hologram
         self.reconstwave = reconstwave
         self.reconst_meta = reconst_meta
@@ -328,7 +329,8 @@ class ReconstructorProduct():
         """
         Get the reconstruction products which include the raw image and hologram object
         """
-        return (self.image, self.hologram, self.reconstwave)
+        #return (self.image, self.hologram, self.reconstwave)
+        return (self.image, self.reconstwave)
 
     def get_image(self):
         """
@@ -336,17 +338,18 @@ class ReconstructorProduct():
         """
         return self.image
 
-    def get_hologram(self):
-        """
-        Get hologram
-        """
-        return self.hologram
+    #def get_hologram(self):
+    #    """
+    #    Get hologram
+    #    """
+    #    return self.hologram
 
     def get_ft_hologram(self):
         """
         Get FT hologram
         """
         return self.ft_hologram
+        #return    np.log(np.abs(self.ft_hologram)).astype(np.uint8)
 
     def get_reconstwave(self):
         """

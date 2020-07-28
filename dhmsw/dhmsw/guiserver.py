@@ -20,7 +20,7 @@
 ###############################################################################
 """
 import sys
-#import time
+import time
 import queue
 import copy
 import numpy as np
@@ -49,11 +49,9 @@ def prepare_fourier_img_packet(data):
     Get the fourier image from data, serialize it and return as GUI packet
     """
     fourierpkt = Iface.MessagePkt(Iface.IMAGE_TYPE, Iface.SRCID_IMAGE_FOURIER)
-    #fourierimage = np.log(np.abs(data.hologram.ft_hologram)) # Log of the magnitude
-    #fourierimage = np.log(np.abs(data.ft_hologram)) # Log of the magnitude
-    fourierimage = data.ft_hologram
+    #fourierimage = data.ft_hologram
+    fourierimage = data.get_ft_hologram()
     fourierpkt.append(fourierimage)
-    #fourierpkt.append(fourierimage.astype(dtype=np.uint8))
     fourierpkt.complete_packet()
     fourier = Iface.GuiPacket('fourier', fourierpkt.to_bytes())
     return fourier
@@ -64,6 +62,7 @@ def create_amp_img_pkt(data, img_type, srcid):
     """
     mpkt_a = Iface.MessagePkt(img_type,
                               srcid)
+    print("GUISERVER: create_amp_img_pkt(): ", time.time())
     mpkt_a.append(data.reconstwave.amplitude.astype(dtype=np.uint8))
     mpkt_a.complete_packet()
     amp_image = Iface.GuiPacket('reconst_amp', mpkt_a.to_bytes())
@@ -132,6 +131,7 @@ class Guiserver(ComponentABC):
         Process reconstruction component products and send to clients
         """
 
+        print("GUISERVER: Received reconst_product. ", time.time())
         amp_image = None
         intensity_image = None
         phase_image = None

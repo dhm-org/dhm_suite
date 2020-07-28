@@ -370,6 +370,7 @@ class Controller(ComponentABC):
                                 Iface.SRCID_TELEMETRY_GUISERVER,
                                )
         elif isinstance(meta, metadata_classes.ReconstructionDoneMetadata):
+            print("************* RECONST DONE EVENT ***********", time.time())
             self._events['reconst']['done'].set()
         else:
             print('Unknown metadata type')
@@ -444,7 +445,7 @@ class Controller(ComponentABC):
             self._process_meta(data)
 
         elif isinstance(data, Iface.Command):
-            print('%f: Got command!'%(time.time()))
+            print('CONTROLLER: %f: Got command!'%(time.time()))
             ### Dispatch the command to the responsible module
             self._command_dispatcher(data)
 
@@ -453,7 +454,7 @@ class Controller(ComponentABC):
             pass
 
         elif isinstance(data, Iface.ReconstructorProduct):
-            print("%f: Got reconstructor data!"%(time.time()))
+            print("CONTROLLER: %f: Got reconstructor data!"%(time.time()))
 
         else:
             print('Controller:  Unknown data type')
