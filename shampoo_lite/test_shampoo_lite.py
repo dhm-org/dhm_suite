@@ -11,8 +11,8 @@ path = './data/USAF_multi.tif'
 
 im = imread(path)
 
-#wl = [405e-3, 532e-3, 650e-3] #um
-wl = [405e-3] #um
+wl = [405e-3, 532e-3, 650e-3] #um
+#wl = [405e-3] #um
 propagation_dist = [65, 260, 360] #um
 #chromatic_shift = [0, 0, 0] #um
 chromatic_shift = [0] #um
@@ -27,8 +27,8 @@ ft_hologram = holo.ft_hologram
 
 print(type(ft_hologram))
 
-#fourier_mask = holo.generate_spectral_mask(center_x=[1267, 1599, 1382], center_y=[1483, 1042, 440], radius=[250, 250, 250])
-fourier_mask = holo.generate_spectral_mask(center_x=[1267], center_y=[1483], radius=[250])
+fourier_mask = holo.generate_spectral_mask(center_x=[1267, 1599, 1382], center_y=[1483, 1042, 440], radius=[250, 250, 250])
+#fourier_mask = holo.generate_spectral_mask(center_x=[1267], center_y=[1483], radius=[250])
 print(type(fourier_mask))
 print(type(holo))
 print(propagation_dist[0])
@@ -56,13 +56,13 @@ for _ in range(5):
 if PLOT:
     f, axes = plt.subplots(1, 3, sharex=True)
     axes[0].imshow(w.amplitude[:,:,0,0])
-    #axes[1].imshow(w.amplitude[:,:,0,1])
-    #axes[2].imshow(w.amplitude[:,:,0,2])
+    axes[1].imshow(w.amplitude[:,:,0,1])
+    axes[2].imshow(w.amplitude[:,:,0,2])
     
     f, axes = plt.subplots(1, 3, sharex=True)
     wv = 0
     axes[0].imshow(w.phase[:,:,0,0])
-    #axes[1].imshow(w.phase[:,:,0,1])
-    #axes[2].imshow(w.phase[:,:,0,2])
+    axes[1].imshow(w.phase[:,:,0,1])
+    axes[2].imshow(w.phase[:,:,0,2])
 
 plt.show()

@@ -25,49 +25,85 @@ class Mask(object):
         self.ky = np.arange(-N/2, N/2) * dk
         self.f_mgrid = np.meshgrid(self.kx, self.ky)
 
-        print(self.kx.shape, self.ky.shape)
-
         self.N = N
         self.circle_list = circle_list
         self.dk = dk
 
-        self._mask_centered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
-        self._mask_uncentered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
+        self._mask_centered = None
+        self._mask_uncentered = None
         self._mask_coordinates = []
 
         for _ in range(len(self.circle_list)):
-
+    
             centerx, centery, radius = self.circle_list[_].get_params
             print("centerx: ", centerx);
             print("centery: ", centery);
             print("radius: ", radius);
             self._mask_coordinates.append(self.circle_list[_].get_params)
-            self._mask_uncentered[:, :, _], \
-            self._mask_centered[:, :, _] = self.spectral_mask(centerx, centery, radius)
 
-        self._mask_number = np.sum(self._mask_uncentered ** 2)
+        #self.mask_uncentered
 
     @property
     def mask(self):
-        return self._mask_uncentered 
+        return self.mask_uncentered 
 
     @property
     def mask_uncentered(self):
+        if self._mask_uncentered is None:
+            self._mask_uncentered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
+    
+            for _ in range(len(self.circle_list)):
+    
+                centerx, centery, radius = self._mask_coordinates[_]
+
+                self._mask_uncentered[:, :, _], \
+                __ = self.spectral_mask(centerx, centery, radius, compute_uncentered=True)
+    
+            self._mask_number = np.sum(self._mask_uncentered ** 2)
+
+#            self._mask_centered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
+#            self._mask_uncentered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
+#    
+#            for _ in range(len(self.circle_list)):
+#    
+#                centerx, centery, radius = self.circle_list[_].get_params
+#                print("centerx: ", centerx);
+#                print("centery: ", centery);
+#                print("radius: ", radius);
+#                self._mask_coordinates.append(self.circle_list[_].get_params)
+#                self._mask_uncentered[:, :, _], \
+#                self._mask_centered[:, :, _] = self.spectral_mask(centerx, centery, radius)
+#    
+#            self._mask_number = np.sum(self._mask_uncentered ** 2)
+
         return self._mask_uncentered 
 
     @property
     def mask_centered(self):
+        if self._mask_centered is None:
+            self._mask_centered = np.zeros((self.N, self.N, len(self.circle_list)), dtype=BOOLDTYPE) 
+    
+            for _ in range(len(self.circle_list)):
+    
+                centerx, centery, radius = self._mask_coordinates[_]
+                self._mask_coordinates.append(self.circle_list[_].get_params)
+                __, \
+                self._mask_centered[:, :, _] = self.spectral_mask(centerx, centery, radius, compute_centered=True)
+    
+            #self._mask_number = np.sum(self._mask_uncentered ** 2)
         return self._mask_centered 
 
     @property
     def mask_coordinates(self):
+        #if not self._mask_coordinates:
+        #    self.mask_uncentered
         return self._mask_coordinates
 
     @property
     def mask_number(self):
         return self._mask_number
         
-    def spectral_mask(self, center_x_pix, center_y_pix, radius_pix):
+    def spectral_mask(self, center_x_pix, center_y_pix, radius_pix, compute_uncentered=False, compute_centered=False):
         """ 
         Compute spectral mask in frequency coordinates
         
@@ -92,7 +128,16 @@ class Mask(object):
         centerX = self.kx[int(center_x_pix)] # um^-1 frequency coordinate
         centerY = self.ky[int(center_y_pix)] # um^-1
         radius = radius_pix * self.dk # um^-1
-        spectral_mask_uncentered = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
-        spectral_mask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)
+
+        spectral_mask_uncentered = None
+        spectral_mask_centered = None
+
+        if compute_uncentered:
+            print("UNCENTERED MASK COMPUTED")
+            spectral_mask_uncentered = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
+
+        if compute_centered:
+            print("CENTERED MASK COMPUTED")
+            spectral_mask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)
 
         return (spectral_mask_uncentered, spectral_mask_centered,)

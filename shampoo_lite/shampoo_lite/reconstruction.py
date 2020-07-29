@@ -447,38 +447,6 @@ class Hologram():
 
         return self._spectral_peak
 
-    def spectral_mask(self, center_x_pix, center_y_pix, radius_pix):
-        """ 
-        Compute spectral mask in frequency coordinates
-        
-        Two arrays are computed, the first a circular spectral mask where only the pixels within
-        the mask are '1' and all else is '0'.  The other array is the same spectral mask
-        but centered.
-
-        Parameters
-        ----------
-        center_x_pix : float
-            X coordinate in pixels of max spectral peak 
-            This should be the center location of a fourier satellite
-        center_y_pix : float
-            Y coordinate in pixels of max spectral peak 
-            This should be the center location of a fourier satellite
-        radius_pix : float
-            Radius of satellite in pixels
-
-        Return : tuple of 2 np.array
-            (spectral_mask, spectral_mask_centered)
-        """
-        kx = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
-        ky = np.arange(-1 * self.hololen/2, self.hololen/2) * self.dk
-        centerX = kx[center_x_pix] # um^-1 frequency coordinate
-        centerY = ky[center_y_pix] # um^-1
-        radius = radius_pix * self.dk # um^-1
-        spectral_mask_uncentered = (circ_prop(self.f_mgrid[0]-centerX, self.f_mgrid[1]-centerY, radius) > 0.5)
-        spectral_mask_centered = (circ_prop(self.f_mgrid[0], self.f_mgrid[1], radius) > 0.5)
-
-        return (spectral_mask_uncentered, spectral_mask_centered,)
-
     def real_image_mask(self, center_x, center_y, radius):
         """
         Calculate the Fourier-space mask to isolate the real image
@@ -631,6 +599,11 @@ class Hologram():
 
             self.fourier_mask = fourier_mask
 
+            # If fourier mask not expected shape, then generate spectral mask
+            if self.fourier_mask.mask.shape[0] != self.hololen or self.fourier_mask.mask.shape[1] != self.hololen or self.fourier_mask.mask.shape[2] != self.wavelength.size:
+                print("GENERATE SPECTRAL MASK")
+                self.generate_spectral_mask(compute_spectral_peak=True)
+
         if self.propagation_kernel is None and G_factor is None:
             self.update_G_factor(propagation_distance[0, 0, 0])
         else:
@@ -642,36 +615,32 @@ class Hologram():
         wave = np.zeros((self.hololen, self.hololen, propagation_distance.size, self.wavelength.size), dtype=self.angular_spectrum.dtype)
 
         for i in range(self.wavelength.size):
+            for dist_idx in range(propagation_distance.size):
 
-            dist_idx = 0 # because we going to process a single propagation distance only
+                #dist_idx = 0 # because we going to process a single propagation distance only
 
-            #maskedHolo = np.roll(ang_spec * self.fourier_mask.mask_uncentered[:, :, i],
-            #                     (int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][1]), int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][0])),
-            #                     axis=(0, 1))
+                # proppsedWave = maskedHolo * self.propagation_kernel[:, :, dist_idx]
+                proppedWave = np.roll(self.angular_spectrum * self.fourier_mask.mask_uncentered[:, :, i],
+                                     (int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][1]), int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][0])),
+                                     axis=(0, 1)) * self.propagation_kernel[:, :, dist_idx]
+    
+    
+                #proppedWave = self.propagation_kernel[:, :, dist_idx] * maskedHolo
+                wave[:, :, dist_idx, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen * self.dk * self.hololen * self.dk)/(2 * np.pi)
+    
+                ### Energy conservation
+                #spectral_maskNumber = self.fourier_mask.mask_number;
+                #print(spectral_maskNumber)
+                #reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
+                #E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
+                #E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
+                #E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
+                #E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
+                #print('E_image', E_image)
+                #print('E_fft', E_fft)
+                #print('E_maskedFFT', E_maskedFFT)
+                #print('E_reconstruction', E_reconstruction)
 
-            proppedWave = np.roll(self.angular_spectrum * self.fourier_mask.mask_uncentered[:, :, i],
-                                 (int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][1]), int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][0])),
-                                 axis=(0, 1)) * self.propagation_kernel[:, :, dist_idx]
-
-
-            #proppedWave = self.propagation_kernel[:, :, dist_idx] * maskedHolo
-            wave[:, :, dist_idx, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen * self.dk * self.hololen * self.dk)/(2 * np.pi)
-
-            ### Energy conservation
-            #spectral_maskNumber = self.fourier_mask.mask_number;
-            #print(spectral_maskNumber)
-            #reconField = np.fft.ifftshift(ifft2(np.fft.ifftshift(proppedWave))) * (self.hololen*self.dk * self.hololen*self.dk)/(2*np.pi)
-            #E_image = np.sum(self._apodized_hologram * np.conj(self._apodized_hologram)) * self._pix_width_x*self._pix_width_y
-            #E_fft = np.sum(ang_spec * np.conj(ang_spec)) * self.dk**2
-            #E_maskedFFT = np.sum(maskedHolo * np.conj(maskedHolo)) * self.dk**2
-            #E_reconstruction = np.sum(reconField * np.conj(reconField)) * self._pix_width_x*self._pix_width_y
-            #print('E_image', E_image)
-            #print('E_fft', E_fft)
-            #print('E_maskedFFT', E_maskedFFT)
-            #print('E_reconstruction', E_reconstruction)
-
-        #return ReconstructedWave(reconstructed_wave=wave, fourier_mask=self.fourier_mask.mask_uncentered,
-        #                         wavelength=self.wavelength, depths=propagation_distance)
         return ReconstructedWave(reconstructed_wave=wave)
 
 class ReconstructedWave():
@@ -735,8 +704,7 @@ class ReconstructedWave():
         """
         if self._phase_image is None:
             self._phase_image = np.angle(self.reconstructed_wave)
-
-        print("PHASE Type: ", self._phase_image.dtype)
+            print("PHASE Type: ", self._phase_image.dtype)
         return self._phase_image
 
 ###################################################################3

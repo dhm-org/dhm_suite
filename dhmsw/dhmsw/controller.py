@@ -335,10 +335,10 @@ class Controller(ComponentABC):
                                 Iface.SRCID_TELEMETRY_RECONSTRUCTION,
                                )
         elif isinstance(meta, metadata_classes.FouriermaskMetadata):
-            #print('Received FouriermaskMetadata')
+            print('Received FouriermaskMetadata')
             self._fouriermask_meta = data.meta
-            self.send_telemetry(self.fouriermaskmeta_to_telem(data.meta),
-                                Iface.SRCID_TELEMETRY_FOURIERMASK)
+            #self.send_telemetry(self.fouriermaskmeta_to_telem(data.meta),
+            #                    Iface.SRCID_TELEMETRY_FOURIERMASK)
         elif isinstance(meta, metadata_classes.SessionMetadata):
             #print('Received SessionMetadata')
             self._session_meta = data.meta

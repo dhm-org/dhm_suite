@@ -362,8 +362,14 @@ class Reconstructor(MP.Process):
                                                center_y,
                                                radius,
                                               )
+
+            dk = 1 if self.holo is None else self.holo.dk
+
+            print("COMPUTING_CIRCLE_1")
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)])
+                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   dk)
+            print("DONE COMPUTING_CIRCLE_1")
             self._update_fourier_mask = True
 
         return validcmd
@@ -390,8 +396,10 @@ class Reconstructor(MP.Process):
                                                center_y,
                                                radius
                                               )
+            dk = 1 if self.holo is None else self.holo.dk
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)])
+                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   dk)
             self._update_fourier_mask = True
 
         return validcmd
@@ -416,8 +424,10 @@ class Reconstructor(MP.Process):
             fmask_meta.center_list[2] = Circle(center_x,
                                                center_y,
                                                radius)
+            dk = 1 if self.holo is None else self.holo.dk
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)])
+                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   dk)
             self._update_fourier_mask = True
 
         return validcmd
@@ -604,15 +614,17 @@ class Reconstructor(MP.Process):
                   %(time.time(), time.time()-start_time))
 
 
-    def _recompute_mask(self):
+    def _should_we_recompute_mask(self):
         """
         Inidicates if need to recompute mask
         """
         recompute_mask = True
         if self._mask is not None:
-            recompute_mask = self._mask.N != self.holo.ft_hologram.shape[0] or\
-                             self._mask.N != self.holo.ft_hologram.shape[1]
-            print("%%%%%%%%%%%%%%%%%: ", self._mask.mask_uncentered.shape,
+            mask_shape = self._mask.mask.shape
+            recompute_mask = mask_shape[0] != self.holo.ft_hologram.shape[0] or\
+                             mask_shape[1] != self.holo.ft_hologram.shape[1] or \
+                             mask_shape[2] != len(self._holo_meta.wavelength)
+            print("%%%%%% RECOMPUTE_MASK: ", self._mask.mask_uncentered.shape,
                   self.holo.ft_hologram.shape,
                   recompute_mask)
 
@@ -645,8 +657,10 @@ class Reconstructor(MP.Process):
                 print('Really Updating Fourier Mask...')
                 idx = slice(0, len(self._holo_meta.wavelength))
 
+                dk = 1 if self.holo is None else self.holo.dk
                 self._fouriermask_meta.mask = Mask(self.holo.hololen,
-                                                   self._fouriermask_meta.center_list[idx])
+                                                   self._fouriermask_meta.center_list[idx],
+                                                   dk)
 
                 self._mask = self._fouriermask_meta.mask
                 self.holo.fourier_mask = self._mask
@@ -751,7 +765,7 @@ class Reconstructor(MP.Process):
             self.holo.ft_hologram
 
             ### If mask shape not equal to ft_hologram, need to recompute mask
-            recompute_mask = self._recompute_mask()
+            recompute_mask = self._should_we_recompute_mask()
 
             ### Compute the spectral peak and the mask
             self._compute_spectral_peak(recompute_mask)
@@ -789,6 +803,7 @@ class Reconstructor(MP.Process):
             print('%f: Reconstruction Computed . Elapsed Time: %f'\
                   %(time.time(), time.time()-start_time))
 
+            # Prepare the fourier image for display
             fourier_image = np.log(np.abs(self.holo.ft_hologram)).astype(np.uint8)
             reconstproduct = Iface.ReconstructorProduct(img,
                                                         #self.holo,
@@ -797,7 +812,6 @@ class Reconstructor(MP.Process):
                                                         self._reconst_meta,
                                                         self._holo_meta,
                                                        )
-            print("Sizeof(reconstproduct): ", sys.getsizeof(reconstproduct))
             self._pub.publish('reconst_product', reconstproduct)
             self._pub.publish('reconst_done', Iface.MetadataPacket(MetaC.ReconstructionDoneMetadata(done=True)))
 
@@ -816,7 +830,7 @@ class Reconstructor(MP.Process):
                                                             args=(self._reconstprocessor['queue'],),
                                                            )
         self._reconstprocessor['thread'].daemon = True
-        #self._reconstprocessor['thread'].start()
+        self._reconstprocessor['thread'].start()
 
     def create_heartbeat(self):
         """
@@ -858,9 +872,9 @@ class Reconstructor(MP.Process):
         elif not self._reconst_meta.running:
             print("%f: Reconstructor:  Got Image!"%(time.time()))
             self._reconst_meta.running = True
-            #self._reconstprocessor['queue'].put(data)
-            self._reconst_meta.running = True
-            self.perform_reconstruction(data)
+            self._reconstprocessor['queue'].put(data)
+            #self._reconst_meta.running = True
+            #self.perform_reconstruction(data)
             self._reconst_meta.running = False
         else:
             pass
