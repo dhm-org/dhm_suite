@@ -1729,7 +1729,8 @@ class ConfigurationWin(QObject):
 
 
     def GetWavelength(self, input_thing):
-        return int(input_thing * 10e+8)
+        #return int(input_thing * 10e+8)
+        return int(input_thing)
 
 
     def GetNumOfWavelength(self):
@@ -1801,11 +1802,11 @@ class ConfigurationWin(QObject):
          self.spinBox_t2_rebin.setProperty("value",tlm_manager.session['rebin_factor'])
          self.spinBox_t2_rebin_default = self.spinBox_t2_rebin
 
-         tlm_manager.session['dx'] = w.subwin_conf.metric_conversion((tlm_data.dx),"m","um")
+         tlm_manager.session['dx'] = tlm_data.dx
          self.spinBox_t3_dx.setProperty("realValue",tlm_manager.session['dx'])
          self.spinBox_t3_dx_default = self.spinBox_t3_dx
 
-         tlm_manager.session['dy'] = w.subwin_conf.metric_conversion((tlm_data.dy),"m","um")
+         tlm_manager.session['dy'] = tlm_data.dy
          self.spinBox_t3_dy.setProperty("realValue",tlm_manager.session['dy'])
          self.spinBox_t3_dy_default = self.spinBox_t3_dy
 
@@ -1817,7 +1818,7 @@ class ConfigurationWin(QObject):
          self.spinBox_t4_num_ap.setProperty("realValue",tlm_manager.session['numerical_aperture'])
          self.spinBox_t4_num_ap_default = self.spinBox_t4_num_ap
 
-         tlm_manager.session['lens_system_magnification'] = w.subwin_conf.metric_conversion((tlm_data.lens_system_magnification),"m","mm")
+         tlm_manager.session['lens_system_magnification'] = tlm_data.lens_system_magnification
          self.spinBox_t4_sys_mag.setProperty("realValue",tlm_manager.session['lens_system_magnification'])
          self.spinBox_t4_sys_mag_default = self.spinBox_t4_sys_mag
 

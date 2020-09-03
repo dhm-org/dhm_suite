@@ -63,7 +63,7 @@ MouseArea {
         text: qsTr("Save to File")
 
         onClicked: {
-            pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+metric_conversion((spinBox_t3_dx.realValue),"um","m")+',dy='+metric_conversion((spinBox_t3_dy.realValue),"um","m")+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+metric_conversion((spinBox_t4_sys_mag.realValue),"mm","m"))
+            pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+spinBox_t3_dx.realValue+',dy='+spinBox_t3_dy.realValue+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+(spinBox_t4_sys_mag.realValue))
         }
     }
 
@@ -542,7 +542,7 @@ MouseArea {
         text: qsTr("Apply")
         objectName: "button_apply"
         onClicked: {
-            pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+metric_conversion((spinBox_t3_dx.realValue),"um","m")+',dy='+metric_conversion((spinBox_t3_dy.realValue),"um","m")+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+metric_conversion((spinBox_t4_sys_mag.realValue),"mm","m"))
+            pack_cmd('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+'],dx='+spinBox_t3_dx.realValue+',dy='+spinBox_t3_dy.realValue+',crop_fraction='+(spinBox_t2_crop.realValue)+',rebin_factor='+(spinBox_t2_rebin.value)+',focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+',numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+',system_magnification='+(spinBox_t4_sys_mag.realValue))
         }
     }
 
@@ -583,11 +583,11 @@ MouseArea {
     function send_wl(){
         if(radio_t1_mono.checked){
            // return model_w1.get(combo_t1_w1.currentIndex).text
-            return metric_conversion(model_w1.get(combo_t1_w1.currentIndex).text,"nm","m")
+            return metric_conversion(model_w1.get(combo_t1_w1.currentIndex).text,"nm","um")
         }
         if(radio_t1_multi.checked){
             //return model_w1.get(combo_t1_w1.currentIndex).text+","+model_w2.get(combo_t1_w2.currentIndex).text+","+model_w3.get(combo_t1_w3.currentIndex).text
-            return metric_conversion(model_w1.get(combo_t1_w1.currentIndex).text,"nm","m")+","+metric_conversion(model_w2.get(combo_t1_w2.currentIndex).text,"nm","m")+","+metric_conversion(model_w3.get(combo_t1_w3.currentIndex).text,"nm","m")
+            return metric_conversion(model_w1.get(combo_t1_w1.currentIndex).text,"nm","um")+","+metric_conversion(model_w2.get(combo_t1_w2.currentIndex).text,"nm","um")+","+metric_conversion(model_w3.get(combo_t1_w3.currentIndex).text,"nm","um")
         }
     }
     function metric_conversion(item, scale_in, scale_out){
@@ -595,6 +595,9 @@ MouseArea {
        // var item_output = parseInt(item,10)
         var item_output = item
 
+        if(scale_in == "um" && scale_out == "um") {
+            scale_factor = 1
+        }
         if(scale_in == "nm" && scale_out == "m"){
             scale_factor = 1e-9
         }
@@ -603,6 +606,9 @@ MouseArea {
         }
         if(scale_in == "mm" && scale_out == "m"){
             scale_factor = 1e-2
+        }
+        if(scale_in = "nm" && scale_out == "um"){
+            scale_factor = 1e-3
         }
 
         if(scale_in == "m" && scale_out == "mm"){
@@ -613,6 +619,9 @@ MouseArea {
         }
         if(scale_in = "m" && scale_out == "nm"){
             scale_factor = 1e9
+        }
+        if(scale_in = "um" && scale_out == "nm"){
+            scale_factor = 1e3
         }
         return (item_output * scale_factor).toPrecision(6)
     }
@@ -641,7 +650,7 @@ MouseArea {
 
     /* For writing a session configuration (.ses) file */
     function get_session_cfg(){
-        return ('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+']\n,dx='+metric_conversion((spinBox_t3_dx.realValue),"um","m")+'\n,dy='+metric_conversion((spinBox_t3_dy.realValue),"um","m")+'\n,crop_fraction='+(spinBox_t2_crop.realValue)+'\n,rebin_factor='+(spinBox_t2_rebin.value)+'\n,focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+'\n,numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+'\n,system_magnification='+metric_conversion((spinBox_t4_sys_mag.realValue),"mm","m"))
+        return ('session name='+textField_session_name.text+',description='+textArea_desc.text+',wavelength=['+send_wl()+']\n,dx='+spinBox_t3_dx.realValue+'\n,dy='+spinBox_t3_dy.realValue+'\n,crop_fraction='+(spinBox_t2_crop.realValue)+'\n,rebin_factor='+(spinBox_t2_rebin.value)+'\n,focal_length='+metric_conversion((spinBox_t4_focal.realValue),"mm","m")+'\n,numerical_aperture='+metric_conversion((spinBox_t4_num_ap.realValue),"mm","m")+'\n,system_magnification='+(spinBox_t4_sys_mag.realValue))
     }
 }
 
