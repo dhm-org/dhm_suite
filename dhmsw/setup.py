@@ -100,6 +100,7 @@ setup(
 #    tests_require=['pytest'],
     packages=find_packages(),
     package_data={},
+    include_package_data=True,
 #    cmdclass={
 #        'test': PyTest,
 #        'build_docs': BuildSphinx

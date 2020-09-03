@@ -4,6 +4,8 @@
 #  brief:  This is the DHM Software Suite install script
 #  author:  Santos F. Fregoso
 #  date:    05/29/2019
+#  modified:  09/03/2020  Install shampoo-lite instead of shampoo
+#                         Added -dhmx option to install all except camserver
 ###############################################################################
 
 usage() 
@@ -13,10 +15,11 @@ usage()
     echo ""
     echo "where options are as follows:"
     echo "-all        Setup environment, install drivers, and install suite software"
+    echo "-dhmx       Setup environment, install shampoo-lite, dhmsw, and dhm_gui (all except camserver and drivers)"
     echo "-verbose    Display instruction verbose to standard out"
     echo "-env        Environment setup"
     echo "-drivers    Install external drivers required."
-    echo "-shampoo    Install Shampoo python module"
+    echo "-shampoo-lite    Install Shampoo python module"
     echo "-camserver  Install camera server application software. Add '-drivers' if you don't have the drivers."
     echo "-dhmsw      Install DHM softwares python module"
     echo "-dhm_gui     Install DHM GUI and necessary packages"
@@ -104,6 +107,14 @@ do
         dhmsw=1
         dhm_gui=1
         ;;
+    "-dhmx")
+        env_setup=1
+        drivers=0
+        shampoo=1
+        camserver=0
+        dhmsw=1
+        dhm_gui=1
+        ;;
     "-env")
         env_setup=1
         ;;
@@ -113,7 +124,7 @@ do
     "-drivers")
         drivers=1
         ;;
-    "-shampoo")
+    "-shampoo-lite")
         shampoo=1
         ;;
     "-camserver")
@@ -135,7 +146,7 @@ do
     shift
 done
 
-printf "Options Selected: \n\tevn_setup=%s\n\tdrivers=%s\n\tshampoo=%s\n\tcamserver=%s\n\tdhmsw=%s\n\tdhm_gui=%s\n" $env_setup $drivers $shampoo $camserver $dhmsw $dhm_gui
+printf "Options Selected: \n\tevn_setup=%s\n\tdrivers=%s\n\tshampoo-lite=%s\n\tcamserver=%s\n\tdhmsw=%s\n\tdhm_gui=%s\n" $env_setup $drivers $shampoo $camserver $dhmsw $dhm_gui
 
 if [ "$EUID" -ne 0 ]
 then
@@ -213,8 +224,8 @@ fi
 if [ $shampoo -eq 1 ]
 then
 ### Install shampoo
-pip3 install astropy-helpers
-cd $DHM_SUITE_DIR/shampoo
+#pip3 install astropy-helpers
+cd $DHM_SUITE_DIR/shampoo_lite
 python3 setup.py install
 
 fi
