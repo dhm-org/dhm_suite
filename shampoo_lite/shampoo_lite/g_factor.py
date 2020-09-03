@@ -12,12 +12,6 @@ class PropagationKernel(object):
         Kx, Ky = np.meshgrid(kx, ky)
 
         np.sqrt(wavenum**2 - (Kx**2 + Ky**2) * circ_prop(Kx,Ky,k0))
-    def 
-
-    
-
-
-
 
 
 def circ_prop(kx, ky, k):

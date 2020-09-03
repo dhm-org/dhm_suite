@@ -49,7 +49,7 @@ for prop_dist in propagation_dist:
     w.amplitude
     w.phase
 
-    w.save_to_file('/Users/sfregoso/Documents/old_mac/MacPro_2012thru2015/Santos/Work/FelipeStuff/DHM/git_repos/dhm_suite/shampoo_lite/Reconstructions/')
+    w.save_to_file('./')
     amp_name = "amplitude_Z%g_"%(prop_dist) + ntpath.basename(path)
     plt.imsave(amp_name, w.amplitude[:,:,0,0], format='tiff')
 
