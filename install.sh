@@ -4,6 +4,8 @@
 #  brief:  This is the DHM Software Suite install script
 #  author:  Santos F. Fregoso
 #  date:    05/29/2019
+#  modified:  09/03/2020  Install shampoo-lite instead of shampoo
+#                         Added -dhmx option to install all except camserver
 ###############################################################################
 
 usage() 
@@ -13,6 +15,7 @@ usage()
     echo ""
     echo "where options are as follows:"
     echo "-all        Setup environment, install drivers, and install suite software"
+    echo "-dhmx       Setup environment, install shampoo-lite, dhmsw, and dhm_gui (all except camserver and drivers)"
     echo "-verbose    Display instruction verbose to standard out"
     echo "-env        Environment setup"
     echo "-drivers    Install external drivers required."
@@ -101,6 +104,14 @@ do
         drivers=1
         shampoo=1
         camserver=1
+        dhmsw=1
+        dhm_gui=1
+        ;;
+    "-dhmx")
+        env_setup=1
+        drivers=0
+        shampoo=1
+        camserver=0
         dhmsw=1
         dhm_gui=1
         ;;
