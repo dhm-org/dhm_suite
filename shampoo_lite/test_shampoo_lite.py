@@ -18,7 +18,7 @@ PLOT = True
 #center_y=[1483, 1042, 440]
 #radius=[250, 250, 250]
 
-path = '/Users/sfregoso/Documents/old_mac/MacPro_2012thru2015/Santos/Work/FelipeStuff/DHM/reconstruction_comparison/lilipond_data/Numerical_Reconstruction_Example/Lily_Pond_Data/2020.02.28_17.13.10.880/Holograms/00100_holo.tif'
+path = 'data/00100_holo.tif'
 wl = [405e-3] #um
 propagation_dist = [710, 380] #um
 chromatic_shift = None #um
