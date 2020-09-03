@@ -23,6 +23,9 @@
 """
 import time
 import numpy as np
+import functools
+import multiprocessing
+import matplotlib.pyplot as plt #For saving to TIFF
 
 from .datatypes import (BOOLDTYPE, FLOATDTYPE, COMPLEXDTYPE, FRAMEDIMENSIONS, NUMFFTTHREADS)
 from .util import (circ_prop, crop_image)
@@ -128,6 +131,7 @@ class Hologram():
         """
         self._rebin_factor = rebin_factor
         self._system_magnification = system_magnification
+        self._crop_fraction = crop_fraction
         #self._random_seed = RANDOM_SEED
 
         self.hologram = None
@@ -156,7 +160,7 @@ class Hologram():
         if fourier_mask:
             self.fourier_mask = fourier_mask
 
-        self.set_hologram(hologram, crop_fraction)
+        self.set_hologram(hologram, self._crop_fraction)
 
         self.set_wavelength(wavelength)
         self.set_pixel_width(pix_dx, pix_dy)
@@ -173,6 +177,18 @@ class Hologram():
 #            fftutils.ifft3 = myFFT3.ifft3
 #            fftutils.fft2 = myFFT3.fft2
 #            fftutils.ifft2 = myFFT3.ifft2
+
+    def __str__(self):
+        retstr = "rebin_factor         = " + str(self._rebin_factor) + "\n" + \
+                 "system_magnification = " + str(self._system_magnification) + "\n" + \
+                 "hologram.shape       = " + str(self.hologram.shape) + "\n" + \
+                 "hololen              = " + str(self.hololen) + "\n" + \
+                 "wavelength           = " + str(self.wavelength) + "\n" + \
+                 "wavenumber           = " + str(self.wavenumber) + "\n" + \
+                 "pix_width_x          = " + str(self._pix_width_x) + "\n" + \
+                 "pix_width_y          = " + str(self._pix_width_y) + "\n"
+
+        return retstr
 
     def update_hologram(self, hologram, crop_fraction=None,
                         wavelength=None, rebin_factor=1,
@@ -244,6 +260,7 @@ class Hologram():
     def update_G_factor(self, propagation_distance):
         #print("fourier_mask type: ", type(self.fourier_mask))
         self.propagation_kernel = self.generate_propagation_kernel(propagation_distance, self.fourier_mask.mask_centered)
+        return self.propagation_kernel
 
     def set_hologram(self, hologram, crop_fraction=None):
         """
@@ -579,9 +596,11 @@ class Hologram():
         """
         propagation_distance = reshape_to_3d(propagation_distance, FLOATDTYPE)
 
+        print("RECONSTRUCT: propagation_distance - ", propagation_distance)
+        print("RECONSTRUCT: wavelength - ", self.wavelength)
+
         if chromatic_shift is not None:
             self.update_chromatic_shift(chromatic_shift)
-
 
         # Compute the angular spectrum
         self.angular_spectrum
@@ -600,7 +619,10 @@ class Hologram():
             self.fourier_mask = fourier_mask
 
             # If fourier mask not expected shape, then generate spectral mask
-            if self.fourier_mask.mask.shape[0] != self.hololen or self.fourier_mask.mask.shape[1] != self.hololen or self.fourier_mask.mask.shape[2] != self.wavelength.size:
+            if self.fourier_mask.mask.shape[0] != self.hololen or \
+               self.fourier_mask.mask.shape[1] != self.hololen or \
+               self.fourier_mask.mask.shape[2] != self.wavelength.size:
+
                 print("GENERATE SPECTRAL MASK")
                 self.generate_spectral_mask(compute_spectral_peak=True)
 
@@ -611,23 +633,32 @@ class Hologram():
                 raise ValueError("G_factor propgation distance must be shape (%d, %d, %d)"%(self.hololen, self.hololen, self.wavelength.size))
             self.propagation_kernel = G_factor
 
+        print(self)
         # Initialize the reconstructed wave array
-        wave = np.zeros((self.hololen, self.hololen, propagation_distance.size, self.wavelength.size), dtype=self.angular_spectrum.dtype)
 
+        tup = []
         for i in range(self.wavelength.size):
-            for dist_idx in range(propagation_distance.size):
+            tup.append((self.fourier_mask.mask_uncentered[:, :, i], self.fourier_mask.mask_coordinates[i][1], self.fourier_mask.mask_coordinates[i][0]))
 
-                #dist_idx = 0 # because we going to process a single propagation distance only
+        comp_wave = functools.partial(compute_wave, self.angular_spectrum, self.hololen, self.dk, self.propagation_kernel[:, :, 0])
+        result = list(map(comp_wave, tup))
+        wave = np.expand_dims(np.dstack(result), axis=2).astype(self.angular_spectrum.dtype)
 
-                # proppsedWave = maskedHolo * self.propagation_kernel[:, :, dist_idx]
-                proppedWave = np.roll(self.angular_spectrum * self.fourier_mask.mask_uncentered[:, :, i],
-                                     (int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][1]), int(self.hololen/2 - self.fourier_mask.mask_coordinates[i][0])),
-                                     axis=(0, 1)) * self.propagation_kernel[:, :, dist_idx]
-    
-    
-                #proppedWave = self.propagation_kernel[:, :, dist_idx] * maskedHolo
-                wave[:, :, dist_idx, i] = fftshift(ifft2(fftshift(proppedWave))) * (self.hololen * self.dk * self.hololen * self.dk)/(2 * np.pi)
-    
+
+#        wave = np.zeros((self.hololen, self.hololen, propagation_distance.size, self.wavelength.size), dtype=self.angular_spectrum.dtype)
+#        for i in range(self.wavelength.size):
+#            for dist_idx in range(propagation_distance.size):
+#
+#
+#                wave[:, :, dist_idx, i] = compute_wave(self.angular_spectrum,
+#                                                       self.hololen,
+#                                                       self.dk,
+#                                                       self.propagation_kernel[:, :, dist_idx],
+#                                                       self.fourier_mask.mask_uncentered[:, :, i],
+#                                                       self.fourier_mask.mask_coordinates[i][1],
+#                                                       self.fourier_mask.mask_coordinates[i][0],
+#                                                      )
+
                 ### Energy conservation
                 #spectral_maskNumber = self.fourier_mask.mask_number;
                 #print(spectral_maskNumber)
@@ -642,6 +673,29 @@ class Hologram():
                 #print('E_reconstruction', E_reconstruction)
 
         return ReconstructedWave(reconstructed_wave=wave)
+
+def compute_wave(angular_spectrum,
+                 hololen,
+                 dk,
+                 propagation_kernel,
+                 arg,
+                 #mask_uncentered,
+                 #center_x,
+                 #center_y,
+                ):
+    print("start")
+    mask_uncentered = arg[0]
+    center_x = arg[1]
+    center_y = arg[2]
+
+    proppedWave = np.roll(angular_spectrum * mask_uncentered,
+                         (int(hololen/2 - center_x), int(hololen/2 - center_y)),
+                         axis=(0, 1)) * propagation_kernel
+
+
+    print("done")
+    return fftshift(ifft2(fftshift(proppedWave))) * (hololen * dk * hololen * dk)/(2 * np.pi)
+
 
 class ReconstructedWave():
     """
@@ -668,6 +722,7 @@ class ReconstructedWave():
         self._amplitude_image = None
         self._intensity_image = None
         self._phase_image = None
+        self._timestamp = time.time()
         #self.fourier_mask = fourier_mask #np.asarray(fourier_mask, dtype=BOOLDTYPE)
         #self.wavelength = np.atleast_1d(wavelength)
         #self._random_seed = RANDOM_SEED
@@ -688,7 +743,7 @@ class ReconstructedWave():
         `~numpy.ndarray` of the reconstructed amplitude
         """
         if self._amplitude_image is None:
-            self._amplitude_image = np.abs(self.reconstructed_wave*np.conj(self.reconstructed_wave))
+            self._amplitude_image = (self.reconstructed_wave*np.conj(self.reconstructed_wave)).real
             #self._amplitude_image = np.abs(self.reconstructed_wave)
 
             print("AMPLITUDE Type: ", self._amplitude_image.dtype)
@@ -706,6 +761,14 @@ class ReconstructedWave():
             self._phase_image = np.angle(self.reconstructed_wave)
             print("PHASE Type: ", self._phase_image.dtype)
         return self._phase_image
+
+    def save_to_file(self, path):
+        if self._amplitude_image is not None:
+            plt.imsave(path+'/amplitude.tif', self.amplitude[:,:,0,0], format='tiff')
+        if self._phase_image is not None:
+            plt.imsave(path+'/phase.tif', self.phase[:,:,0,0], format='tiff')
+        if self._intensity_image is not None:
+            plt.imsave(path+'/intensity.tif', self.intensity[:,:,0,0], format='tiff')
 
 ###################################################################3
 ###              Support Functions

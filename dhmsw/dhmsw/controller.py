@@ -268,9 +268,10 @@ class Controller(ComponentABC):
 
             if validcmd:
                 self._session_meta = copy.copy(tempsession)
-                self._holo_meta = copy.copy(tempsession.holo)
+                #self._holo_meta = copy.copy(tempsession.holo)
                 # Send holo data to
-                self._inq['reconstructor_inq'].put_nowait(self._holo_meta)
+                #self._inq['reconstructor_inq'].put_nowait(self._holo_meta)
+                self._inq['reconstructor_inq'].put_nowait(self._session_meta)
                 self.publish_session_status(status_msg="SUCCESS")
 
     def process_shutdown_cmd(self, data):

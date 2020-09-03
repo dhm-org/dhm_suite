@@ -463,9 +463,9 @@ class HologramMetadata(MetadataABC):
         """
         Constructor
         """
-        self.wavelength = [635e-9] # NOTE must be a list
-        self.dx = 3.45e-6 # Pixel width in x-direction
-        self.dy = 3.45e-6 # Pixel width in y-direction
+        self.wavelength = [635e-3] # NOTE must be a list
+        self.dx = 3.45 # Pixel width in x-direction
+        self.dy = 3.45 # Pixel width in y-direction
         self.crop_fraction = None #Fraction of the image to crop for analysis
         self.rebin_factor = 1 # Rebin the image by factor.  Must be integer
         self.bgd_sub = False

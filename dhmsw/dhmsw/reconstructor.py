@@ -26,7 +26,6 @@ import time
 import queue
 import numpy as np
 
-sys.path.append('../shampoo_lite');
 from shampoo_lite.reconstruction import (Hologram)
 from shampoo_lite.mask import (Circle, Mask)
 
@@ -118,6 +117,14 @@ class Reconstructor(MP.Process):
         if status_msg:
             self._holo_meta.status_msg = status_msg
         self._pub.publish('holo_status', Iface.MetadataPacket(self._holo_meta))
+
+    def publish_session_status(self, status_msg=None):
+        """
+        Publish hologram status.  Sets status message if passed
+        """
+        if status_msg:
+            self._session_meta.status_msg = status_msg
+        self._pub.publish('session_status', Iface.MetadataPacket(self._session_meta))
 
     def publish_fouriermask_status(self, status_msg=None):
         """
@@ -317,6 +324,7 @@ class Reconstructor(MP.Process):
             ### Wavelength
             if param == 'wavelength':
                 holo_meta.wavelength = value
+                print("WAVELENGTH: ", holo_meta.wavelength)
             elif param == 'dx':
                 holo_meta.dx = value
             elif param == 'dy':
@@ -336,6 +344,44 @@ class Reconstructor(MP.Process):
                     %(param)
 
         holo_meta.status_msg += 'SUCCESS.' if validcmd else 'UNSUCCESSFUL'
+
+        return validcmd
+
+    def process_session_cmd(self, arg, session_meta):
+        """
+        Process Holo Commands
+        """
+        validcmd = True
+
+        for param, value in arg.items():
+
+            session_meta.status_msg += \
+                'Received parameter [%s] with value [%s].'\
+                %(param, repr(value))
+
+            ### Wavelength
+            if param == 'wavelength':
+                session_meta.wavelength = value
+                print("WAVELENGTH: ", session_meta.wavelength)
+            elif param == 'dx':
+                session_meta.dx = value
+            elif param == 'dy':
+                session_meta.dy = value
+            elif param == 'crop_fraction':
+                session_meta.crop_fraction = value
+            elif param == 'rebin_factor':
+                session_meta.rebin_factor = value
+            elif param == 'bgd_sub':
+                session_meta.bgd_sub = value
+            elif param == 'bgd_file':
+                session_meta.bgd_file = value
+            else:
+                validcmd = False
+                session_meta.status_msg += \
+                    'ERROR.  Unknown parameter [%s].'\
+                    %(param)
+
+        session_meta.status_msg += 'SUCCESS.' if validcmd else 'UNSUCCESSFUL'
 
         return validcmd
 
@@ -367,7 +413,7 @@ class Reconstructor(MP.Process):
 
             print("COMPUTING_CIRCLE_1")
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   fmask_meta.center_list[0:len(self._session_meta.holo.wavelength)],
                                    dk)
             print("DONE COMPUTING_CIRCLE_1")
             self._update_fourier_mask = True
@@ -398,7 +444,7 @@ class Reconstructor(MP.Process):
                                               )
             dk = 1 if self.holo is None else self.holo.dk
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   fmask_meta.center_list[0:len(self._session_meta.holo.wavelength)],
                                    dk)
             self._update_fourier_mask = True
 
@@ -426,7 +472,7 @@ class Reconstructor(MP.Process):
                                                radius)
             dk = 1 if self.holo is None else self.holo.dk
             fmask_meta.mask = Mask(self._camera_meta.N,
-                                   fmask_meta.center_list[0:len(self._holo_meta.wavelength)],
+                                   fmask_meta.center_list[0:len(self._session_meta.holo.wavelength)],
                                    dk)
             self._update_fourier_mask = True
 
@@ -501,6 +547,18 @@ class Reconstructor(MP.Process):
                 self._holo_meta = copy.copy(holo_meta)
                 self.publish_holo_status()
 
+            elif modid == 'session':
+
+                holo_meta.status_msg = ''
+                if not arg: ### Empty parameter list, send reconst status
+                    self.publish_session_status("SUCCESS")
+                    continue
+
+                self.process_session_cmd(arg, holo_meta)
+
+                self._session_meta = copy.copy(session_meta)
+                self.publish_session_status()
+
             elif modid == 'fouriermask':
                 fmask_meta.status_msg = ''
                 if not arg: ### Empty parameter list, send reconst status
@@ -565,21 +623,21 @@ class Reconstructor(MP.Process):
         ### Create Hologram object or update it.  Updating saves CPU cycles.
         if self.holo is None:
             self.holo = Hologram(img,
-                                 wavelength=self._holo_meta.wavelength,
-                                 crop_fraction=self._holo_meta.crop_fraction,
-                                 rebin_factor=self._holo_meta.rebin_factor,
-                                 pix_dx=self._holo_meta.dx,
-                                 pix_dy=self._holo_meta.dy,
+                                 wavelength=self._session_meta.holo.wavelength,
+                                 #crop_fraction=self._holo_meta.crop_fraction,
+                                 #rebin_factor=self._holo_meta.rebin_factor,
+                                 pix_dx=self._session_meta.holo.dx,
+                                 pix_dy=self._session_meta.holo.dy,
                                  system_magnification=self._session_meta.lens.system_magnification,
                                  fourier_mask=self._mask,
                                 )
         else:
             self.holo.update_hologram(img,
-                                      wavelength=self._holo_meta.wavelength,
-                                      crop_fraction=self._holo_meta.crop_fraction,
-                                      rebin_factor=self._holo_meta.rebin_factor,
-                                      pix_dx=self._holo_meta.dx,
-                                      pix_dy=self._holo_meta.dy,
+                                      wavelength=self._session_meta.holo.wavelength,
+                                      #crop_fraction=self._holo_meta.crop_fraction,
+                                      #rebin_factor=self._holo_meta.rebin_factor,
+                                      pix_dx=self._session_meta.holo.dx,
+                                      pix_dy=self._session_meta.holo.dy,
                                       system_magnification=self._session_meta.lens.system_magnification,
                                       fourier_mask=self._mask,
                                      )
@@ -593,9 +651,9 @@ class Reconstructor(MP.Process):
 
         g_key = repr(self._reconst_meta.propagation_distance) + \
                 "_" + repr(self.holo.hololen) + \
-                "_" + repr(self._holo_meta.dx) + \
-                "_" + repr(self._holo_meta.dy) + \
-                "_" + repr(self._holo_meta.wavelength)
+                "_" + repr(self._session_meta.holo.dx) + \
+                "_" + repr(self._session_meta.holo.dy) + \
+                "_" + repr(self._session_meta.holo.wavelength)
 
         try:
 
@@ -606,8 +664,7 @@ class Reconstructor(MP.Process):
 
             if self._verbose:
                 print('Updating G factor for g_key=%s'%(g_key))
-            self.holo.update_G_factor(self._reconst_meta.propagation_distance[0])
-            self._g_db[g_key] = self.holo.propagation_kernel
+            self._g_db[g_key] = self.holo.update_G_factor(self._reconst_meta.propagation_distance[0])
 
         if self._verbose:
             print('%f: Reconstruction G Database. Elapsed Time: %f'\
@@ -623,7 +680,7 @@ class Reconstructor(MP.Process):
             mask_shape = self._mask.mask.shape
             recompute_mask = mask_shape[0] != self.holo.ft_hologram.shape[0] or\
                              mask_shape[1] != self.holo.ft_hologram.shape[1] or \
-                             mask_shape[2] != len(self._holo_meta.wavelength)
+                             mask_shape[2] != len(self._session_meta.holo.wavelength)
             print("%%%%%% RECOMPUTE_MASK: ", self._mask.mask_uncentered.shape,
                   self.holo.ft_hologram.shape,
                   recompute_mask)
@@ -655,7 +712,7 @@ class Reconstructor(MP.Process):
             if len(self._fouriermask_meta.center_list) > 0:
 
                 print('Really Updating Fourier Mask...')
-                idx = slice(0, len(self._holo_meta.wavelength))
+                idx = slice(0, len(self._session_meta.holo.wavelength))
 
                 dk = 1 if self.holo is None else self.holo.dk
                 self._fouriermask_meta.mask = Mask(self.holo.hololen,
@@ -670,7 +727,7 @@ class Reconstructor(MP.Process):
         Validate and ensure that aboth wavelength and chormatic shift
         are the same
         """
-        wavelength = self._holo_meta.wavelength
+        wavelength = self._session_meta.holo.wavelength
 
         if len(wavelength) != len(self._reconst_meta.chromatic_shift):
 
@@ -679,7 +736,7 @@ class Reconstructor(MP.Process):
                 idx = slice(0, len(wavelength))
                 self._reconst_meta.chromatic_shift = self._reconst_meta.chromatic_shift[idx]
 
-            elif len(self._reconst_meta.chromatic_shift) < len(self._holo_meta.wavelength):
+            elif len(self._reconst_meta.chromatic_shift) < len(self._session_meta.holo.wavelength):
 
                 tmpchromaticshift = [0] * len(wavelength)
                 self._reconst_meta.chromatic_shift = [tmpchromaticshift[i]\
@@ -798,6 +855,8 @@ class Reconstructor(MP.Process):
                 www.amplitude
                 www.phase
 
+            www.save_to_file('/Users/sfregoso/Documents/old_mac/MacPro_2012thru2015/Santos/Work/FelipeStuff/DHM/git_repos/dhm_suite/shampoo_lite/Reconstructions')
+
             if self._verbose:
                 print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
             print('%f: Reconstruction Computed . Elapsed Time: %f'\
@@ -897,6 +956,11 @@ class Reconstructor(MP.Process):
 
             self._holo_meta = data
             self.publish_holo_status()
+
+        elif isinstance(data, MetaC.SessionMetadata):
+
+            self._session_meta = data
+            self.publish_session_status()
 
         else:
             pass
