@@ -95,6 +95,10 @@ setup(
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
+    install_requires=[
+        'numpy',
+        'matplotlib',
+    ],
 #    install_requires=['sphinx_rtd_theme'
 #    ],
 #    tests_require=['pytest'],

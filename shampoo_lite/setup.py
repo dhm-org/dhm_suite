@@ -13,13 +13,13 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/dhm-org/dhm_suite/tree/master/shampoo_lite",
     packages=setuptools.find_packages(),
-#    install_requires=[
-#        'numpy',
-#        'pyfftw',
-#        'scipy',
-#        'scikit-image',
-#        'imagecodecs',
-#    ],
+    install_requires=[
+        'numpy',
+        'pyfftw',
+        'scipy',
+        'scikit-image',
+        'imagecodecs',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3.5",
     ],
