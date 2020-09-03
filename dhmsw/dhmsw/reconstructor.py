@@ -855,7 +855,7 @@ class Reconstructor(MP.Process):
                 www.amplitude
                 www.phase
 
-            www.save_to_file('/Users/sfregoso/Documents/old_mac/MacPro_2012thru2015/Santos/Work/FelipeStuff/DHM/git_repos/dhm_suite/shampoo_lite/Reconstructions')
+            #www.save_to_file('/Users/sfregoso/Documents/old_mac/MacPro_2012thru2015/Santos/Work/FelipeStuff/DHM/git_repos/dhm_suite/shampoo_lite/Reconstructions')
 
             if self._verbose:
                 print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
