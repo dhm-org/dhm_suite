@@ -35,12 +35,17 @@ To setup the environment, install drivers, and install all components of the DHM
 
 `sudo ./install.sh -all`
 
+To setup only the DHMx without the camera drivers, run the following:
+
+`sudo ./install.sh -dhmx`
+
 This install script has options in case you want to do a step at a time. 
 
 > usage:  install.sh [options]  
 >   
 > where options are as follows:  
 > -all        Setup environment, install drivers, and install suite software  
+> -dhmx       Setup environment, install shampoo-lite, dhmsw, and dhm_gui (all except camserver and drivers)
 > -verbose    Display instruction verbose to standard out  
 > -env        Environment setup  
 > -drivers    Install external drivers required.  
