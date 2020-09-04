@@ -17,7 +17,8 @@
 
 # version v0.10.4    -   Last version that F. Lima delivered
 # version v0.10.5    -   Disabled QtMultimedia so that DHMX can run on Mac and Windows
-DHMX_VERSION_STRING = "DHMx v0.10.5  03-06-2020"
+# version v0.11.0    -   Changed slider values to reflect units.
+DHMX_VERSION_STRING = "DHMx v0.11.0  09-04-2020"
 
 
 import os, sys, re, time, random
