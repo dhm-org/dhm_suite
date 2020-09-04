@@ -41,7 +41,6 @@ ApplicationWindow {
         onTriggered: checkDelegate_recording.onShortcut()
     }
 
-
     Rectangle {
         id: bg
         width: 800
@@ -218,6 +217,8 @@ ApplicationWindow {
             source: "images/bg_desat.jpg"
             opacity: 0.2
         }
+
+
 
         Item {
             id: item_camera_controls
@@ -409,6 +410,40 @@ ApplicationWindow {
                 anchors.leftMargin: 15
             }
         }
+
+        CheckBox {
+            id: checkbox_enable_histogram
+            objectName: "checkbox_enable_histogram"
+            signal qml_enable_hist(bool checked)
+            x: 32
+            y: 558
+            text: qsTr("Enable Histogram")
+            checkable: true
+            checked: true
+            enabled: true
+
+            onClicked: {
+                subwin_histogram.enabled = checkbox_enable_histogram.checked
+                qml_enable_hist(checkbox_enable_histogram.checked)
+            }
+        }
+
+        CheckBox {
+            id: checkbox_enable_image
+            objectName: "checkbox_enable_image"
+            signal qml_enable_image(bool checked)
+            x: 32
+            y: 608
+            text: qsTr("Enable Image")
+            checkable: true
+            checked: true
+            enabled: true
+
+            onClicked: {
+                qml_enable_image(checkbox_enable_image.checked)
+            }
+        }
+
 
         CheckDelegate {
             id: checkDelegate_recording
@@ -641,7 +676,7 @@ ApplicationWindow {
         font.bold: true
     }
 
-    DhmxHistogram{
+    DhmxHistogram {
         z:100
         id: subwin_histogram
         x: 651
@@ -657,9 +692,9 @@ ApplicationWindow {
 
         Button {
             id: button_autoscale
-            x: 100
+            x: 112
             y: 240
-            width: 104
+            width: 98
             height: 30
             text: qsTr("Autoscale")
             highlighted: false
@@ -679,9 +714,9 @@ ApplicationWindow {
 
         Button {
             id: button_reset
-            x: 244
+            x: 243
             y: 240
-            width: 104
+            width: 101
             height: 30
             text: qsTr("Reset View")
 
