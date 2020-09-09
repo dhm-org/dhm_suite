@@ -32,6 +32,9 @@ DHMx-c can be used for accessing, monitoring and calibrating the camera(s) being
 
 ![DHMx-C](doc/DHMx_C_screenshot.png)
 
+## User Manuals
+The user manuals for the DHMx GUI can be found [here](usermanual/USERMANUAL.md)
+
 ## Authors
 * Frank Lima
 * Felipe Fregoso
