@@ -4,29 +4,37 @@ Created By:  S. F. Fregoso
 
 ## Quickstart
 
-### Create a session
+1. Create a session
+2. Select image file
+3. Select reconstruction mode
+4. Set Propagation Distance
+5. Open Displays
+6. Run execution
+7. Verify execution
+
+## Create a session
 To start, first create a new session.  Once all parameters have been set, click the "Apply" button to set the values.  You can store the values into a "session" file by clicking the "Save To File" button.
 
 NOTE:  On start of the GUI, default session values are used which may not be what you need.  Creating a new session will overwrite the default values.
 
 Create a new session by clicking on the "+" icon in the "Sessions" section of the menu bar.
 
-#### Set Light Source Parameters
+### Set Light Source Parameters
 In the "Light Source Parameters" section, select either "Monochromatic" or "Multi wavelength" reconstruction, and select the wavelength from the dropdown boxes.
 
 ![Session_LightParameters](dhmx_session_lightparameters.png)
 
-#### Set Image Settings
+### Set Image Settings
 In the "Image Settings" tab, set the pixel x/y width of the images in um which affect the reconstruction computations.
 
 ![Session_ImageSettings](dhmx_session_imagesettings.png)
 
-#### Set Hologram Parameters
+### Set Hologram Parameters
 In the "Hologram Parameters" tab, set the rebin or crop fraction if its necessary.  Keep the default values of the images don't need rebinning nor cropping.
 
 ![Session_HologramParameters](dhmx_session_hologramparameters.png)
 
-#### Set Lens Information
+### Set Lens Information
 In the "Lens Information" tab, set the system magnification value which affects the reconstruction.
 
 ![Session_HologramParameters](dhmx_session_hologramparameters.png)
@@ -56,6 +64,10 @@ NOTE:  If you want to do more then one product at the same time such as "Amplitu
 
 ![Mode_MenuItems](mode_menu_selections.png)
 
+
+## Set Propagation Distance
+Go to Settings->Reconstruction.  Change the propagation distance.  NOTE must run the reconstruction to see the effect.
+
 ## Open Displays To View Reconstruction Products
 In order to view the data, press the icons in the "Views" section of the task bar.
 
@@ -67,9 +79,7 @@ In order to view the data, press the icons in the "Views" section of the task ba
 
 ![Views_Icons](views_icons.png)
 
-## Set Reconstruction Parameters
-
-## Execute Reconstruction
+## Run Reconstruction
 In order to execute the selected mode and view the reconstruction products, you must press the run button which looks like a side ways triangle or a play button.
 
 **IMPORTANT NOTE**:  You need to press this reconstruct button everytime you change a parameter in order to see the change.
