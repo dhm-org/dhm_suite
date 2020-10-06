@@ -193,7 +193,7 @@ class guiclient(object):
                         meta = None
                         totalbytes = 0
                         self.displayQ.put_nowait(msg)
-                        print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
+                        #print('Counter=%d, Queue.Size=%d'%(count, self.displayQ.qsize()))
                         print('%.2f Hz'%(1/(time.time()-lasttime)))
                         lasttime = time.time()
                         count+=1
@@ -205,6 +205,7 @@ class guiclient(object):
 if __name__ == "__main__":
     a = guiclient()
     host= socket.gethostname()
+    host= 'localhost'
     port = 9993
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 

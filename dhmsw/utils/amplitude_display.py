@@ -208,7 +208,7 @@ class guiclient(object):
 
 if __name__ == "__main__":
     a = guiclient()
-    host= socket.gethostname()
+    host= 'localhost'
     port = 9994
     print("Client host:  %s: port: %d"%(host, port)) 
     a.connect_to_server(host, port) 
