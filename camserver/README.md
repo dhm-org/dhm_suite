@@ -99,7 +99,7 @@ NOTE:  Ensure the camera is plugged into the network card and powered up.
 5.  Enter the following lines were you replace "<network_card_name>" with the name from Step 3.
     * auto <network_card_name>
     * iface <nework_card_name> inet static
-    * address 192.168.100.1
+    * address 169.254.100.1
     * netmask 255.255.0.0
     * mtu 9000
     * pre-up /sbin/ethtool -s <network_card_name> speed 1000 duplex full autoneg off
