@@ -63,7 +63,8 @@ def create_amp_img_pkt(data, img_type, srcid):
     mpkt_a = Iface.MessagePkt(img_type,
                               srcid)
     print("GUISERVER: create_amp_img_pkt(): ", time.time())
-    mpkt_a.append(data.reconstwave.amplitude.astype(dtype=np.uint8))
+    normData = data.reconstwave.amplitude/np.max(data.reconstwave.amplitude) * 255
+    mpkt_a.append(normData.astype(dtype=np.uint8))
     mpkt_a.complete_packet()
     amp_image = Iface.GuiPacket('reconst_amp', mpkt_a.to_bytes())
     return amp_image
@@ -74,7 +75,8 @@ def create_int_img_pkt(data, img_type, srcid):
     """
     mpkt_a = Iface.MessagePkt(img_type,
                               srcid)
-    mpkt_a.append(data.reconstwave.intensity.astype(dtype=np.uint8))
+    normData = data.reconstwave.intensity/np.max(data.reconstwave.intensity) * 255
+    mpkt_a.append(normData.astype(dtype=np.uint8))
     mpkt_a.complete_packet()
     intensity_image = Iface.GuiPacket('reconst_intensity', mpkt_a.to_bytes())
     return intensity_image
@@ -85,7 +87,8 @@ def create_phase_img_pkt(data, img_type, srcid):
     """
     mpkt_a = Iface.MessagePkt(img_type,
                               srcid)
-    mpkt_a.append(data.reconstwave.phase.astype(dtype=np.uint8))
+    normData = data.reconstwave.phase/np.max(data.reconstwave.phase) * 255
+    mpkt_a.append(normData.astype(dtype=np.uint8))
     mpkt_a.complete_packet()
     phase_image = Iface.GuiPacket('reconst_phase', mpkt_a.to_bytes())
     return phase_image
@@ -148,7 +151,6 @@ class Guiserver(ComponentABC):
             #print('Recons processing mode = NONE')
             pass
         elif processing_mode == MetaC.ReconstructionMetadata.RECONST_AMP:
-
             #print('Recons processing mode = AMP')
             amp_image = create_amp_img_pkt(data,
                                            Iface.IMAGE_TYPE,

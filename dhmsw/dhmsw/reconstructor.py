@@ -621,7 +621,8 @@ class Reconstructor(MP.Process):
         Create hologram object or update it if it already exists
         """
         ### Create Hologram object or update it.  Updating saves CPU cycles.
-        if self.holo is None:
+        #if self.holo is None:
+        if True:
             self.holo = Hologram(img,
                                  wavelength=self._session_meta.holo.wavelength,
                                  #crop_fraction=self._holo_meta.crop_fraction,
