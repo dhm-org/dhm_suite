@@ -103,7 +103,7 @@ setup(
 #    ],
 #    tests_require=['pytest'],
     packages=find_packages(),
-    package_data={},
+    package_data={'': ['DEFAULT.ini']},
     include_package_data=True,
 #    cmdclass={
 #        'test': PyTest,
